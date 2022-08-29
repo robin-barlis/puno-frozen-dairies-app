@@ -1,0 +1,8 @@
+@import url('./main-layout.css');
+@import url('./views/administration-view.css');
+@import url('./views/products-view.css');
+@import url('line-awesome/dist/line-awesome/css/line-awesome.min.css');
+@import url('@fontsource/roboto');    html {
+--lumo-font-family: Roboto;
+
+    }
