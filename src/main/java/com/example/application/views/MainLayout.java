@@ -14,6 +14,7 @@ import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
@@ -144,6 +145,10 @@ public class MainLayout extends AppLayout {
 		avatar.setHeight("2.5em");
 		
 		
+		Button avatarButton = new Button(avatar);	
+		avatarButton.getStyle().set("background", "#FFF");
+	
+		
 		Div div = new Div();
 		div.setVisible(false);
 		div.addClassName(CssClassNamesConstants.USER_PROFILE_WRAPPER);
@@ -153,6 +158,8 @@ public class MainLayout extends AppLayout {
 		VerticalLayout nameWrapper = new VerticalLayout();
 		nameWrapper.addClassName(CssClassNamesConstants.PROFILE_DETAILS_NAME_AVATAR_WRAPPER);
 		nameWrapper.setAlignItems(Alignment.CENTER);
+		
+		
 		
 		Avatar profilePicture = new Avatar(user.getFirstName());
 		profilePicture.setWidth("7em");
@@ -254,23 +261,20 @@ public class MainLayout extends AppLayout {
 		changePasswordPanel.setOpened(false);
 		changePasswordContent.addClassName(CssClassNamesConstants.CHANGE_PASSWORD_ACCORDION_PANEL);
 
-		
+		avatarButton.addClickListener(e -> {
+			if (!div.isVisible()) {
+				div.setVisible(true);
+			} else {
+				div.setVisible(false);
+			}
+		});
 		profileDetailsWrapper.add(profileAccordion);		
 		div.add(nameWrapper);
 		div.add(profileDetailsWrapper);
 
-		
-		ComponentUtil.addListener(avatar, ClickEvent.class, e-> {
-			if (!div.isVisible()) {
-		    	div.setVisible(true);
-			} else {
-				div.setVisible(false);
-			}
-		
-		});
 
 		layout.add(div);
-		layout.add(avatar);
+		layout.add(avatarButton);
 	}
 
     private MenuItemInfo[] createMenuItems() {
