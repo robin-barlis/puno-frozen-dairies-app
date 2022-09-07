@@ -1,0 +1,12 @@
+[Unit]
+Description=Puno Frozen Dairies, Inc Business Management Application
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/usr/bin/java -jar /artifact/punofrozendairies-1.0-SNAPSHOT.jar
+[Install]
+WantedBy=multi-user.target
