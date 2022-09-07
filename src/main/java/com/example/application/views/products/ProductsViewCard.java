@@ -8,7 +8,9 @@ import com.vaadin.flow.component.html.Span;
 
 public class ProductsViewCard extends ListItem {
 
-    public ProductsViewCard(String text, String url) {
+    private static final long serialVersionUID = 2711778627059486451L;
+
+	public ProductsViewCard(String text, String url) {
         addClassNames("bg-contrast-5", "flex", "flex-col", "items-start", "p-m", "rounded-l");
 
         Div div = new Div();
@@ -25,7 +27,7 @@ public class ProductsViewCard extends ListItem {
 
         Span header = new Span();
         header.addClassNames("text-xl", "font-semibold");
-        header.setText("Title");
+        header.setText(text);
 
         Span subtitle = new Span();
         subtitle.addClassNames("text-s", "text-secondary");

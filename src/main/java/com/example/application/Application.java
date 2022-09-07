@@ -22,7 +22,9 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 @NpmPackage(value = "line-awesome", version = "1.3.0")
 public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
 
-    public static void main(String[] args) {
+    private static final long serialVersionUID = 1L;
+
+	public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 

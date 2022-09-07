@@ -1,3 +1,12 @@
+input {
+	box-shadow: inset 0 0 0 1px var(- -lumo-contrast-30pct);
+	background-color: var(- -lumo-base-color);
+}
+
+:host([invalid]) [part="input-field"] {
+	box-shadow: inset 0 0 0 1px var(- -lumo-error-color);
+}
+
 header vaadin-context-menu {
   align-items: center;
   display: flex;
@@ -51,3 +60,62 @@ header nav a[highlight]::after {
 header nav a[highlight]:not([active])::after {
   opacity: 0;
 }
+
+.user-profile-wrapper {
+	position:absolute;
+	right: 0px;
+    top: 70px;
+    background-color: #FFFFFF; 
+	font-size: var(--lumo-font-size-s);
+}
+
+.bold-label{
+	font-weight: bold;
+}
+
+.main-layout-header-wrapper {
+	background: white;
+    border-bottom-color: #1C7324;
+    border-bottom-style: solid;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom-width: thin;
+}
+
+.nav-bar-wrapper {
+	padding-top: 5px;
+    padding-bottom: 5px;
+    background-color: #FFF;
+    box-shadow: 0 4px 4px -2px darkgrey;
+}
+
+.profile-details-accordion {
+	background-color: #f7f7f7;
+	padding-left: 10px;
+	font-size: var(--lumo-font-size-s);
+}
+
+.profile-details-name-avatar-wrapper {
+	padding-top:1.5em;
+	font-size: var(--lumo-font-size-s);
+}
+
+.profile-details-label-wrapper{
+	font-weight: bold;
+	font-size:var(--lumo-font-size-s);
+}
+
+.profile-details-value-wrapper{
+	font-size:var(--lumo-font-size-s);
+}
+
+.profile-details-wrapper{
+	padding-top:25px;
+}
+
+.change-password-accordion-wrapper{
+	
+}
+
+
+

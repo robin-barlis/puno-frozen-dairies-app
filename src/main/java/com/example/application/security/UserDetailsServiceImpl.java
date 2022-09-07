@@ -1,7 +1,9 @@
 package com.example.application.security;
 
-import com.example.application.data.entity.User;
+import com.example.application.data.entity.AppUser;
 import com.example.application.data.service.UserRepository;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,17 +26,21 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
+    	// Add the logic that checks if the user exists in the database
+        List<AppUser> userList = userRepository.findAll();
+        
+        AppUser user = userList.stream().filter(appUser -> appUser.getUsername().equals(username)).findFirst(). orElse(null);
         if (user == null) {
             throw new UsernameNotFoundException("No user present with username: " + username);
         } else {
-            return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getHashedPassword(),
+            return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
                     getAuthorities(user));
         }
     }
 
-    private static List<GrantedAuthority> getAuthorities(User user) {
-        return user.getRoles().stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+    private static List<GrantedAuthority> getAuthorities(AppUser user) {
+ 
+        return Arrays.asList(user.getRoles()).stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .collect(Collectors.toList());
 
     }

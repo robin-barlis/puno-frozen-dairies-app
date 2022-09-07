@@ -1,6 +1,6 @@
 package com.example.application.security;
 
-import com.example.application.data.entity.User;
+import com.example.application.data.entity.AppUser;
 import com.example.application.data.service.UserRepository;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.VaadinServletRequest;
@@ -29,7 +29,7 @@ public class AuthenticatedUser {
                 .filter(authentication -> !(authentication instanceof AnonymousAuthenticationToken));
     }
 
-    public Optional<User> get() {
+    public Optional<AppUser> get() {
         return getAuthentication().map(authentication -> userRepository.findByUsername(authentication.getName()));
     }
 

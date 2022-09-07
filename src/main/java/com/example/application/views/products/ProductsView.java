@@ -4,6 +4,7 @@ import com.example.application.views.MainLayout;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.html.OrderedList;
 import com.vaadin.flow.component.html.Paragraph;
@@ -46,7 +47,7 @@ public class ProductsView extends Main implements HasComponents, HasStyle {
         container.addClassNames("items-center", "justify-between");
 
         VerticalLayout headerContainer = new VerticalLayout();
-        H2 header = new H2("Beautiful photos");
+        H3 header = new H3("Products List");
         header.addClassNames("mb-0", "mt-xl", "text-3xl");
         Paragraph description = new Paragraph("Royalty free photos and pictures, courtesy of Unsplash");
         description.addClassNames("mb-xl", "mt-0", "text-secondary");

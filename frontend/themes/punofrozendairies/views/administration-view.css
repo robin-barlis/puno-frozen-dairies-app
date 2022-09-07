@@ -13,15 +13,10 @@
   height: 100%;
 }
 
-.administration-view .editor-layout {
+.administration-view .editor-layout .flex-layout {
   display: flex;
   flex-direction: column;
   width: 400px;
-}
-
-.administration-view .editor {
-  flex-grow: 1;
-  padding: var(--lumo-space-l);
 }
 
 .administration-view .editor vaadin-checkbox {
@@ -30,15 +25,21 @@
 
 .administration-view .button-layout {
   width: 100%;
-  flex-wrap: wrap;
-  background-color: var(--lumo-contrast-5pct);
-  padding-bottom: var(--lumo-space-s);
-  padding-top: var(--lumo-space-s);
-  padding-left: var(--lumo-space-l);
-  padding-right: var(--lumo-space-l);
-  gap: var(--lumo-space-m);
 }
+
+.pfdi-button {
+	width: 250px;
+	height: 50px;
+	text-align: center;
+	size: 16px;
+	background-color: #1C7324;
+	color: #FFFFFF;
+}
+
 
 .administration-view .grid-wrapper {
   width: 100%;
 }
+
+
+
