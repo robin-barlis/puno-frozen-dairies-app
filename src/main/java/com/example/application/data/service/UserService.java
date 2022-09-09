@@ -21,7 +21,7 @@ public class UserService {
         this.repository = repository;
     }
 
-    public Optional<AppUser> get(UUID id) {
+    public Optional<AppUser> get(Integer id) {
         return repository.findById(id);
     }
 
@@ -29,7 +29,7 @@ public class UserService {
         return repository.save(entity);
     }
 
-    public void delete(UUID id) {
+    public void delete(Integer id) {
         repository.deleteById(id);
     }
 
@@ -49,6 +49,12 @@ public class UserService {
     public int getLastId() {
         return (int) repository.findLastId();
     }
+
+	public void changeUserStatus(AppUser currentAppUser, boolean newStatus) {
+		AppUser appUserToUpdate = repository.findById(currentAppUser.getId()).orElseGet(null);
+		appUserToUpdate.setEnabled(newStatus);
+		repository.save(appUserToUpdate);
+	}
 
 
 }
