@@ -16,6 +16,7 @@ import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
@@ -158,7 +159,8 @@ public class MainLayout extends AppLayout {
 		div.setVisible(false);
 		div.addClassName(CssClassNamesConstants.USER_PROFILE_WRAPPER);
 		div.setHeight("100vh");
-		div.setWidth("35vw");		
+		div.setWidth("35vw");	
+		div.scrollIntoView();
 		
 		VerticalLayout nameWrapper = new VerticalLayout();
 		nameWrapper.addClassName(CssClassNamesConstants.PROFILE_DETAILS_NAME_AVATAR_WRAPPER);
@@ -276,13 +278,41 @@ public class MainLayout extends AppLayout {
 		profileDetailsWrapper.add(profileAccordion);		
 		div.add(nameWrapper);
 		div.add(profileDetailsWrapper);
-
+		
+		VerticalLayout logoutButtonWrapper = new VerticalLayout();
+		logoutButtonWrapper.setAlignItems(Alignment.CENTER);
+		
+		
+		
+		Button logout = new Button("Logout");
+		logout.addClickListener( e -> openDialog().open());
+		logout.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		logoutButtonWrapper.add(logout);
+		
+		div.add(logoutButtonWrapper);
 
 		layout.add(div);
 		layout.add(avatarButton);
 	}
 
-    private MenuItemInfo[] createMenuItems() {
+    private ConfirmDialog openDialog() {
+    	ConfirmDialog dialog = new ConfirmDialog();
+        dialog.setHeader("");
+        dialog.setText("Are you sure you want to logout?");
+
+        dialog.setCancelable(true);
+        dialog.setCancelText("No");
+        dialog.setCancelButtonTheme("error primary");
+        dialog.addCancelListener(event -> dialog.close());
+
+        dialog.setConfirmText("Yes");
+        dialog.setConfirmButtonTheme("primary");
+        dialog.addConfirmListener(event -> authenticatedUser.logout());
+        
+        return dialog;
+	}
+
+	private MenuItemInfo[] createMenuItems() {
         return new MenuItemInfo[]{ //
                 new MenuItemInfo("Profile Management", "la", AdministrationView.class), //
 
