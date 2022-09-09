@@ -11,7 +11,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
-public class CustomStringArrayType implements UserType{
+public class CustomStringArrayType implements UserType {
 
 	@Override
 	public int[] sqlTypes() {
@@ -59,7 +59,7 @@ public class CustomStringArrayType implements UserType{
 	@Override
 	public Object deepCopy(Object value) throws HibernateException {
 		// TODO Auto-generated method stub
-		return null;
+		return value;
 	}
 
 	@Override

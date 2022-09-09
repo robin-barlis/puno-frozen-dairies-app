@@ -15,6 +15,7 @@ import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.NpmPackage;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
@@ -145,8 +146,12 @@ public class MainLayout extends AppLayout {
 		avatar.setHeight("2.5em");
 		
 		
-		Button avatarButton = new Button(avatar);	
-		avatarButton.getStyle().set("background", "#FFF");
+		Button avatarButton = new Button();	
+		avatarButton.addThemeVariants(ButtonVariant.LUMO_ICON,
+                ButtonVariant.LUMO_SUCCESS,
+                ButtonVariant.LUMO_TERTIARY);
+		avatarButton.setIcon(avatar);
+		avatarButton.setSizeUndefined();
 	
 		
 		Div div = new Div();

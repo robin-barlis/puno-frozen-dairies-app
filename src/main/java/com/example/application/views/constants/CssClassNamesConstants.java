@@ -15,6 +15,8 @@ public class CssClassNamesConstants {
 	public static final String PROFILE_DETAILS_WRAPPER = "profile-details-wrapper";
 
 	public static final String CHANGE_PASSWORD_ACCORDION_PANEL = "change-password-accordion-wrapper";
+	public static final String SEARCH_FILTER_FIELD = "search-field-filter";
+	public static final String PFDI_ICONS = "pfdi-icons";
 	
 
 }

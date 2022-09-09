@@ -21,12 +21,6 @@ public class AppUser implements Serializable {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Integer id;
-	public Integer getId() {
-		return id;
-	}
-	public void seId(Integer id) {
-		this.id = id;
-	}
 	private String username;
     private String emailAddress;
 	private Boolean locked;
@@ -40,11 +34,10 @@ public class AppUser implements Serializable {
     
     private String password;
     
-    @Column(columnDefinition = "text[]")
+    @Column(columnDefinition = "text[]", name = "roles")
     @Type(type = "com.example.application.data.type.CustomStringArrayType")
     private String[] roles;
     
-
     public String getUsername() {
         return username;
     }
@@ -124,6 +117,12 @@ public class AppUser implements Serializable {
 	}
 	public void setEmailAddress(String emailAddress) {
 		this.emailAddress = emailAddress;
+	}
+	public Integer getId() {
+		return id;
+	}
+	public void seId(Integer id) {
+		this.id = id;
 	}
 	
 

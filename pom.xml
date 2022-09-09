@@ -218,7 +218,7 @@
 							</execution>
 						</executions>
 						<configuration>
-							<productionMode>true</productionMode>
+							<productionMode>false</productionMode>
 						</configuration>
 					</plugin>
 				</plugins>

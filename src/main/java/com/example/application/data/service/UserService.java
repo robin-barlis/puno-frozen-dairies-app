@@ -44,5 +44,11 @@ public class UserService {
     public int count() {
         return (int) repository.count();
     }
+    
+    
+    public int getLastId() {
+        return (int) repository.findLastId();
+    }
+
 
 }

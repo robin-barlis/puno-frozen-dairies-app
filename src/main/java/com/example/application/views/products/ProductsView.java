@@ -20,7 +20,8 @@ import javax.annotation.security.RolesAllowed;
 @RolesAllowed("ADMIN")
 public class ProductsView extends Main implements HasComponents, HasStyle {
 
-    private OrderedList imageContainer;
+    private static final long serialVersionUID = -6210105239749320428L;
+	private OrderedList imageContainer;
 
     public ProductsView() {
         constructUI();
