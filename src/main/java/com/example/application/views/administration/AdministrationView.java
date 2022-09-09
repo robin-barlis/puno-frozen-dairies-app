@@ -400,7 +400,7 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 
 	private void changeStatus(AppUser deactivateUser, boolean newStatus) {
 		userService.changeUserStatus(deactivateUser, newStatus);
-		grid.getDataProvider().refreshItem(deactivateUser);
+		UI.getCurrent().getPage().reload();
 	}
 
 	private void populateDataAndCallDialog(AppUser currentAppUser) {
@@ -410,7 +410,7 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 
 	private void refreshGrid() {
 		grid.select(null);
-		UI.getCurrent().getPage().reload();
+		grid.getListDataView().refreshAll();
 	}
 
 	private void refreshGrid(AppUser appUser) {
