@@ -1,0 +1,12 @@
+:host([all-rows-visible]) {
+	height:1!important; 
+    align-self: flex-start;
+    flex-grow: 0;
+    width: 100%;
+}
+
+:host([theme~='wrap-cell-content']) [part~='cell'] ::slotted(vaadin-grid-cell-content) {
+    white-space: normal;
+    
+}
+
