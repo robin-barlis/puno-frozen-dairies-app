@@ -1,19 +1,20 @@
 package com.example.application.data.service;
 
-import com.example.application.data.entity.AppUser;
-
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.example.application.data.entity.AppUser;
+
 @Service
 public class UserService {
 
+	@Autowired
     private final UserRepository repository;
 
     @Autowired
@@ -24,9 +25,22 @@ public class UserService {
     public Optional<AppUser> get(Integer id) {
         return repository.findById(id);
     }
+    
+    public AppUser findByEmailAddress(String emailAddress) {
+        return repository.findByEmailAddress(emailAddress);
+    }
+    
+    public AppUser findByUserName(String userName) {
+        return repository.findByUsername(userName);
+    }
 
-    public AppUser update(AppUser entity) {
-        return repository.save(entity);
+    public AppUser update(AppUser user) {
+    	if (user.getId() == null) {
+            
+            return repository.save(user);
+        } else {
+        	return repository.save(user);
+        }
     }
 
     public void delete(Integer id) {
@@ -50,11 +64,12 @@ public class UserService {
         return (int) repository.findLastId();
     }
 
-	public void changeUserStatus(AppUser currentAppUser, boolean newStatus) {
+	public AppUser changeUserStatus(AppUser currentAppUser, boolean newStatus) {
 		AppUser appUserToUpdate = repository.findById(currentAppUser.getId()).orElseGet(null);
 		appUserToUpdate.setEnabled(newStatus);
-		repository.save(appUserToUpdate);
+		return repository.save(appUserToUpdate);
 	}
+
 
 
 }

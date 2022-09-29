@@ -19,6 +19,7 @@ public class CustomStringArrayType implements UserType {
 		return new int[]{Types.ARRAY};
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Override
 	public Class returnedClass() {
 		// TODO Auto-generated method stub

@@ -17,5 +17,7 @@ public class UserRepositoryCustomImpl implements UserRepositoryCustom {
 		query.getFirstResult();
 		return 0;
 	}
+	
+	
 
 }

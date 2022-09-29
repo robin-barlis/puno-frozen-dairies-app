@@ -10,7 +10,7 @@
 
 	<properties>
 		<java.version>18</java.version>
-		<vaadin.version>23.1.7</vaadin.version>
+		<vaadin.version>23.2.0</vaadin.version>
 		<selenium.version>4.2.1</selenium.version>
 	</properties>
 
@@ -84,7 +84,7 @@
 		<dependency>
 			<groupId>com.vaadin</groupId>
 			<!-- Replace artifactId with vaadin-core to use only free components -->
-			<artifactId>vaadin</artifactId>
+			<artifactId>vaadin-core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.vaadin</groupId>
@@ -120,6 +120,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+			<version>2.5.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -161,6 +166,11 @@
 			<groupId>com.flowingcode.addons</groupId>
 			<artifactId>font-awesome-iron-iconset</artifactId>
 			<version>4.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.vaadin.marcus</groupId>
+			<artifactId>mouse-events</artifactId>
+			<version>1.0.1</version>
 		</dependency>
 	</dependencies>
 

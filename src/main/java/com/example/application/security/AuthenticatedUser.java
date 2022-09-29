@@ -4,6 +4,8 @@ import com.example.application.data.entity.AppUser;
 import com.example.application.data.service.UserRepository;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.VaadinServletRequest;
+
+import java.io.Serializable;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -14,9 +16,10 @@ import org.springframework.security.web.authentication.logout.SecurityContextLog
 import org.springframework.stereotype.Component;
 
 @Component
-public class AuthenticatedUser {
+public class AuthenticatedUser implements Serializable{
 
-    private final UserRepository userRepository;
+    private static final long serialVersionUID = -1795642918555948343L;
+	private final UserRepository userRepository;
 
     @Autowired
     public AuthenticatedUser(UserRepository userRepository) {

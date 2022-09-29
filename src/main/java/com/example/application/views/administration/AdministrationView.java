@@ -17,6 +17,7 @@ import com.example.application.data.service.LocationsService;
 import com.example.application.data.service.PositionsService;
 import com.example.application.data.service.RolesService;
 import com.example.application.data.service.UserService;
+import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
 import com.flowingcode.vaadin.addons.fontawesome.FontAwesome;
@@ -46,14 +47,15 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.EmailField;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
-import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -64,18 +66,17 @@ import com.vaadin.flow.router.RouteAlias;
 
 @PageTitle("Administration")
 @Route(value = "admin/:samplePersonID?/:action?(edit)", layout = MainLayout.class)
-@RouteAlias(value = "", layout = MainLayout.class)
-@RolesAllowed("ADMIN")
+@RouteAlias(value = "/", layout = MainLayout.class)
+@RolesAllowed({ "Admin", "Superuser", "ADMIN" })
 @Uses(Icon.class)
-public class AdministrationView extends Div implements BeforeEnterObserver {
+public class AdministrationView extends AbstractPfdiView implements BeforeEnterObserver {
 
 	private static final long serialVersionUID = 2754507440441771890L;
-	private final String SAMPLEPERSON_ID = "samplePersonID";
-	private final String SAMPLEPERSON_EDIT_ROUTE_TEMPLATE = "admin/%s/edit";
 
 	private Grid<AppUser> grid = new Grid<>(AppUser.class, false);
 
 	private TextField firstName;
+	private IntegerField id;
 	private TextField lastName;
 	private Select<String> position;
 	private Select<String> location;
@@ -87,7 +88,7 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 	private Button cancelButton = new Button("Cancel");
 	private Button saveButton = new Button("Save");
 
-	private Button addProfileButton = new Button("Add Profile");
+	private Button addProfileButton;
 
 	private Dialog addProfileDialog = new Dialog();
 
@@ -95,58 +96,45 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 
 	private final UserService userService;
 	private final RolesService rolesService;
-	private final LocationsService locationsServcice;
+	private final LocationsService locationsService;
 	private final PositionsService positionsService;
+	ListDataProvider<AppUser> ldp = null;
 	private AppUser appUser;
 
 	@Autowired
 	public AdministrationView(UserService userService, RolesService rolesService, LocationsService locationsService,
 			PositionsService positionsService) {
+		super("Admin", "Admin");
 		this.userService = userService;
 		this.rolesService = rolesService;
-		this.locationsServcice = locationsService;
+		this.locationsService = locationsService;
 		this.positionsService = positionsService;
 		addClassNames("administration-view");
 
-		// create container for filter and add item button
-		VerticalLayout tableFunctions = new VerticalLayout();
-		createTableFunctions(tableFunctions);
-
-		// create container for admin content
 		VerticalLayout tableContent = new VerticalLayout();
-		createGridLayout(tableContent);
+		createGridLayout(tableContent); 
 
 		createProfileDialog("Add Profile");
 
-		add(tableFunctions);
-		add(new Hr());
 		add(tableContent);
 
-		// Configure Form
-		binder = new BeanValidationBinder<>(AppUser.class);
 
 		// Bind fields. This is where you'd define e.g. validation rules
-
+		binder = new BeanValidationBinder<>(AppUser.class);
 		binder.bindInstanceFields(this);
+		binder.forField(emailAddress).withValidator(email -> validateEmailExists(email) != true,
+				"Email address already exists in the system. Please enter a valid email address.").bind(AppUser::getEmailAddress, AppUser::setEmailAddress);
+	
+
 		addProfileButton.addClickListener(e -> {
-			addProfileDialog.open();
+			this.appUser = null;
+			populateDataAndCallDialog();
 		});
 	}
 
-	private void prepareAppUser(AppUser appUser) {
-		String firstName = appUser.getFirstName();
-		String lastName = appUser.getLastName();
-
-		appUser.setUsername(firstName + "." + lastName);
-		appUser.setEnabled(true);
-		appUser.setLocked(false);
-		String[] role = { this.role.getValue() };
-
-		appUser.setRoles(role);
-
-		BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-		appUser.setPassword(encoder.encode("Password123!"));
-
+	private boolean validateEmailExists(String email) {
+		AppUser user = userService.findByEmailAddress(email);
+		return user != null && !user.equals(this.appUser) ? true : false;
 	}
 
 	private void createProfileDialog(String label) {
@@ -172,6 +160,7 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 		role.setPlaceholder("Select Role");
 
 		firstName = new TextField("Employee First Name");
+		firstName.setId("first-name-form");
 		firstName.setRequired(true);
 		firstName.setRequiredIndicatorVisible(true);
 
@@ -189,7 +178,7 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 		position.setEmptySelectionAllowed(false);
 		position.setPlaceholder("Select Position");
 
-		List<PfdiLocation> locations = locationsServcice.listAll(Sort.unsorted());
+		List<PfdiLocation> locations = locationsService.listAll(Sort.unsorted());
 		location = new Select<>();
 		location.setLabel("Location");
 		location.setEmptySelectionAllowed(false);
@@ -198,7 +187,7 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 		location.setEmptySelectionAllowed(false);
 		location.setPlaceholder("Select Location");
 
-		startDate = new DatePicker("Start Date of Access");
+		startDate = new DatePicker("Start Date of AcceslocationsServices");
 		startDate.getStyle().set("padding-top", "20px");
 		startDate.getStyle().set("padding-bottom", "40px");
 		expirationDate = new DatePicker("Expiration Date");
@@ -213,17 +202,23 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		saveButton.addClickListener(e -> {
 			try {
-				AppUser appUser = new AppUser();
 
+				prepareAppUser();
 				binder.writeBean(appUser);
 
-				prepareAppUser(appUser);
-				userService.update(appUser);
+				if (appUser.getUsername() == null) {
+					String firstName = appUser.getFirstName();
+					String lastName = appUser.getLastName();
+					String userName = firstName + "." + lastName;
+					appUser.setUsername(userName.replace(' ', '.'));
+				}
+
+				AppUser updatedAppUser = userService.update(appUser);
 				clearForm();
-				refreshGrid(appUser);
+				refreshGrid(updatedAppUser);
 
 				addProfileDialog.close();
-				Notification.show("New profile successfully created.")
+				Notification.show("Profile successfully created/updated")
 						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				UI.getCurrent().navigate(AdministrationView.class);
 			} catch (ValidationException validationException) {
@@ -238,15 +233,15 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 			refreshGrid();
 		});
 
+		id = new IntegerField("Account Id");
+		id.setVisible(false);
+
 		FormLayout formLayout = new FormLayout();
 		formLayout.setWidth("800px");
 		formLayout.add(addProfileLabel, divider1, emailAddress, role, firstName, location, lastName, position, divider2,
-				startDate, expirationDate, saveButton, cancelButton);
-		formLayout.setResponsiveSteps(
-				// Use one column by default
-				new ResponsiveStep("0", 1),
-				// Use two columns, if layout's width exceeds 500px
-				new ResponsiveStep("500px", 2));
+				startDate, expirationDate, saveButton, cancelButton, id);
+
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("500px", 2));
 
 		formLayout.setColspan(addProfileLabel, 2);
 		formLayout.setColspan(divider1, 2);
@@ -260,13 +255,14 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 		VerticalLayout verticalLayout = new VerticalLayout();
 		verticalLayout.setClassName("flex-layout");
 
+		addProfileButton = new Button("Add Profile");
+		addProfileButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
+		
 		FlexLayout flexWrapper = new FlexLayout();
 		flexWrapper.setFlexDirection(FlexDirection.ROW);
 		flexWrapper.setJustifyContentMode(JustifyContentMode.END);
-
 		flexWrapper.setClassName("button-layout");
 		flexWrapper.add(addProfileButton);
-		addProfileButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
 
 		Icon addUserIcon = FontAwesome.Solid.USER_PLUS.create();
 		addUserIcon.setColor("#FFFFFF");
@@ -299,29 +295,28 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
 
-		grid.addColumn("username").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
-
-		grid.addColumn("firstName").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
-
-		grid.addColumn("lastName").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
-
-		grid.addColumn("emailAddress").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
-
-		// grid.addColumn("roles").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
+		//grid.addColumn("id").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn("username").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addColumn(currentAppUser -> {
-			String roles = String.join(", ", currentAppUser.getRoles());
-			return roles;
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER).setHeader("Roles").setSortable(true);
+			String firstName = currentAppUser.getFirstName();
+			String lastName = currentAppUser.getLastName();
+			String fullName = lastName + ", " + firstName;
+			return fullName;
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Name").setSortable(true);
 
-		grid.addColumn("position").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
+		grid.addColumn("emailAddress").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn("location").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
+		grid.addColumn("role").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+
+		grid.addColumn("position").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+
+		grid.addColumn("location").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		// grid.addColumn("startDateOfAccess").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);;
 		// grid.addColumn("expirationDate").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);;
 
-		LitRenderer<AppUser> activeRenderer = LitRenderer
+		LitRenderer<AppUser> statusColumnRenderer = LitRenderer
 				.<AppUser>of("<vaadin-icon icon='vaadin:${item.icon}' " + "style='width: var(--lumo-icon-size-xs); "
 						+ "height: var(--lumo-icon-size-xs); " + "color: ${item.color};'>"
 						+ "</vaadin-icon>&nbsp;&nbsp;${item.status}")
@@ -331,45 +326,37 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 								: "var(--lumo-disabled-text-color)")
 				.withProperty("status", user -> user.getEnabled() ? "Active" : "Inactive");
 
-		grid.addColumn(activeRenderer).setHeader("Status").setAutoWidth(true).setSortable(true)
-				.setTextAlign(ColumnTextAlign.CENTER);
+		grid.addColumn(statusColumnRenderer).setHeader("Status").setAutoWidth(true).setSortable(true)
+				.setTextAlign(ColumnTextAlign.START);
 
 		grid.addComponentColumn(currentAppUser -> {
+			
 			MenuBar menuBar = new MenuBar();
 			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
 			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
 			menuItem.getElement().setAttribute("aria-label", "More options");
 			SubMenu subMenu = menuItem.getSubMenu();
-			// subMenu.addItem("Edit Profile", e ->
-			// populateDateAndCallDialog(currentAppUser));
-			if (currentAppUser.getEnabled()) {
-				subMenu.addItem("Deactivate", event -> changeStatus(currentAppUser, false));
-			} else {
-				subMenu.addItem("Activate", event -> changeStatus(currentAppUser, true));
-			}
+			subMenu.addItem("Edit Profile", e -> {
+				this.appUser = currentAppUser;
+				populateDataAndCallDialog();
+			});
+
+			subMenu.addItem(currentAppUser.getEnabled() ? "Deactivate" : "Activate", event -> {
+				this.appUser = currentAppUser;
+				changeStatus();
+				currentAppUser.setEnabled(!currentAppUser.getEnabled());
+
+			});
+
 			return menuBar;
 		}).setWidth("70px").setFlexGrow(0);
 
-		GridListDataView<AppUser> dataView = grid.setItems(userService.listAll(Sort.by("id")));
+		ldp = DataProvider.ofCollection(userService.listAll(Sort.by("id")));
+
+		GridListDataView<AppUser> dataView = grid.setItems(ldp);
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 		grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-
-		HorizontalLayout activeColumnWrapper = new HorizontalLayout();
-		activeColumnWrapper.add(FontAwesome.Solid.USER_ASTRONAUT.create());
-		Label label = new Label("Labeling can be dangerous");
-		activeColumnWrapper.add(label);
-
 		grid.addThemeVariants(GridVariant.MATERIAL_COLUMN_DIVIDERS);
-
-//		// when a row is selected or deselected, populate form
-//		grid.asSingleSelect().addValueChangeListener(event -> {
-//			if (event.getValue() != null) {
-//				UI.getCurrent().navigate(String.format(SAMPLEPERSON_EDIT_ROUTE_TEMPLATE, event.getValue().getId()));
-//			} else {
-//				clearForm();
-//				UI.getCurrent().navigate(AdministrationView.class);
-//			}
-//		});
 
 		TextField searchField = new TextField();
 		searchField.setPlaceholder("Search by first name, last name or email address");
@@ -398,13 +385,20 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 		verticalLayout.addAndExpand(wrapper);
 	}
 
-	private void changeStatus(AppUser deactivateUser, boolean newStatus) {
-		userService.changeUserStatus(deactivateUser, newStatus);
-		UI.getCurrent().getPage().reload();
+	private void changeStatus() {
+		userService.changeUserStatus(appUser, !appUser.getEnabled());
+		refreshGrid(appUser);
+		Notification.show("Successfully changed profile status.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+		UI.getCurrent().navigate(AdministrationView.class);
 	}
 
-	private void populateDataAndCallDialog(AppUser currentAppUser) {
-		binder.readBean(currentAppUser);
+	private void populateDataAndCallDialog() {
+
+		if (this.appUser != null) {
+
+			id.setValue(this.appUser.getId());
+		}
+		binder.readBean(this.appUser);
 		addProfileDialog.open();
 	}
 
@@ -415,7 +409,20 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 
 	private void refreshGrid(AppUser appUser) {
 		grid.getListDataView().addItem(appUser);
+		ldp.refreshItem(appUser);
 		refreshGrid();
+
+	}
+
+	private void prepareAppUser() {
+		if (appUser == null) {
+			appUser = new AppUser();
+			appUser.setEnabled(true);
+			appUser.setLocked(false);
+
+			BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+			appUser.setPassword(encoder.encode("Password123!"));
+		}
 
 	}
 
@@ -432,4 +439,17 @@ public class AdministrationView extends Div implements BeforeEnterObserver {
 	private boolean matchesTerm(String value, String searchTerm) {
 		return value.toLowerCase().contains(searchTerm.toLowerCase());
 	}
+
+	@Override
+	protected void createMainContentLayout(VerticalLayout mainContentContainer) {
+
+	}
+	
+	@Override
+	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
+		VerticalLayout tableFunctions = new VerticalLayout();
+		createTableFunctions(tableFunctions);
+		contentHeaderContainer.add(tableFunctions);
+	}
+	
 }

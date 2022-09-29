@@ -1,7 +1,5 @@
 package com.example.application.security;
 
-import com.example.application.views.login.LoginView;
-import com.vaadin.flow.spring.security.VaadinWebSecurityConfigurerAdapter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -10,6 +8,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.example.application.views.login.LoginView;
+import com.vaadin.flow.spring.security.VaadinWebSecurityConfigurerAdapter;
+
+@SuppressWarnings("deprecation")
 @EnableWebSecurity
 @Configuration
 public class SecurityConfiguration extends VaadinWebSecurityConfigurerAdapter {

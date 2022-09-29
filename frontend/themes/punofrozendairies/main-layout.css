@@ -64,6 +64,7 @@ header nav a[highlight]:not([active])::after {
 	top: 70px;
 	background-color: #FFFFFF;
 	font-size: var(- -lumo-font-size-s);
+	z-index: 1
 }
 
 .bold-label {
@@ -118,3 +119,25 @@ header nav a[highlight]:not([active])::after {
 	width: 300px;
 	padding-bottom: 30px;
 }
+.pfdi-header-container{
+	height:50px;
+}
+
+.background-div {
+	background-color: #C4C4C4;
+}
+
+.no-padding{
+	padding:0px;
+}
+
+.full-width{
+	width:100%;	
+}
+
+.padding-top-large{
+	padding-top:50px !important;
+}
+
+
+
