@@ -99,8 +99,7 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 		tableContent.addAndExpand(locationTagGrid);
 		
 		HorizontalLayout buttonWrapper = new HorizontalLayout();
-		buttonWrapper.setSpacing(true);
-		buttonWrapper.setPadding(false);
+		buttonWrapper.addClassNames("padding-top-bottom-20px");
 		Button addNewTagButton = new Button("Add Location Tag");
 
 		LocationTagFormDialog locationTagDialog =  new LocationTagFormDialog("Add New Tag", locationTagService);
@@ -125,6 +124,7 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 		HorizontalLayout customerTagWrapper = new HorizontalLayout();
 		customerTagWrapper.setSpacing(true);
 		customerTagWrapper.setPadding(false);
+		customerTagWrapper.addClassName("padding-top-medium");
 		Label customerTagLabel = new Label("Customer Tags");
 		customerTagLabel.addClassName(CssClassNamesConstants.PROFILE_DETAILS_LABEL_WRAPPER);
 		customerTagWrapper.add(customerTagLabel);
@@ -153,6 +153,7 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 		HorizontalLayout customerTagButtonWrapper = new HorizontalLayout();
 		customerTagButtonWrapper.setSpacing(true);
 		customerTagButtonWrapper.setPadding(false);
+		customerTagButtonWrapper.addClassNames("padding-top-bottom-20px");
 		
 		
 		CustomerTagFormDialog customerTagFormDialog = new CustomerTagFormDialog("Add New Customer Tag", customerTagService, locationTagService);

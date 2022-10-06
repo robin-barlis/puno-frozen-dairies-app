@@ -33,6 +33,7 @@ public class SizeFormDialog  extends Dialog {
 	private TextField sizeDescription;
 	private BeanValidationBinder<Size> binder;
 	private Size size;
+	private int sizeLimit;
 	
 	public SizeFormDialog(String label, CustomerTagService customerTagService, SizesService sizeService) {
 		Label addTagLabel = new Label(label);

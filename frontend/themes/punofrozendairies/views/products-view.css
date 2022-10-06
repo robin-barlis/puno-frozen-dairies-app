@@ -43,3 +43,9 @@
     padding-right: 0px;
 }
 
+.sub-pricing-wrapper {
+    border: #C4C4C4;
+    border-style: solid;
+    border-width:thin !important;
+}
+

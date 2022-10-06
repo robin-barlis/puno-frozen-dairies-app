@@ -85,8 +85,9 @@ public class ManageCategoriesView extends AbstractPfdiView implements HasCompone
 		categoryGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
 		tableContent.addAndExpand(categoryGrid);
 		
-		HorizontalLayout sizeButtonWrapper = new HorizontalLayout();
-		sizeButtonWrapper.setPadding(false);
+		HorizontalLayout categoryButtonWrapper = new HorizontalLayout();
+		categoryButtonWrapper.setPadding(false);
+		categoryButtonWrapper.addClassNames("padding-top-bottom-20px");
 		
 		
 		CategoryFormDialog categoryFormDialog = new CategoryFormDialog("Add New Size",categoryService, sizesService );
@@ -100,11 +101,11 @@ public class ManageCategoriesView extends AbstractPfdiView implements HasCompone
 				categoryGrid.getListDataView().refreshAll();
 			}
 		});	
-		Button addNewSizeButton = new Button("Add Size");
-		addNewSizeButton.addClickListener(e -> categoryFormDialog.open());
-		sizeButtonWrapper.add(addNewSizeButton);
+		Button addNewCategoryButton = new Button("Add Category");
+		addNewCategoryButton.addClickListener(e -> categoryFormDialog.open());
+		categoryButtonWrapper.add(addNewCategoryButton);
 		
-		tableContent.add(sizeButtonWrapper);
+		tableContent.add(categoryButtonWrapper);
 		
 		
 	}

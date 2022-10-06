@@ -76,7 +76,7 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 			Hibernate.initialize(sizeTag.getCustomerTagSet());
 			Set<String> locationTagsString = sizeTag.getCustomerTagSet().stream().map(CustomerTag::getCustomerTagName).collect(Collectors.toSet());
 			return String.join(", ", locationTagsString).toLowerCase();
-		}).setTextAlign(ColumnTextAlign.START).setHeader("Sizes");
+		}).setTextAlign(ColumnTextAlign.START).setHeader("Categories");
 		sizesGrid.setAllRowsVisible(true);
 
 		ldp = DataProvider.ofCollection(sizesService.listAll(Sort.by("id")));
@@ -91,6 +91,7 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 		HorizontalLayout sizeButtonWrapper = new HorizontalLayout();
 		sizeButtonWrapper.setSpacing(true);
 		sizeButtonWrapper.setPadding(false);
+		sizeButtonWrapper.addClassNames("padding-top-bottom-20px");
 		
 		
 		SizeFormDialog sizeFormDialog = new SizeFormDialog("Add New Size", customerTagService, sizesService);
