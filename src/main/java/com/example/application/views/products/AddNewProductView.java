@@ -121,9 +121,9 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		cancelButton = new Button("Cancel");
 		
 		cancelButton.addClickListener(e -> {
-			newAddSizeContainer.removeAll();
-			category.setValue(null);
-			productName.setValue(null);
+//			newAddSizeContainer.removeAll();
+//			category.setValue(null);
+//			productName.setValue(null);
 			UI.getCurrent().navigate(ProductsView.class);
 			
 		});

@@ -1,11 +1,26 @@
 package com.example.application.views.products;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
 import javax.annotation.security.PermitAll;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+
+import com.example.application.data.entity.products.Category;
+import com.example.application.data.entity.products.Product;
+import com.example.application.data.service.products.CategoryService;
+import com.example.application.data.service.products.ProductService;
+import com.example.application.data.service.products.SizesService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
 import com.example.application.views.products.components.ProductsViewCard;
+import com.google.gwt.user.server.rpc.core.java.util.Collections;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
@@ -31,9 +46,16 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 	private static final long serialVersionUID = -6210105239749320428L;
 	private OrderedList imageContainer;
 	private Button addProductsButton;
+	private ProductService productService;
+	private List<Product> productList;
+	private CategoryService categoryService;
 	
-	public ProductsView() {
+	@Autowired
+	public ProductsView(ProductService productService, CategoryService categoryService) {
 		super("products-view", "Products");
+		this.productService = productService;
+		this.productList = productService.listAll(Sort.unsorted());
+		this.categoryService = categoryService;
 	}
 
 	@Override
@@ -82,18 +104,15 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {
-		imageContainer.add(new ProductsViewCard("Halo-halo Ice Cream",
-				"https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80"));
-		imageContainer.add(new ProductsViewCard("Avocado Macapuno Ice Cream",
-				"https://images.unsplash.com/photo-1512273222628-4daea6e55abb?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80"));
-		imageContainer.add(new ProductsViewCard("Pistachio Ice Cream",
-				"https://images.unsplash.com/photo-1536048810607-3dc7f86981cb?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=375&q=80"));
-		imageContainer.add(new ProductsViewCard("Vanilla Ice Cream",
-				"https://images.unsplash.com/photo-1515705576963-95cad62945b6?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=750&q=80"));
-		imageContainer.add(new ProductsViewCard("Ube Cheese Ice Cream",
-				"https://images.unsplash.com/photo-1513147122760-ad1d5bf68cdb?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80"));
-		imageContainer.add(new ProductsViewCard("Danish Wafer Cone",
-				"https://images.unsplash.com/photo-1562832135-14a35d25edef?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=815&q=80"));
+		
+		for (Product product : productList) {
+			List<Integer> categoryIdList = product.getProductPrices().stream().map(e->e.getCategoryId()).collect(Collectors.toList());
+			Integer categoryId = categoryIdList.get(0);
+			imageContainer.add(new ProductsViewCard(product,categoryService.get(categoryId).orElseGet(null), 
+					"https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80"));
+		
+		}
+			
 
 	}
 

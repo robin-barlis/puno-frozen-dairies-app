@@ -7,6 +7,5 @@
 
 :host([theme~='wrap-cell-content']) [part~='cell'] ::slotted(vaadin-grid-cell-content) {
     white-space: normal;
-    
 }
 

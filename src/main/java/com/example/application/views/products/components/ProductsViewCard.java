@@ -1,5 +1,11 @@
 package com.example.application.views.products.components;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.example.application.data.entity.products.Category;
+import com.example.application.data.entity.products.Product;
+import com.example.application.data.entity.products.Size;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.ListItem;
@@ -11,9 +17,10 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 public class ProductsViewCard extends ListItem {
 
     private static final long serialVersionUID = 2711778627059486451L;
+ 
 
 
-	public ProductsViewCard(String text, String url) {
+	public ProductsViewCard(Product product, Category category, String url) {
         addClassNames("bg-contrast-5", "flex", "flex-col", "items-start", "rounded-l");
 
         Div div = new Div();
@@ -24,7 +31,7 @@ public class ProductsViewCard extends ListItem {
         Image image = new Image();
         image.setWidth("100%");
         image.setSrc(url);
-        image.setAlt(text);
+        image.setAlt(product.getProductName());
         image.addClassName("product-view-image-attributes");
 
         div.add(image);
@@ -32,18 +39,20 @@ public class ProductsViewCard extends ListItem {
 
         Span iceCreamName = new Span();
         iceCreamName.addClassNames("text-l", "font-semibold");
-        iceCreamName.setText(text);
+        iceCreamName.setText(product.getProductName());
+        
+        
+        Set<String> sizes = category.getSizeSet().stream().map(e->e.getSizeName()).collect(Collectors.toSet());
+        Paragraph sizesContainer = new Paragraph(String.join(" | ", sizes));
+        sizesContainer.addClassName("my-m");
 
-        Paragraph sizes = new Paragraph("Pint | Liter | Half Gallon");
-        sizes.addClassName("my-m");
-
-        Span category = new Span();
-        category.getElement().setAttribute("theme", "badge");
-        category.setText("Ice Cream - Special Flavor");
+        Span categorySpan = new Span();
+        categorySpan.getElement().setAttribute("theme", "badge");
+        categorySpan.setText(category.getCategoryName());
         
         VerticalLayout iceCreamDescriptionContainer = new VerticalLayout();
         iceCreamDescriptionContainer.setAlignItems(Alignment.START);
-        iceCreamDescriptionContainer.add(iceCreamName, sizes, category );
+        iceCreamDescriptionContainer.add(iceCreamName, sizesContainer, categorySpan );
 
         add(div, iceCreamDescriptionContainer);
 
