@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 
 import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.Product;
-import com.example.application.data.entity.products.Size;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.ListItem;

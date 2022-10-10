@@ -18,7 +18,7 @@ import com.example.application.data.service.products.LocationTagService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
-import com.flowingcode.vaadin.addons.fontawesome.FontAwesome;
+import com.example.application.views.products.AddNewProductView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -34,6 +34,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
@@ -42,9 +43,11 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -86,21 +89,22 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 
 	private Button addCustomerButton;
 
-	private Dialog addProfileDialog = new Dialog();
+	private Dialog addCustomerDialog = new Dialog();
 
 	private BeanValidationBinder<Customer> binder;
 
 	private final CustomerTagService customerTagService;
 	private final LocationTagService locationTagService;
 	private final CustomerService customerService;
-	
+
 	private ListDataProvider<Customer> ldp = null;
 	private Customer customer;
 
 	private Set<LocationTag> locationTags = Collections.emptySet();
 
 	@Autowired
-	public CustomerView(CustomerTagService customerTagService, CustomerService customerService, LocationTagService locationTagService ) {
+	public CustomerView(CustomerTagService customerTagService, CustomerService customerService,
+			LocationTagService locationTagService) {
 		super("Admin", "Admin");
 		this.customerTagService = customerTagService;
 		this.customerService = customerService;
@@ -108,12 +112,11 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
-		createGridLayout(tableContent); 
+		createGridLayout(tableContent);
 
 		createProfileDialog("Add New Customer");
 
 		add(tableContent);
-
 
 		// Bind fields. This is where you'd define e.g. validation rules
 		binder = new BeanValidationBinder<>(Customer.class);
@@ -121,11 +124,6 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 //		binder.forField(emailAddress).withValidator(email -> validateEmailExists(email) != true,
 //				"Email address already exists in the system. Please enter a valid email address.").bind(AppUser::getEmailAddress, AppUser::setEmailAddress);
 //	
-
-		addCustomerButton.addClickListener(e -> {
-			this.customer = null;
-			populateDataAndCallDialog();
-		});
 	}
 
 	private void createProfileDialog(String label) {
@@ -135,7 +133,6 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		Hr divider1 = new Hr();
 
 		Hr divider2 = new Hr();
-
 
 		List<CustomerTag> customerTags = customerTagService.listAll(Sort.unsorted());
 		locationTag = new Select<>();
@@ -148,7 +145,6 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		locationTag.setItems(customerTags.get(0).getLocationTagSet());
 		locationTag.setPlaceholder("Select Location Tag");
 		locationTag.setEnabled(false);
-		
 
 		customerTag = new Select<>();
 		customerTag.setLabel("Customer Tag");
@@ -158,16 +154,13 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		customerTag.setEmptySelectionAllowed(false);
 		customerTag.setRequiredIndicatorVisible(true);
 		customerTag.setPlaceholder("Select Customer Tag");
-		customerTag.addValueChangeListener( e -> {
+		customerTag.addValueChangeListener(e -> {
 			locationTags = e.getValue().getLocationTagSet();
 			locationTags.addAll(locationTags);
 			locationTag.setItems(locationTags);
 			locationTag.setEnabled(true);
-			
+
 		});
-
-		
-
 
 		storeName = new TextField("Store Name");
 		storeName.setRequired(true);
@@ -176,23 +169,21 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		ownerName = new TextField("Owner Name");
 		ownerName.setRequired(true);
 		ownerName.setRequiredIndicatorVisible(true);
-		
+
 		address = new TextField("Customer Address");
 		address.setRequired(true);
 		address.setRequiredIndicatorVisible(true);
-		
-		
+
 		contactNumber = new IntegerField("Customer Contact Number");
 		contactNumber.setRequiredIndicatorVisible(true);
 
 		contractStartDate = new DatePicker("Contract Start Date");
 		contractStartDate.getStyle().set("padding-top", "20px");
 		contractStartDate.getStyle().set("padding-bottom", "40px");
-		
+
 		contractEndDate = new DatePicker("Contract End Date");
 		contractEndDate.getStyle().set("padding-top", "20px");
 		contractEndDate.getStyle().set("padding-bottom", "40px");
-
 
 		saveButton = new Button("Save");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -204,13 +195,12 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 				Integer customerTagId = customerTag.getValue().getId();
 				customer.setLocationTagId(locationTagId);
 				customer.setCustomerTagId(customerTagId);
-				
-				
+
 				Customer updateCustomer = customerService.update(customer);
 				clearForm();
 				refreshGrid(updateCustomer);
 
-				addProfileDialog.close();
+				addCustomerDialog.close();
 				Notification.show("Customer successfully created/updated")
 						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				UI.getCurrent().navigate(CustomerView.class);
@@ -221,7 +211,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 
 		cancelButton = new Button("Cancel");
 		cancelButton.addClickListener(e -> {
-			addProfileDialog.close();
+			addCustomerDialog.close();
 			clearForm();
 			refreshGrid();
 		});
@@ -231,8 +221,8 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 
 		FormLayout formLayout = new FormLayout();
 		formLayout.setWidth("800px");
-		formLayout.add(addCustomerLabel, divider1, customerTag, locationTag, storeName, ownerName, address, contactNumber, divider2,
-				contractStartDate, contractEndDate, saveButton, cancelButton, id);
+		formLayout.add(addCustomerLabel, divider1, customerTag, locationTag, storeName, ownerName, address,
+				contactNumber, divider2, contractStartDate, contractEndDate, saveButton, cancelButton, id);
 
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("500px", 2));
 
@@ -240,38 +230,50 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		formLayout.setColspan(divider1, 2);
 		formLayout.setColspan(divider2, 2);
 
-		addProfileDialog.add(formLayout);
+		addCustomerDialog.add(formLayout);
 
 	}
 
 	private void prepareCustomer() {
 		if (customer == null) {
 			customer = new Customer();
-		} 
-		
+		}
+
 	}
 
-	private void createTableFunctions(VerticalLayout tableFunctions) {
-		VerticalLayout verticalLayout = new VerticalLayout();
-		verticalLayout.setClassName("flex-layout");
+	@Override
+	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
+		HorizontalLayout headerContainer = new HorizontalLayout();
+		headerContainer.setWidthFull();
 
-		addCustomerButton = new Button("Add Customer");
-		addCustomerButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
-		
+		FlexLayout headerNameWrapper = new FlexLayout();
+		headerNameWrapper.setFlexDirection(FlexDirection.ROW);
+		headerNameWrapper.setJustifyContentMode(JustifyContentMode.START);
+		headerNameWrapper.setAlignItems(Alignment.CENTER);
+		H1 header = new H1("Customer List");
+		header.addClassNames("mb-0", "mt-s", "text-xl");
+		headerNameWrapper.add(header);
+		headerNameWrapper.setWidth("50%");
+
 		FlexLayout flexWrapper = new FlexLayout();
 		flexWrapper.setFlexDirection(FlexDirection.ROW);
 		flexWrapper.setJustifyContentMode(JustifyContentMode.END);
 		flexWrapper.setClassName("button-layout");
+
+		addCustomerButton = new Button("Add New Customer");
+		addCustomerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		addCustomerButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
+	
+		addCustomerButton.addClickListener(e -> {
+			this.customer = null;
+			populateDataAndCallDialog();
+		});
 		flexWrapper.add(addCustomerButton);
+		flexWrapper.setWidth("50%");
 
-		Icon addUserIcon = FontAwesome.Solid.USER_PLUS.create();
-		addUserIcon.setColor("#FFFFFF");
-		addCustomerButton.setIcon(addUserIcon);
+		headerContainer.add(headerNameWrapper, flexWrapper);
+		contentHeaderContainer.add(headerContainer);
 
-		verticalLayout.add(flexWrapper);
-		// flexWrapper.setClassName("button-layout");
-
-		tableFunctions.add(verticalLayout);
 	}
 
 	@Override
@@ -306,13 +308,13 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 //		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Name").setSortable(true);
 
 		grid.addColumn("storeName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-		
+
 		grid.addColumn("ownerName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-		
+
 		grid.addColumn(customer -> {
 			return customerTagService.get(customer.getCustomerTagId()).get().getCustomerTagName();
 		}).setHeader("Customer Tag");
-		
+
 		grid.addColumn(customer -> {
 			return locationTagService.get(customer.getLocationTagId()).get().getLocationTagName();
 		}).setHeader("Location Tag");
@@ -322,11 +324,11 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		grid.addColumn("contactNumber").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addColumn("contractStartDate").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-		
+
 		grid.addColumn("contractEndDate").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addComponentColumn(currentCustomer -> {
-			
+
 			MenuBar menuBar = new MenuBar();
 			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
 			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
@@ -342,9 +344,8 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 				clearForm();
 				refreshGrid(currentCustomer);
 
-				addProfileDialog.close();
-				Notification.show("Customer successfully deleted")
-						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				addCustomerDialog.close();
+				Notification.show("Customer successfully deleted").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				UI.getCurrent().navigate(CustomerView.class);
 			});
 
@@ -391,7 +392,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 			id.setValue(this.customer.getId());
 		}
 		binder.readBean(this.customer);
-		addProfileDialog.open();
+		addCustomerDialog.open();
 	}
 
 	private void refreshGrid() {
@@ -411,7 +412,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		refreshGrid();
 
 	}
-	
+
 	private void refreshGrid(Customer updateCustomer) {
 		refreshGrid(updateCustomer, false);
 
@@ -435,12 +436,5 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 	protected void createMainContentLayout(VerticalLayout mainContentContainer) {
 
 	}
-	
-	@Override
-	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
-		VerticalLayout tableFunctions = new VerticalLayout();
-		createTableFunctions(tableFunctions);
-		contentHeaderContainer.add(tableFunctions);
-	}
-	
+
 }

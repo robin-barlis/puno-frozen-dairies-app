@@ -1,9 +1,6 @@
 package com.example.application.views.products;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
@@ -11,16 +8,13 @@ import javax.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
-import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.Product;
 import com.example.application.data.service.products.CategoryService;
 import com.example.application.data.service.products.ProductService;
-import com.example.application.data.service.products.SizesService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
 import com.example.application.views.products.components.ProductsViewCard;
-import com.google.gwt.user.server.rpc.core.java.util.Collections;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
@@ -46,14 +40,12 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 	private static final long serialVersionUID = -6210105239749320428L;
 	private OrderedList imageContainer;
 	private Button addProductsButton;
-	private ProductService productService;
 	private List<Product> productList;
 	private CategoryService categoryService;
 	
 	@Autowired
 	public ProductsView(ProductService productService, CategoryService categoryService) {
 		super("products-view", "Products");
-		this.productService = productService;
 		this.productList = productService.listAll(Sort.unsorted());
 		this.categoryService = categoryService;
 	}
