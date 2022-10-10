@@ -113,6 +113,7 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 		
 		}
 			
+			
 
 	}
 

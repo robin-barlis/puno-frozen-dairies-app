@@ -6,6 +6,7 @@ import com.example.application.data.entity.AppUser;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.views.administration.AdministrationView;
 import com.example.application.views.constants.CssClassNamesConstants;
+import com.example.application.views.customer.CustomerView;
 import com.example.application.views.products.AddNewProductView;
 import com.example.application.views.products.ManageCategoriesView;
 import com.example.application.views.products.ManageSizesView;
@@ -271,6 +272,7 @@ public class MainLayout extends AppLayout {
 		RouterLink manageTag = createNewRoute("Manage Tags", ManageTagsView.class);
 		RouterLink manageSizes = createNewRoute("Manage Sizes", ManageSizesView.class);
 		RouterLink manageCategories = createNewRoute("Manage Categories", ManageCategoriesView.class);
+
 		
 		subMenu.addItem(productList);
 		subMenu.addItem(createNewProductPageLink);
@@ -280,9 +282,9 @@ public class MainLayout extends AppLayout {
 		productsTab.add(menuBar);	
 		
 		Tab profilesTab = createTab("Profile Management", AdministrationView.class, "admin-view-tab");
-		
+		Tab customersTab = createTab("Customer Management", CustomerView.class, "admin-view-tab");
 
-		tabs.add(profilesTab, productsTab);
+		tabs.add(profilesTab, productsTab, customersTab);
 		return tabs;
 	}
 
