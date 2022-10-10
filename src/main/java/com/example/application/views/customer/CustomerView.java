@@ -14,6 +14,7 @@ import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.LocationTag;
 import com.example.application.data.service.customers.CustomerService;
 import com.example.application.data.service.products.CustomerTagService;
+import com.example.application.data.service.products.LocationTagService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
@@ -53,7 +54,6 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.value.ValueChangeMode;
-import com.vaadin.flow.function.ValueProvider;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -91,6 +91,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 	private BeanValidationBinder<Customer> binder;
 
 	private final CustomerTagService customerTagService;
+	private final LocationTagService locationTagService;
 	private final CustomerService customerService;
 	
 	private ListDataProvider<Customer> ldp = null;
@@ -99,10 +100,11 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 	private Set<LocationTag> locationTags = Collections.emptySet();
 
 	@Autowired
-	public CustomerView(CustomerTagService customerTagService, CustomerService customerService) {
+	public CustomerView(CustomerTagService customerTagService, CustomerService customerService, LocationTagService locationTagService ) {
 		super("Admin", "Admin");
 		this.customerTagService = customerTagService;
 		this.customerService = customerService;
+		this.locationTagService = locationTagService;
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
@@ -307,7 +309,13 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		
 		grid.addColumn("ownerName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		
-	//	grid.addColumn()
+		grid.addColumn(customer -> {
+			return customerTagService.get(customer.getCustomerTagId()).get().getCustomerTagName();
+		}).setHeader("Customer Tag");
+		
+		grid.addColumn(customer -> {
+			return locationTagService.get(customer.getLocationTagId()).get().getLocationTagName();
+		}).setHeader("Location Tag");
 
 		grid.addColumn("address").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
