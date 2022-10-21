@@ -1,8 +1,22 @@
 package com.example.application.views;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
 import java.util.Optional;
 
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.Singleton;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.application.data.entity.AppUser;
+import com.example.application.data.service.UserService;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.views.administration.AdministrationView;
 import com.example.application.views.constants.CssClassNamesConstants;
@@ -33,13 +47,18 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.PasswordField;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 
 /**
@@ -51,10 +70,15 @@ public class MainLayout extends AppLayout {
 	private static final long serialVersionUID = 3493362210483888466L;
 	private AuthenticatedUser authenticatedUser;
 	private AccessAnnotationChecker accessChecker;
+	private final static int MAX_FILE_SIZE_BYTES = 2000 * 10 * 1024 * 1024; // 10MB
+	private UserService userService;
+	private final Cloudinary cloudinary = Singleton.getCloudinary();
+	private AppUser currentUser;
 
-	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker) {
+	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, UserService userService) {
 		this.authenticatedUser = authenticatedUser;
 		this.accessChecker = accessChecker;
+		this.userService = userService;
 
 		addToNavbar(createHeaderContent());
 	}
@@ -95,6 +119,7 @@ public class MainLayout extends AppLayout {
 		Avatar avatar = new Avatar(user.getFirstName());
 		avatar.setWidth("2.5em");
 		avatar.setHeight("2.5em");
+		avatar.setImage(user.getProfilePictureUrl());
 
 		Button avatarButton = new Button();
 		avatarButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS, ButtonVariant.LUMO_TERTIARY);
@@ -113,8 +138,72 @@ public class MainLayout extends AppLayout {
 		nameWrapper.setAlignItems(Alignment.CENTER);
 
 		Avatar profilePicture = new Avatar(user.getFirstName());
-		profilePicture.setWidth("7em");
-		profilePicture.setHeight("7em");
+		profilePicture.setImage(user.getProfilePictureUrl());
+		profilePicture.addClassName("profile-picture");
+		
+		MemoryBuffer memoryBuffer = new MemoryBuffer();
+		
+		Upload uploadImage = new Upload();
+		uploadImage.setDropAllowed(false);
+		uploadImage.setAcceptedFileTypes("image/*");
+		uploadImage.setMaxFiles(1);
+		uploadImage.setMaxFileSize(MAX_FILE_SIZE_BYTES);
+		uploadImage.setReceiver(memoryBuffer);
+		uploadImage.addFileRejectedListener(event -> {
+			String errorMessage = event.getErrorMessage();
+
+			Notification notification = Notification.show(errorMessage, 5000, Notification.Position.MIDDLE);
+			notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+		});
+		uploadImage.addSucceededListener(event -> {
+			
+			InputStream fileData = memoryBuffer.getInputStream();
+			String fileName = event.getFileName();	
+
+			try {
+				BufferedImage bufferedImage = ImageIO.read(fileData);
+				File file = new File(FileUtils.getTempDirectoryPath() + fileName);
+				file.createNewFile();
+				
+				
+				if (file.exists()) {
+					ImageIO.write(bufferedImage, FilenameUtils.getExtension(fileName), file);
+					
+					Map<?, ?> uploadResult = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
+					String url = uploadResult.get("url").toString();
+					System.out.println(url);
+					StreamResource imageResource = new StreamResource("profilePicture",
+							() -> memoryBuffer.getInputStream());
+
+					profilePicture.setImageResource(imageResource);
+					avatar.setImageResource(imageResource);
+					user.setProfilePictureUrl(url);
+					cloudinary.uploader().destroy(fileName, uploadResult);
+					userService.update(user);
+				}
+				
+				
+
+			} catch (IOException e1) {
+				Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.MIDDLE);
+				notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			} 
+			//processFile(fileData, fileName, contentLength, mimeType);
+
+		});
+		
+		Button uploadButton = new Button();
+		uploadButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS, ButtonVariant.LUMO_TERTIARY);
+		uploadButton.setIcon(profilePicture);
+		uploadButton.setWidth("10em");
+		uploadButton.setHeight("10em");
+
+		uploadImage.setUploadButton(uploadButton);
+		
+		VerticalLayout uploadButtonWrapper = new VerticalLayout();
+		uploadButtonWrapper.addClassName(CssClassNamesConstants.PROFILE_DETAILS_NAME_AVATAR_WRAPPER);
+		uploadButtonWrapper.setAlignItems(Alignment.CENTER);
+		uploadButtonWrapper.add(uploadImage);
 
 		VerticalLayout namePositionWrapper = new VerticalLayout();
 		Label fullName = new Label(user.getLastName() + ", " + user.getFirstName());
@@ -124,7 +213,7 @@ public class MainLayout extends AppLayout {
 		namePositionWrapper.setAlignItems(Alignment.CENTER);
 		namePositionWrapper.setPadding(true);
 
-		nameWrapper.add(profilePicture);
+		nameWrapper.add(uploadButtonWrapper);
 		nameWrapper.add(namePositionWrapper);
 		nameWrapper.setPadding(false);
 		nameWrapper.setSpacing(false);

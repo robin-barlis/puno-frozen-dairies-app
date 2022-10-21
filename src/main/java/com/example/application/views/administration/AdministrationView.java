@@ -81,8 +81,8 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 	private Select<String> position;
 	private Select<String> location;
 	private Select<String> role;
-	private DatePicker startDate;
-	private DatePicker expirationDate;
+	private DatePicker startDateOfAccess;
+	private DatePicker endDateOfAccess;
 	private EmailField emailAddress;
 
 	private Button cancelButton = new Button("Cancel");
@@ -112,19 +112,19 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
-		createGridLayout(tableContent); 
+		createGridLayout(tableContent);
 
 		createProfileDialog("Add Profile");
 
 		add(tableContent);
 
-
 		// Bind fields. This is where you'd define e.g. validation rules
 		binder = new BeanValidationBinder<>(AppUser.class);
 		binder.bindInstanceFields(this);
-		binder.forField(emailAddress).withValidator(email -> validateEmailExists(email) != true,
-				"Email address already exists in the system. Please enter a valid email address.").bind(AppUser::getEmailAddress, AppUser::setEmailAddress);
-	
+		binder.forField(emailAddress)
+				.withValidator(email -> validateEmailExists(email) != true,
+						"Email address already exists in the system. Please enter a valid email address.")
+				.bind(AppUser::getEmailAddress, AppUser::setEmailAddress);
 
 		addProfileButton.addClickListener(e -> {
 			this.appUser = null;
@@ -187,12 +187,13 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		location.setEmptySelectionAllowed(false);
 		location.setPlaceholder("Select Location");
 
-		startDate = new DatePicker("Start Date of AcceslocationsServices");
-		startDate.getStyle().set("padding-top", "20px");
-		startDate.getStyle().set("padding-bottom", "40px");
-		expirationDate = new DatePicker("Expiration Date");
-		expirationDate.getStyle().set("padding-top", "20px");
-		expirationDate.getStyle().set("padding-bottom", "40px");
+		startDateOfAccess = new DatePicker("Start Date of Access");
+		startDateOfAccess.getStyle().set("padding-top", "20px");
+		startDateOfAccess.getStyle().set("padding-bottom", "40px");
+
+		endDateOfAccess = new DatePicker("End Date of Access");
+		endDateOfAccess.getStyle().set("padding-top", "20px");
+		endDateOfAccess.getStyle().set("padding-bottom", "40px");
 
 		emailAddress = new EmailField();
 		emailAddress.setLabel("Email Address");
@@ -239,7 +240,7 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		FormLayout formLayout = new FormLayout();
 		formLayout.setWidth("800px");
 		formLayout.add(addProfileLabel, divider1, emailAddress, role, firstName, location, lastName, position, divider2,
-				startDate, expirationDate, saveButton, cancelButton, id);
+				startDateOfAccess, endDateOfAccess, saveButton, cancelButton, id);
 
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("500px", 2));
 
@@ -257,7 +258,7 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 
 		addProfileButton = new Button("Add Profile");
 		addProfileButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
-		
+
 		FlexLayout flexWrapper = new FlexLayout();
 		flexWrapper.setFlexDirection(FlexDirection.ROW);
 		flexWrapper.setJustifyContentMode(JustifyContentMode.END);
@@ -294,8 +295,6 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
-
-		//grid.addColumn("id").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		grid.addColumn("username").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addColumn(currentAppUser -> {
@@ -306,15 +305,11 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Name").setSortable(true);
 
 		grid.addColumn("emailAddress").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-
 		grid.addColumn("role").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-
 		grid.addColumn("position").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-
 		grid.addColumn("location").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-
-		// grid.addColumn("startDateOfAccess").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);;
-		// grid.addColumn("expirationDate").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);;
+		grid.addColumn("startDateOfAccess").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
+		grid.addColumn("endDateOfAccess").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
 
 		LitRenderer<AppUser> statusColumnRenderer = LitRenderer
 				.<AppUser>of("<vaadin-icon icon='vaadin:${item.icon}' " + "style='width: var(--lumo-icon-size-xs); "
@@ -330,7 +325,7 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 				.setTextAlign(ColumnTextAlign.START);
 
 		grid.addComponentColumn(currentAppUser -> {
-			
+
 			MenuBar menuBar = new MenuBar();
 			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
 			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
@@ -444,12 +439,12 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 	protected void createMainContentLayout(VerticalLayout mainContentContainer) {
 
 	}
-	
+
 	@Override
 	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
 		VerticalLayout tableFunctions = new VerticalLayout();
 		createTableFunctions(tableFunctions);
 		contentHeaderContainer.add(tableFunctions);
 	}
-	
+
 }

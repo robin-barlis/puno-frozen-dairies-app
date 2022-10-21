@@ -18,7 +18,6 @@ import com.example.application.data.service.products.LocationTagService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
-import com.example.application.views.products.AddNewProductView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;

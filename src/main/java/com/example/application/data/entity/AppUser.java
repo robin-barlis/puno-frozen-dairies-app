@@ -1,6 +1,7 @@
 package com.example.application.data.entity;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -41,6 +42,10 @@ public class AppUser implements Serializable {
 	
 	@NotEmpty(message = "Role must not be empty")
 	private String role;
+	
+	private LocalDate startDateOfAccess;
+	private LocalDate endDateOfAccess;
+	private String profilePictureUrl;
 
 	private String password;
 
@@ -131,6 +136,22 @@ public class AppUser implements Serializable {
 	public void setId(Integer id) {
 		this.id = id;
 	}
+	
+	public LocalDate getStartDateOfAccess() {
+		return startDateOfAccess;
+	}
+
+	public void setStartDateOfAccess(LocalDate startDateOfAccess) {
+		this.startDateOfAccess = startDateOfAccess;
+	}
+
+	public LocalDate getEndDateOfAccess() {
+		return endDateOfAccess;
+	}
+
+	public void setEndDateOfAccess(LocalDate endDateOfAccess) {
+		this.endDateOfAccess = endDateOfAccess;
+	}
 
 	@Override
 	public int hashCode() {
@@ -156,6 +177,14 @@ public class AppUser implements Serializable {
 			return false;
 		}
 		return getId().equals(other.getId());
+	}
+
+	public String getProfilePictureUrl() {
+		return profilePictureUrl;
+	}
+
+	public void setProfilePictureUrl(String profilePictureUrl) {
+		this.profilePictureUrl = profilePictureUrl;
 	}
 
 }
