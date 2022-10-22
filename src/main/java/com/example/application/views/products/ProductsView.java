@@ -100,8 +100,9 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 		for (Product product : productList) {
 			List<Integer> categoryIdList = product.getProductPrices().stream().map(e->e.getCategoryId()).collect(Collectors.toList());
 			Integer categoryId = categoryIdList.get(0);
-			imageContainer.add(new ProductsViewCard(product,categoryService.get(categoryId).orElseGet(null), 
-					"https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80"));
+			String imageUrl = product.getProductPictureUrl() != null ? product.getProductPictureUrl() : "https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80";
+			imageContainer.add(new ProductsViewCard(product,categoryService.get(categoryId).orElseGet(null), imageUrl 
+					));
 		
 		}
 			

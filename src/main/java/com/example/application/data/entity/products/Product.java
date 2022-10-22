@@ -28,6 +28,8 @@ public class Product implements Serializable {
 
 	private String productDescription;
 	
+	private String productPictureUrl;
+	
 	
 	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
 	@JoinColumn(name = "product_id")
@@ -92,5 +94,14 @@ public class Product implements Serializable {
 		}
 		return getId().equals(other.getId());
 	}
+
+	public String getProductPictureUrl() {
+		return productPictureUrl;
+	}
+
+	public void setProductPictureUrl(String productPictureUrl) {
+		this.productPictureUrl = productPictureUrl;
+	}
+
 
 }
