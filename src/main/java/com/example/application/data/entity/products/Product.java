@@ -11,7 +11,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.example.application.data.entity.stock.ItemStock;
 
 @Entity
 @Table(name = "pfdi_products")
@@ -25,8 +28,13 @@ public class Product implements Serializable {
 
 	private String productName;
 
+	private String productShortCode;
 
 	private String productDescription;
+	
+	@OneToOne(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
+	@JoinColumn(name = "category_id")
+	private Category category;
 	
 	private String productPictureUrl;
 	
@@ -34,6 +42,10 @@ public class Product implements Serializable {
 	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
 	@JoinColumn(name = "product_id")
 	private Set<ProductPrice> productPrices;
+	
+	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
+	@JoinColumn(name = "product_id")
+	private Set<ItemStock> itemStock;
 
 	public String getProductName() {
 		return productName;
@@ -77,6 +89,40 @@ public class Product implements Serializable {
 		return super.hashCode();
 	}
 
+	public String getProductPictureUrl() {
+		return productPictureUrl;
+	}
+
+	public void setProductPictureUrl(String productPictureUrl) {
+		this.productPictureUrl = productPictureUrl;
+	}
+
+	public String getProductShortCode() {
+		return productShortCode;
+	}
+
+	public void setProductShortCode(String productShortCode) {
+		this.productShortCode = productShortCode;
+	}
+	
+
+	
+	public Category getCategory() {
+		return category;
+	}
+
+	public void setCategory(Category category) {
+		this.category = category;
+	}
+
+	public Set<ItemStock> getItemStock() {
+		return itemStock;
+	}
+
+	public void setItemStock(Set<ItemStock> itemStock) {
+		this.itemStock = itemStock;
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) {
@@ -93,14 +139,6 @@ public class Product implements Serializable {
 			return false;
 		}
 		return getId().equals(other.getId());
-	}
-
-	public String getProductPictureUrl() {
-		return productPictureUrl;
-	}
-
-	public void setProductPictureUrl(String productPictureUrl) {
-		this.productPictureUrl = productPictureUrl;
 	}
 
 

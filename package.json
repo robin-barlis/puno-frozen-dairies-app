@@ -352,8 +352,8 @@
     "construct-style-sheets-polyfill": "$construct-style-sheets-polyfill",
     "lit": "$lit",
     "@polymer/polymer": "$@polymer/polymer",
-    "@fontsource/roboto": "$@fontsource/roboto",
     "date-fns": "$date-fns",
+    "@fontsource/roboto": "$@fontsource/roboto",
     "line-awesome": "$line-awesome"
   }
 }

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import javax.annotation.security.RolesAllowed;
 
 import org.hibernate.Hibernate;
+import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
@@ -19,6 +20,9 @@ import com.example.application.views.constants.CssClassNamesConstants;
 import com.example.application.views.products.components.CustomerTagFormDialog;
 import com.example.application.views.products.components.LocationTagFormDialog;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
@@ -26,8 +30,14 @@ import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -37,7 +47,6 @@ import com.vaadin.flow.router.Route;
 
 @PageTitle("Manage Tags")
 @Route(value = "/product/tags", layout = MainLayout.class)
-//@RouteAlias(value = "/", layout = MainLayout.class)
 @RolesAllowed({ "Admin", "Superuser", "ADMIN" })
 @Uses(Icon.class)
 public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObserver {
@@ -50,8 +59,10 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 	private final LocationTagService locationTagService;
 	private final CustomerTagService customerTagService;
 	
-	ListDataProvider<LocationTag> ldp = null;
-	ListDataProvider<CustomerTag> customerTagLdp = null;
+	private ListDataProvider<LocationTag> ldp = null;
+	private ListDataProvider<CustomerTag> customerTagLdp = null;
+	private CustomerTagFormDialog customerTagFormDialog =  null;
+	private LocationTagFormDialog locationTagDialog;
 
 	@Autowired
 	public ManageTagsView(LocationTagService locationTagService, CustomerTagService customerTagService) {
@@ -81,20 +92,62 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 		Label locationTagLabel = new Label("Location Tags");
 		locationTagLabel.addClassName(CssClassNamesConstants.PROFILE_DETAILS_LABEL_WRAPPER);
 		headingWrapper.add(locationTagLabel);
+		customerTagFormDialog = new CustomerTagFormDialog("Add New Customer Tag", customerTagService, locationTagService);
+		locationTagDialog =  new LocationTagFormDialog("Add New Tag", locationTagService);
 		
 		
 		tableContent.add(headingWrapper);
 		locationTagGrid = new Grid<>(LocationTag.class, false);
-		locationTagGrid.addColumn("locationTagName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-		locationTagGrid.addColumn("locationTagDescription").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-		locationTagGrid.setAllRowsVisible(true);
 
 		ldp = DataProvider.ofCollection(locationTagService.listAll(Sort.by("id")));
-
 		locationTagGrid.setItems(ldp);
+
+		locationTagGrid.setAllRowsVisible(true);
+
 		locationTagGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 		locationTagGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		locationTagGrid.addThemeVariants(GridVariant.MATERIAL_COLUMN_DIVIDERS);
+		locationTagGrid.addColumn("locationTagName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		locationTagGrid.addColumn("locationTagDescription").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		locationTagGrid.addComponentColumn(currentLocationTagTag -> {
+
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			subMenu.addItem("Edit Location Tag", e -> {
+				try {
+					locationTagDialog.setCurrentLocationTagSelectionToBinder(currentLocationTagTag);
+
+					locationTagDialog.open();
+				} catch (ValidationException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			});
+			subMenu.addItem("Delete", e -> {
+				ConfirmDialog confirmDialog = new ConfirmDialog();
+				confirmDialog.setCancelable(true);
+				confirmDialog.setText("This tag will be permanently deleted. Do you want to proceed?");
+				confirmDialog.open();
+				
+				confirmDialog.addConfirmListener(event -> {
+					try {
+
+						locationTagService.delete(currentLocationTagTag.getId());
+						locationTagGrid.getListDataView().removeItem(currentLocationTagTag);
+						locationTagGrid.getListDataView().refreshAll();
+						Notification.show("Location Tag successfully deleted.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					} catch (Exception exception) {
+						System.out.println(exception.getMessage());
+						Notification.show("Unable to delete Location Tag because it is still being used in the Customer Tag.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+						
+					}
+				});		
+			});
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0);
 
 		tableContent.addAndExpand(locationTagGrid);
 		
@@ -102,17 +155,18 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 		buttonWrapper.addClassNames("padding-top-bottom-20px");
 		Button addNewTagButton = new Button("Add Location Tag");
 
-		LocationTagFormDialog locationTagDialog =  new LocationTagFormDialog("Add New Tag", locationTagService);
-		locationTagDialog.addOpenedChangeListener(eventListener -> {
+		locationTagDialog.addConfirmListener(eventListener -> {
 			
 			LocationTag locationTag = locationTagDialog.getUpdatedLocationTag();
-			locationTagGrid.getListDataView().addItem(locationTag);
+			if (locationTag != null) {
 
-			ldp.refreshItem(locationTag);
-			locationTagGrid.getListDataView().refreshAll();
+				locationTagGrid.getListDataView().addItem(locationTag);
+				ldp.refreshItem(locationTag);
+			}
 		});	
 		
 		addNewTagButton.addClickListener(e -> {
+			locationTagDialog.clearForm(false);
 			locationTagDialog.open();
 		});
 		buttonWrapper.add(addNewTagButton);
@@ -139,6 +193,46 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 			Set<String> locationTagsString = locationTags.getLocationTagSet().stream().map(LocationTag::getLocationTagName).collect(Collectors.toSet());
 			return String.join(", ", locationTagsString).toLowerCase();
 		}).setTextAlign(ColumnTextAlign.START).setHeader("Location Tags");
+		
+
+		customerTagGrid.addComponentColumn(currentCustomerTag -> {
+
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			subMenu.addItem("Edit Customer Tag", e -> {
+				populateDataAndOpenDialog(currentCustomerTag, customerTagFormDialog);
+			});
+			
+			subMenu.addItem("Delete Customer Tag", e -> {
+				ConfirmDialog confirmDialog = new ConfirmDialog();
+				confirmDialog.setCancelable(true);
+				confirmDialog.setText("This tag will be permanently deleted. Do you want to proceed?");
+				confirmDialog.open();
+				
+				confirmDialog.addConfirmListener(event -> {
+					try {
+
+						customerTagService.delete(currentCustomerTag.getId());
+						customerTagGrid.getListDataView().removeItem(currentCustomerTag);
+						customerTagGrid.getListDataView().refreshAll();
+						Notification.show("Customer tag successfully deleted.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					} catch (Exception exception) {
+						System.out.println(exception.getMessage());
+						Notification.show("Unable to delete Customer Tag because it is still being used in the Sizes.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+						
+					}
+				});		
+			});
+
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0);
+		
+		
+		
+		
 		customerTagGrid.setAllRowsVisible(true);
 
 		customerTagLdp = DataProvider.ofCollection(customerTagService.listAll(Sort.by("id")));
@@ -148,6 +242,9 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 		customerTagGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		customerTagGrid.addThemeVariants(GridVariant.MATERIAL_COLUMN_DIVIDERS);
 		customerTagGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
+		
+		
+		
 		tableContent.addAndExpand(customerTagGrid);
 		
 		HorizontalLayout customerTagButtonWrapper = new HorizontalLayout();
@@ -156,22 +253,30 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 		customerTagButtonWrapper.addClassNames("padding-top-bottom-20px");
 		
 		
-		CustomerTagFormDialog customerTagFormDialog = new CustomerTagFormDialog("Add New Customer Tag", customerTagService, locationTagService);
 		
-		customerTagFormDialog.addOpenedChangeListener(eventListener -> {
+		customerTagFormDialog.addConfirmListener(eventListener -> {
 			
 			CustomerTag customerTag = customerTagFormDialog.getUpdatedTag();
 			if (customerTag != null) {
 				customerTagGrid.getListDataView().addItem(customerTag);
 				customerTagLdp.refreshItem(customerTag);
-				customerTagGrid.getListDataView().refreshAll();
 			}
 		});	
 		Button addNewCustomerTagButton = new Button("Add Customer Tag");
-		addNewCustomerTagButton.addClickListener(e -> customerTagFormDialog.open());
+		addNewCustomerTagButton.addClickListener(e -> {
+			customerTagFormDialog.clearForm(false);
+			customerTagFormDialog.open();
+		});
 		customerTagButtonWrapper.add(addNewCustomerTagButton);
 		
 		tableContent.add(customerTagButtonWrapper);
+		
+	}
+
+
+	private void populateDataAndOpenDialog(CustomerTag currentCustomerTag, CustomerTagFormDialog formDialog) {
+		formDialog.open();
+		formDialog.setCurrentCustomerSelectionToBinder(currentCustomerTag);
 		
 	}
 }

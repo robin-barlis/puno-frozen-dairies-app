@@ -1,31 +1,22 @@
 package com.example.application.views;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
 import java.util.Optional;
-
-import javax.imageio.ImageIO;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Singleton;
-import com.cloudinary.utils.ObjectUtils;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.service.UserService;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.views.administration.AdministrationView;
 import com.example.application.views.constants.CssClassNamesConstants;
 import com.example.application.views.customer.CustomerView;
-import com.example.application.views.products.AddNewProductView;
+import com.example.application.views.order.InvoicesView;
+import com.example.application.views.order.StockOrderView;
 import com.example.application.views.products.ManageCategoriesView;
 import com.example.application.views.products.ManageSizesView;
 import com.example.application.views.products.ManageTagsView;
 import com.example.application.views.products.ProductsView;
+import com.example.application.views.stocks.StocksInvetoryView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
@@ -47,25 +38,20 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.PasswordField;
-import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.RouterLink;
-import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 
 /**
  * The main view is a top-level placeholder for other views.
  */
 public class MainLayout extends AppLayout {
-
 
 	private static final long serialVersionUID = 3493362210483888466L;
 	private AuthenticatedUser authenticatedUser;
@@ -75,7 +61,8 @@ public class MainLayout extends AppLayout {
 	private final Cloudinary cloudinary = Singleton.getCloudinary();
 	private AppUser currentUser;
 
-	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker, UserService userService) {
+	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker,
+			UserService userService) {
 		this.authenticatedUser = authenticatedUser;
 		this.accessChecker = accessChecker;
 		this.userService = userService;
@@ -140,70 +127,70 @@ public class MainLayout extends AppLayout {
 		Avatar profilePicture = new Avatar(user.getFirstName());
 		profilePicture.setImage(user.getProfilePictureUrl());
 		profilePicture.addClassName("profile-picture");
-		
+
 		MemoryBuffer memoryBuffer = new MemoryBuffer();
-		
-		Upload uploadImage = new Upload();
-		uploadImage.setDropAllowed(false);
-		uploadImage.setAcceptedFileTypes("image/*");
-		uploadImage.setMaxFiles(1);
-		uploadImage.setMaxFileSize(MAX_FILE_SIZE_BYTES);
-		uploadImage.setReceiver(memoryBuffer);
-		uploadImage.addFileRejectedListener(event -> {
-			String errorMessage = event.getErrorMessage();
 
-			Notification notification = Notification.show(errorMessage, 5000, Notification.Position.MIDDLE);
-			notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-		});
-		uploadImage.addSucceededListener(event -> {
-			
-			InputStream fileData = memoryBuffer.getInputStream();
-			String fileName = event.getFileName();	
+//		Upload uploadImage = new Upload();
+//		uploadImage.setDropAllowed(false);
+//		uploadImage.setAcceptedFileTypes("image/*");
+//		uploadImage.setMaxFiles(1);
+//		uploadImage.setMaxFileSize(MAX_FILE_SIZE_BYTES);
+//		uploadImage.setReceiver(memoryBuffer);
+//		uploadImage.addFileRejectedListener(event -> {
+//			String errorMessage = event.getErrorMessage();
+//
+//			Notification notification = Notification.show(errorMessage, 5000, Notification.Position.MIDDLE);
+//			notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+//		});
+//		uploadImage.addSucceededListener(event -> {
+//			
+//			InputStream fileData = memoryBuffer.getInputStream();
+//			String fileName = event.getFileName();	
+//
+//			try {
+//				BufferedImage bufferedImage = ImageIO.read(fileData);
+//				File file = new File(FileUtils.getTempDirectoryPath() + fileName);
+//				file.createNewFile();
+//				
+//				
+//				if (file.exists()) {
+//					ImageIO.write(bufferedImage, FilenameUtils.getExtension(fileName), file);
+//					
+//					Map<?, ?> uploadResult = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
+//					String url = uploadResult.get("url").toString();
+//					System.out.println(url);
+//					StreamResource imageResource = new StreamResource("profilePicture",
+//							() -> memoryBuffer.getInputStream());
+//
+//					profilePicture.setImageResource(imageResource);
+//					avatar.setImageResource(imageResource);
+//					user.setProfilePictureUrl(url);
+//					cloudinary.uploader().destroy(fileName, uploadResult);
+//					userService.update(user);
+//				}
+//				
+//				
+//
+//			} catch (IOException e1) {
+//				Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.MIDDLE);
+//				notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+//			} 
+//			//processFile(fileData, fileName, contentLength, mimeType);
+//
+//		});
 
-			try {
-				BufferedImage bufferedImage = ImageIO.read(fileData);
-				File file = new File(FileUtils.getTempDirectoryPath() + fileName);
-				file.createNewFile();
-				
-				
-				if (file.exists()) {
-					ImageIO.write(bufferedImage, FilenameUtils.getExtension(fileName), file);
-					
-					Map<?, ?> uploadResult = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
-					String url = uploadResult.get("url").toString();
-					System.out.println(url);
-					StreamResource imageResource = new StreamResource("profilePicture",
-							() -> memoryBuffer.getInputStream());
-
-					profilePicture.setImageResource(imageResource);
-					avatar.setImageResource(imageResource);
-					user.setProfilePictureUrl(url);
-					cloudinary.uploader().destroy(fileName, uploadResult);
-					userService.update(user);
-				}
-				
-				
-
-			} catch (IOException e1) {
-				Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.MIDDLE);
-				notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-			} 
-			//processFile(fileData, fileName, contentLength, mimeType);
-
-		});
-		
 		Button uploadButton = new Button();
 		uploadButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS, ButtonVariant.LUMO_TERTIARY);
 		uploadButton.setIcon(profilePicture);
 		uploadButton.setWidth("10em");
 		uploadButton.setHeight("10em");
 
-		uploadImage.setUploadButton(uploadButton);
-		
+		// uploadImage.setUploadButton(uploadButton);
+
 		VerticalLayout uploadButtonWrapper = new VerticalLayout();
 		uploadButtonWrapper.addClassName(CssClassNamesConstants.PROFILE_DETAILS_NAME_AVATAR_WRAPPER);
 		uploadButtonWrapper.setAlignItems(Alignment.CENTER);
-		uploadButtonWrapper.add(uploadImage);
+		uploadButtonWrapper.add(uploadButton);
 
 		VerticalLayout namePositionWrapper = new VerticalLayout();
 		Label fullName = new Label(user.getLastName() + ", " + user.getFirstName());
@@ -347,33 +334,66 @@ public class MainLayout extends AppLayout {
 		Tabs tabs = new Tabs();
 		tabs.getStyle().set("margin", "auto");
 
-
-		Tab productsTab = createTab("Product Management", ProductsView.class, "product-view-tab");
+		Tab productsTab = createTab("Products", ProductsView.class, "product-view-tab");
 		MenuBar menuBar = new MenuBar();
 		menuBar.setOpenOnHover(true);
 		menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
 		MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
 		menuItem.getElement().setAttribute("aria-label", "More options");
 		SubMenu subMenu = menuItem.getSubMenu();
-		
-		RouterLink productList = createNewRoute("Product List", ProductsView.class);
-		RouterLink createNewProductPageLink = createNewRoute("Add Product", AddNewProductView.class);
-		RouterLink manageTag = createNewRoute("Manage Tags", ManageTagsView.class);
-		RouterLink manageSizes = createNewRoute("Manage Sizes", ManageSizesView.class);
-		RouterLink manageCategories = createNewRoute("Manage Categories", ManageCategoriesView.class);
 
-		
-		subMenu.addItem(productList);
-		subMenu.addItem(createNewProductPageLink);
+		//RouterLink productList = createNewRoute("Product List", ProductsView.class);
+		//RouterLink createNewProductPageLink = createNewRoute("Add Product", AddNewProductView.class);
+		RouterLink manageTag = createNewRoute("Tags", ManageTagsView.class);
+		RouterLink manageSizes = createNewRoute("Sizes", ManageSizesView.class);
+		RouterLink manageCategories = createNewRoute("Categories", ManageCategoriesView.class);
+
+		//subMenu.addItem(productList);
+		//subMenu.addItem(createNewProductPageLink);
 		subMenu.addItem(manageTag);
 		subMenu.addItem(manageSizes);
 		subMenu.addItem(manageCategories);
-		productsTab.add(menuBar);	
-		
-		Tab profilesTab = createTab("Profile Management", AdministrationView.class, "admin-view-tab");
-		Tab customersTab = createTab("Customer Management", CustomerView.class, "admin-view-tab");
+		productsTab.add(menuBar);
 
-		tabs.add(profilesTab, productsTab, customersTab);
+		Tab profilesTab = createTab("Profiles", AdministrationView.class, "admin-view-tab");
+		Tab customersTab = createTab("Customers", CustomerView.class, "admin-view-tab");
+//		MenuBar customersTabMenu = new MenuBar();
+//		customersTabMenu.setOpenOnHover(true);
+//		customersTabMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+//		MenuItem customersTabMenuItem = customersTabMenu.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
+//		customersTabMenuItem.getElement().setAttribute("aria-label", "More options");
+//		SubMenu customerTabSubMenu = customersTabMenuItem.getSubMenu();
+//		
+//		RouterLink manageAccountOwners = createNewRoute("Manage Account Owners", AccountOwnerView.class);
+//		RouterLink manageCustomers = createNewRoute("Manage Customers", CustomerView.class);
+//
+//		customerTabSubMenu.addItem(manageAccountOwners);
+//		customerTabSubMenu.addItem(manageCustomers);
+//
+//		customersTab.add(customersTabMenu);
+
+		Tab ordersTab = createTab("Orders", StockOrderView.class, "admin-view-tab");
+		MenuBar ordersTabMenu = new MenuBar();
+		ordersTabMenu.setOpenOnHover(true);
+		ordersTabMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+		MenuItem ordersTabMenuItem = ordersTabMenu.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
+		menuItem.getElement().setAttribute("aria-label", "More options");
+		SubMenu ordersTabSubMenu = ordersTabMenuItem.getSubMenu();
+
+		ordersTab.add(ordersTabMenu);
+
+		// RouterLink manageStocks = createNewRoute("Manage Stock Inventory",
+		// StocksInvetoryView.class);
+		RouterLink manageSalesInvoices = createNewRoute("Sales Invoices", InvoicesView.class);
+		RouterLink stockOrderList = createNewRoute("Stock Order List", StockOrderView.class);
+
+		ordersTabSubMenu.addItem(stockOrderList);
+		// ordersTabSubMenu.addItem(manageStocks);
+		ordersTabSubMenu.addItem(manageSalesInvoices);
+
+		Tab stocksInventory = createTab("Inventory", StocksInvetoryView.class, "admin-view-tab");
+
+		tabs.add(profilesTab, productsTab, customersTab, ordersTab, stocksInventory);
 		return tabs;
 	}
 
@@ -391,7 +411,5 @@ public class MainLayout extends AppLayout {
 		link.setRoute(viewClass);
 		return new Tab(link);
 	}
-	
-	
 
 }

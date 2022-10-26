@@ -31,7 +31,10 @@ public class ProductPrice implements Serializable {
 	
 	private Integer categoryId;
 	
+	private BigDecimal suggestedRetailPrice;
 	
+	private BigDecimal transferPrice;
+
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "product_id", nullable = false)
 	private Product product;
@@ -43,11 +46,6 @@ public class ProductPrice implements Serializable {
 	public void setProduct(Product product) {
 		this.product = product;
 	}
-
-	private BigDecimal suggestedRetailPrice;
-	
-	private BigDecimal transferPrice;
-
 
 	public Integer getSizeId() {
 		return sizeId;

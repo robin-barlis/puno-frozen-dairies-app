@@ -20,10 +20,19 @@ import com.example.application.views.products.components.SizeFormDialog;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.DataProvider;
@@ -63,10 +72,11 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 		HorizontalLayout sizeWrapper = new HorizontalLayout();
 		sizeWrapper.setSpacing(true);
 		sizeWrapper.setPadding(false);
-		Label customerTagLabel = new Label("Product Management > Manage Sizes");
+		Label customerTagLabel = new Label("Manage Sizes");
 		customerTagLabel.addClassName(CssClassNamesConstants.PROFILE_DETAILS_LABEL_WRAPPER);
 		sizeWrapper.add(customerTagLabel);
-		
+
+		SizeFormDialog sizeFormDialog = new SizeFormDialog("Add New Size", customerTagService, sizesService);
 		
 		tableContent.add(sizeWrapper);
 		sizesGrid = new Grid<>(Size.class, false);
@@ -76,7 +86,41 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 			Hibernate.initialize(sizeTag.getCustomerTagSet());
 			Set<String> locationTagsString = sizeTag.getCustomerTagSet().stream().map(CustomerTag::getCustomerTagName).collect(Collectors.toSet());
 			return String.join(", ", locationTagsString).toLowerCase();
-		}).setTextAlign(ColumnTextAlign.START).setHeader("Categories");
+		}).setTextAlign(ColumnTextAlign.START).setHeader("Customer Tag");
+		sizesGrid.addComponentColumn(currentSize -> {
+
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			subMenu.addItem("Edit Size", e -> {
+				populateDataAndOpenDialog(currentSize, sizeFormDialog);
+			});
+			
+			subMenu.addItem("Delete ", e -> {
+				ConfirmDialog confirmDialog = new ConfirmDialog();
+				confirmDialog.setCancelable(true);
+				confirmDialog.setText("This tag will be permanently deleted. Do you want to proceed?");
+				confirmDialog.open();
+				
+				confirmDialog.addConfirmListener(event -> {
+					try {
+
+						sizesService.delete(currentSize.getId());
+						sizesGrid.getListDataView().removeItem(currentSize);
+						sizesGrid.getListDataView().refreshAll();
+						Notification.show("Customer tag successfully deleted.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					} catch (Exception exception) {
+						System.out.println(exception.getMessage());
+						Notification.show("Unable to delete Customer Tag because it is still being used in the Sizes.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+						
+					}
+				});		
+			});
+
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0);
 		sizesGrid.setAllRowsVisible(true);
 
 		ldp = DataProvider.ofCollection(sizesService.listAll(Sort.by("id")));
@@ -94,9 +138,8 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 		sizeButtonWrapper.addClassNames("padding-top-bottom-20px");
 		
 		
-		SizeFormDialog sizeFormDialog = new SizeFormDialog("Add New Size", customerTagService, sizesService);
 		
-		sizeFormDialog.addOpenedChangeListener(eventListener -> {
+		sizeFormDialog.addConfirmListener(eventListener -> {
 			
 			Size sizes = sizeFormDialog.getUpdateSize();
 			if (sizes != null) {
@@ -111,6 +154,11 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 		
 		tableContent.add(sizeButtonWrapper);
 		
+	}
+
+	public void populateDataAndOpenDialog(Size currentSize, SizeFormDialog sizeFormDialog) {
+		sizeFormDialog.open();
+		sizeFormDialog.setCurrentSelectionToBinder(currentSize);
 	}
 
 	@Override

@@ -29,7 +29,7 @@ public class Category implements Serializable {
 	private String categoryName;
 
 
-	private String categoryDescription;
+	private String categoryType;
 	
 	
 	@ManyToMany(fetch = FetchType.EAGER)
@@ -66,12 +66,12 @@ public class Category implements Serializable {
 		this.categoryName = categoryName;
 	}
 
-	public String getCategoryDescription() {
-		return categoryDescription;
+	public String getCategoryType() {
+		return categoryType;
 	}
 
-	public void setCategoryDescription(String categoryDescription) {
-		this.categoryDescription = categoryDescription;
+	public void setCategoryType(String categoryType) {
+		this.categoryType = categoryType;
 	}
 
 	@Override
