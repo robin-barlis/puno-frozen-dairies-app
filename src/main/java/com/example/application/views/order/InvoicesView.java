@@ -192,8 +192,7 @@ public class InvoicesView extends AbstractPfdiView implements BeforeEnterObserve
 				binder.writeBean(customer);
 				Integer locationTagId = locationTag.getValue().getId();
 				Integer customerTagId = customerTag.getValue().getId();
-				customer.setLocationTagId(locationTagId);
-				customer.setCustomerTagId(customerTagId);
+
 
 				Customer updateCustomer = customerService.update(customer);
 				clearForm();
@@ -310,13 +309,6 @@ public class InvoicesView extends AbstractPfdiView implements BeforeEnterObserve
 
 		grid.addColumn("ownerName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn(customer -> {
-			return customerTagService.get(customer.getCustomerTagId()).get().getCustomerTagName();
-		}).setHeader("Customer Tag");
-
-		grid.addColumn(customer -> {
-			return locationTagService.get(customer.getLocationTagId()).get().getLocationTagName();
-		}).setHeader("Location Tag");
 
 		grid.addColumn("address").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 

@@ -76,7 +76,7 @@ public class SizeFormDialog  extends ConfirmDialog {
 				customerTagComboBox.deselectAll();
 				Notification.show("Customer successfully created")
 						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-				clearForm(true);
+				clearForm(false);
 				this.close();
 			} catch (ValidationException validationException) {
 				Notification.show("An exception happened while trying to store the samplePerson details.");
@@ -122,10 +122,14 @@ public class SizeFormDialog  extends ConfirmDialog {
 	}
 
 	public void setCurrentSelectionToBinder(Size currentSize) {
-		this.size = currentSize;
-		binder.readBean(currentSize);
 		
-		customerTagComboBox.setValue(currentSize.getCustomerTagSet());
+		this.size = currentSize;
+		if (currentSize != null) {
+
+			binder.readBean(currentSize);
+			
+			customerTagComboBox.setValue(currentSize.getCustomerTagSet());
+		}
 	}
 	
 	

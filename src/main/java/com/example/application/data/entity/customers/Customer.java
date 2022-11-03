@@ -3,11 +3,21 @@ package com.example.application.data.entity.customers;
 import java.io.Serializable;
 import java.time.LocalDate;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
+import com.example.application.data.entity.products.CustomerTag;
+import com.example.application.data.entity.products.LocationTag;
 
 @Entity
 @Table(name = "pfdi_customers")
@@ -19,8 +29,17 @@ public class Customer implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 	private String storeName;
-	private Integer customerTagId;
-	private Integer locationTagId;
+	
+	@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "customer_tag_id")
+	@Fetch(FetchMode.SELECT)
+	private CustomerTag customerTagId;
+	
+	@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "location_tag_id")
+	@Fetch(FetchMode.SELECT)
+	private LocationTag locationTagId;
+	
 	private String ownerName;
 	private Integer contactNumber;
 	private String address;
@@ -36,11 +55,11 @@ public class Customer implements Serializable {
 		this.storeName = storeName;
 	}
 
-	public Integer getLocationTagId() {
+	public LocationTag getLocationTagId() {
 		return locationTagId;
 	}
 
-	public void setLocationTagId(Integer locationTagId) {
+	public void setLocationTagId(LocationTag locationTagId) {
 		this.locationTagId = locationTagId;
 	}
 
@@ -84,11 +103,11 @@ public class Customer implements Serializable {
 		this.contractEndDate = contractEndDate;
 	}
 
-	public Integer getCustomerTagId() {
+	public CustomerTag getCustomerTagId() {
 		return customerTagId;
 	}
 
-	public void setCustomerTagId(Integer customerTagId) {
+	public void setCustomerTagId(CustomerTag customerTagId) {
 		this.customerTagId = customerTagId;
 	}
 	

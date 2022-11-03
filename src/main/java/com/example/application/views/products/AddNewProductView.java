@@ -259,6 +259,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		product.setProductName(productName.getValue());
 		product.setProductShortCode(shortCode.getValue());
 		product.setProductDescription("product test"); //TODO add field description
+		product.setCategory(category.getValue());
 		
 		
 		HashSet<ProductPrice> prices = new HashSet<>();

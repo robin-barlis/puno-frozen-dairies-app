@@ -1,7 +1,9 @@
 @import url('./main-layout.css');
 @import url('./views/administration-view.css');
 @import url('./views/products-view.css');
+@import url('./views/order-view.css');
 @import url('./components/vaadin-text-field.css');
+@import url('./components/vaadin-number-field.css');
 @import url('./components/vaadin-date-picker.css');
 @import url('./components/vaadin-select.css');
 @import url('line-awesome/dist/line-awesome/css/line-awesome.min.css');

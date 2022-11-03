@@ -42,7 +42,7 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 	private Button addProductsButton;
 	private List<Product> productList;
 	private CategoryService categoryService;
-	
+
 	@Autowired
 	public ProductsView(ProductService productService, CategoryService categoryService) {
 		super("products-view", "Products");
@@ -54,7 +54,7 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
 		HorizontalLayout headerContainer = new HorizontalLayout();
 		headerContainer.setWidthFull();
-		
+
 		FlexLayout headerNameWrapper = new FlexLayout();
 		headerNameWrapper.setFlexDirection(FlexDirection.ROW);
 		headerNameWrapper.setJustifyContentMode(JustifyContentMode.START);
@@ -63,20 +63,19 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 		header.addClassNames("mb-0", "mt-s", "text-xl");
 		headerNameWrapper.add(header);
 		headerNameWrapper.setWidth("50%");
-		
+
 		FlexLayout flexWrapper = new FlexLayout();
 		flexWrapper.setFlexDirection(FlexDirection.ROW);
 		flexWrapper.setJustifyContentMode(JustifyContentMode.END);
-		flexWrapper.setClassName("button-layout");		
-	
-		
+		flexWrapper.setClassName("button-layout");
+
 		addProductsButton = new Button("Add New Product");
 		addProductsButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addProductsButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
-		
+
 		addProductsButton.addClickListener(e -> {
 			UI.getCurrent().navigate(AddNewProductView.class);
-			});
+		});
 		flexWrapper.add(addProductsButton);
 		flexWrapper.setWidth("50%");
 
@@ -96,18 +95,17 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {
-		
-		for (Product product : productList) {
-			List<Integer> categoryIdList = product.getProductPrices().stream().map(e->e.getCategoryId()).collect(Collectors.toList());
-			Integer categoryId = categoryIdList.get(0);
-			String imageUrl = product.getProductPictureUrl() != null ? product.getProductPictureUrl() : "https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80";
-			imageContainer.add(new ProductsViewCard(product,categoryService.get(categoryId).orElseGet(null), imageUrl 
-					));
-		
-		}
-			
-			
 
+		for (Product product : productList) {
+			List<Integer> categoryIdList = product.getProductPrices().stream().map(e -> e.getCategoryId())
+					.collect(Collectors.toList());
+			Integer categoryId = categoryIdList.get(0);
+			String imageUrl = product.getProductPictureUrl() != null ? product.getProductPictureUrl()
+					: "https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80";
+			imageContainer
+					.add(new ProductsViewCard(product, categoryService.get(categoryId).orElseGet(null), imageUrl));
+
+		}
 	}
 
 }

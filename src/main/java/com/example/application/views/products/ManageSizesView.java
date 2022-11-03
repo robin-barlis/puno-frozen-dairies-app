@@ -149,7 +149,10 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 			}
 		});	
 		Button addNewSizeButton = new Button("Add Size");
-		addNewSizeButton.addClickListener(e -> sizeFormDialog.open());
+		addNewSizeButton.addClickListener(e -> {
+			sizeFormDialog.setCurrentSelectionToBinder(null);
+			sizeFormDialog.open();
+		});
 		sizeButtonWrapper.add(addNewSizeButton);
 		
 		tableContent.add(sizeButtonWrapper);

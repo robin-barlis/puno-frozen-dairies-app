@@ -146,7 +146,11 @@ public class ManageCategoriesView extends AbstractPfdiView implements HasCompone
 			}
 		});	
 		Button addNewCategoryButton = new Button("Add Category");
-		addNewCategoryButton.addClickListener(e -> categoryFormDialog.open());
+		addNewCategoryButton.addClickListener(e -> {
+			categoryFormDialog.clearForm(true);
+			categoryFormDialog.open();
+		
+		});
 		categoryButtonWrapper.add(addNewCategoryButton);
 		
 		tableContent.add(categoryButtonWrapper);
@@ -155,8 +159,8 @@ public class ManageCategoriesView extends AbstractPfdiView implements HasCompone
 	}
 
 	private void populateDataAndOpenDialog(Category cuurentCategory, CategoryFormDialog categoryFormDialog2) {
-		categoryFormDialog2.open();
 		categoryFormDialog2.setCurrentSelectionToBinder(cuurentCategory);
+		categoryFormDialog2.open();
 		
 	}
 

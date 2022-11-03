@@ -30,9 +30,7 @@ public class ProductPrice implements Serializable {
 	private Integer locationTagId;
 	
 	private Integer categoryId;
-	
-	private BigDecimal suggestedRetailPrice;
-	
+		
 	private BigDecimal transferPrice;
 
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
@@ -77,14 +75,6 @@ public class ProductPrice implements Serializable {
 
 	public void setCategoryId(Integer categoryId) {
 		this.categoryId = categoryId;
-	}
-
-	public BigDecimal getSuggestedRetailPrice() {
-		return suggestedRetailPrice;
-	}
-
-	public void setSuggestedRetailPrice(BigDecimal suggestedRetailPrice) {
-		this.suggestedRetailPrice = suggestedRetailPrice;
 	}
 
 	public BigDecimal getTransferPrice() {

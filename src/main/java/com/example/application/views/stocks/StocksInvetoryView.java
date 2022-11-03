@@ -108,7 +108,9 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
 		
-		grid.addColumn(itemStock -> {			
+		grid.addColumn(itemStock -> {	
+			
+			
 			return itemStock.getProduct().getCategory().getCategoryName();
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Category").setSortable(true);
 		
@@ -121,7 +123,7 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Size").setSortable(true);
 		
 
-		grid.addColumn("availableStock").setHeader("Available").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn("availableStock").setHeader("Available").setTextAlign(ColumnTextAlign.START);
 
 		
 		
@@ -144,7 +146,7 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 				
 				itemStockService.update(itemStock);
 				ldp.refreshItem(itemStock);
-				grid.getListDataView().refreshAll();
+				//grid.getListDataView().refreshAll();
 				Notification.show("Successfully adjusted available stocks for " + itemStock.getProduct().getProductName() + " (" + itemStock.getSize().getSizeName() + ")")
 				.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 			});
@@ -187,7 +189,7 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 		grid.scrollIntoView();
 
 		TextField searchField = new TextField();
-		searchField.setPlaceholder("Search by owner name or store name");
+		searchField.setPlaceholder("Search by product, size or category");
 
 		Icon searchIcon = new Icon(VaadinIcon.SEARCH);
 		searchIcon.setClassName(CssClassNamesConstants.PFDI_ICONS);
@@ -195,24 +197,28 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 		searchField.setValueChangeMode(ValueChangeMode.EAGER);
 		searchField.addValueChangeListener(e -> dataView.refreshAll());
 		searchField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);
-//
-//		dataView.addFilter(customer -> {
-//			String searchTerm = searchField.getValue().trim();
-//
-//			if (searchTerm.isEmpty())
-//				return true;
-//
-//			boolean matchesCustomerName = matchesTerm(itemStockService.(), searchTerm);
-//			boolean matchesOwnerName = matchesTerm(customer.getOwnerName(), searchTerm);
-//
-//			return matchesCustomerName || matchesOwnerName;
-//		});
+
+		dataView.addFilter(itemStock -> {
+			String searchTerm = searchField.getValue().trim();
+
+			if (searchTerm.isEmpty())
+				return true;
+
+			boolean matchesCustomerName = matchesTerm(itemStock.getProduct().getProductName(), searchTerm);
+			boolean matchesOwnerName = matchesTerm(itemStock.getSize().getSizeName(), searchTerm);
+			boolean matchesCategory = matchesTerm(itemStock.getProduct().getCategory().getCategoryName(), searchTerm);
+
+			return matchesCustomerName || matchesOwnerName || matchesCategory;
+		});
 
 		wrapper.add(searchField, grid);
 		verticalLayout.addAndExpand(wrapper);
 	}
 
 
+	private boolean matchesTerm(String value, String searchTerm) {
+		return value.toLowerCase().contains(searchTerm.toLowerCase());
+	}
 
 	@Override
 	protected void createMainContentLayout(VerticalLayout mainContentContainer) {

@@ -190,10 +190,8 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 			try {
 				prepareCustomer();
 				binder.writeBean(customer);
-				Integer locationTagId = locationTag.getValue().getId();
-				Integer customerTagId = customerTag.getValue().getId();
-				customer.setLocationTagId(locationTagId);
-				customer.setCustomerTagId(customerTagId);
+				customer.setLocationTagId(locationTag.getValue());
+				customer.setCustomerTagId(customerTag.getValue());
 
 				Customer updateCustomer = customerService.update(customer);
 				clearForm();
@@ -311,11 +309,11 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		grid.addColumn("ownerName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addColumn(customer -> {
-			return customerTagService.get(customer.getCustomerTagId()).get().getCustomerTagName();
+			return customer.getCustomerTagId().getCustomerTagName();
 		}).setHeader("Customer Tag");
 
 		grid.addColumn(customer -> {
-			return locationTagService.get(customer.getLocationTagId()).get().getLocationTagName();
+			return customer.getLocationTagId().getLocationTagName();
 		}).setHeader("Location Tag");
 
 		grid.addColumn("address").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);

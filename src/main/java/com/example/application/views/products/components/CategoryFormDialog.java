@@ -92,7 +92,7 @@ public class CategoryFormDialog  extends ConfirmDialog {
 
 				Notification.show("Category successfully created")
 						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-				clearForm();
+				clearForm(false);
 				this.close();
 			} catch (ValidationException validationException) {
 				Notification.show("An exception happened while trying to store the samplePerson details.");
@@ -102,7 +102,7 @@ public class CategoryFormDialog  extends ConfirmDialog {
 		cancelButton = new Button("Cancel");
 		cancelButton.addClickListener(e -> {
 			this.close();
-			clearForm();
+			clearForm(true);
 		});
 
 		FormLayout formLayout = new FormLayout();
@@ -122,10 +122,13 @@ public class CategoryFormDialog  extends ConfirmDialog {
 		add(formLayout);
 	}
 
-	private void clearForm() {
+	public void clearForm(boolean removeObject) {
 		this.categoryName.clear();
 		this.categoryType.clear();
-		category = null;
+		
+		if (removeObject) {
+			category = null;
+		}
 		
 	}
 	

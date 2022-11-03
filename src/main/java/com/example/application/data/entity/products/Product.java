@@ -14,6 +14,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import com.example.application.data.entity.stock.ItemStock;
 
 @Entity
@@ -32,8 +35,9 @@ public class Product implements Serializable {
 
 	private String productDescription;
 	
-	@OneToOne(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
+	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "category_id")
+	@Fetch(FetchMode.SELECT)
 	private Category category;
 	
 	private String productPictureUrl;
