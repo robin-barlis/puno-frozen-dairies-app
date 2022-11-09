@@ -92,14 +92,14 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		buttonContainer.addClassName("order-summary-button-container");
 		
 		back = new Button("Back");
-		back.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		back.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 		back.addClassNames("submit-order-button", "float-right");
 		back.addClickListener(e -> {
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
 		
 		saveAsDraft = new Button("Save As Draft");
-		saveAsDraft.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		saveAsDraft.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 		saveAsDraft.addClassNames("submit-order-button", "float-right");
 		saveAsDraft.addClickListener(e -> {
 			UI.getCurrent().navigate(StockOrderView.class);
@@ -114,7 +114,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
 		
-		buttonContainer.add(back, saveAsDraft, submit);
+		buttonContainer.add(submit,saveAsDraft, back );
 		
 		add(buttonContainer);
 	}
