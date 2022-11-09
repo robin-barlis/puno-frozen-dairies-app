@@ -51,6 +51,8 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	private Button saveAsDraft;
 	
 	private Button submit;
+	
+	private Button back;
 
 	private OrdersService ordersService;
 	
@@ -83,15 +85,18 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		createSummaryHeader(mainDiv);
 		
 		createOrderDetailsDiv(mainDiv);
-		
 
 		add(mainDiv);
-		
-		
 		
 		Div buttonContainer = new Div();
 		buttonContainer.addClassName("order-summary-button-container");
 		
+		back = new Button("Back");
+		back.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+		back.addClassNames("submit-order-button", "float-right");
+		back.addClickListener(e -> {
+			UI.getCurrent().navigate(StockOrderView.class);
+		});
 		
 		saveAsDraft = new Button("Save As Draft");
 		saveAsDraft.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -109,7 +114,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
 		
-		buttonContainer.add(submit);
+		buttonContainer.add(back, saveAsDraft, submit);
 		
 		add(buttonContainer);
 	}
@@ -117,9 +122,14 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {
 		orderId = event.getRouteParameters().get("id").get();
-		Integer stockOrderNumber = generateStockOrderNumber();
+		
+
 		order = ordersService.get(Integer.parseInt(orderId)).get();
-		order.setStockOrderNumber(stockOrderNumber);
+		Integer stockOrderNumber = order.getStockOrderNumber();
+		if (stockOrderNumber == null) {
+			stockOrderNumber = generateStockOrderNumber();
+			order.setStockOrderNumber(stockOrderNumber);
+		}
 
 		stockOrderNumberSpam.setText("Stock Order #" + stockOrderNumber);
 		orderDate.setText(order.getCreationDate().toString());
@@ -169,6 +179,11 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		});
 		
 		totalAmountLabel.setText("Total Amount : " + PfdiUtil.getFormatter().format(totalAmount));
+		
+		if ("For Checking".equals(order.getStatus())) {
+			submit.setVisible(false);
+			saveAsDraft.setVisible(false);
+		}
 	}
 
 	private void createSummaryHeader(Div mainDiv) {

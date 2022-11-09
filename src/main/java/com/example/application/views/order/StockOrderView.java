@@ -23,6 +23,7 @@ import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
+import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.icon.Icon;
@@ -43,6 +44,8 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.router.RouteConfiguration;
+import com.vaadin.flow.router.RouteParameters;
 
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrders", layout = MainLayout.class)
@@ -130,15 +133,16 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
 		
-		grid.addColumn(order -> {	
+		grid.addComponentColumn(order -> {	
 			
-			Integer stockOrderNumber = order.getStockOrderNumber();
-			if (stockOrderNumber != null) {
+			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+			String route = RouteConfiguration.forSessionScope().getUrl(StockOrderSummaryView.class, parameters);
+	       
 
-				return order.getStockOrderNumber();
-			} else {
-				return "Not Available";
-			}
+			Integer stockOrderNumber = order.getStockOrderNumber();
+			
+			String path = stockOrderNumber != null ? "S.O.#" + stockOrderNumber : "Not Available";		
+			return new Anchor(route, path);
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Stock Order Number").setSortable(true);
 		
 		grid.addColumn(order -> {			
