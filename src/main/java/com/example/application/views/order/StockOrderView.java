@@ -15,7 +15,6 @@ import com.example.application.data.service.orders.OrdersService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
-import com.example.application.views.products.AddNewProductView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -131,8 +130,15 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
 		
-		grid.addColumn(order -> {			
-			return order.getId();
+		grid.addColumn(order -> {	
+			
+			Integer stockOrderNumber = order.getStockOrderNumber();
+			if (stockOrderNumber != null) {
+
+				return order.getStockOrderNumber();
+			} else {
+				return "Not Available";
+			}
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Stock Order Number").setSortable(true);
 		
 		grid.addColumn(order -> {			

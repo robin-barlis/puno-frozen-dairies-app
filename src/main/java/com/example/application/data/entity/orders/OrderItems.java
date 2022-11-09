@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -41,7 +42,7 @@ public class OrderItems implements Serializable {
 
 	private LocalDateTime updatedDate;
 	
-	@ManyToOne(fetch = FetchType.EAGER, optional = false)
+	@ManyToOne(fetch = FetchType.EAGER, optional = false, cascade={CascadeType.MERGE})
     @JoinColumn(name = "item_inventory_id", nullable = false)
 	private ItemStock itemInventory;
 	

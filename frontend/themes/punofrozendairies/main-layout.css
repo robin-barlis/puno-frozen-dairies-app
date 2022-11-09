@@ -139,6 +139,10 @@ header nav a[highlight]:not([active])::after {
 	padding-top:50px !important;
 }
 
+.padding-left-50px{
+	padding-left:50px !important;
+}
+
 .padding-top-bottom-20px{
 	padding-top:20px !important;
 	padding-bottom:20px !important;
@@ -151,5 +155,18 @@ header nav a[highlight]:not([active])::after {
 	width:10em;
 	height: 10em;
 }
+
+.float-right {
+	float:right;
+}
+
+.text-align-left {
+	text-align: left;
+}
+
+.text-align-right {
+	text-align: right;
+}
+
 
 

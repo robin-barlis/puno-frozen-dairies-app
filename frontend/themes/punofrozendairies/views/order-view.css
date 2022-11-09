@@ -16,6 +16,75 @@
 	width: 100px !important;
 }
 
+.order-summary-div {
+	width: 100%;
+	background:#FFF;
+	flex: content;
+	height: auto;
+	padding-bottom:50px;
+}
+
+.stock-order-number-date-container {	
+    padding-top: 20px;
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-bottom:40px;
+}
+
+.owner-details-wrapper {
+	padding-left:40px;
+	padding-bottom:30px;
+}
+
+.order-summary-table {
+	width: 100%;
+    align-items: flex-start;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    padding-left: 40px;
+    padding-right: 40px;
+    table-layout: fixed;
+}
+
+.order-summary-total {
+	float: right;
+    padding-left: 40px;
+    padding-right: 40px;
+    padding-top: 40px;
+    font-weight: 700;
+    font-size: larger;
+}
+
+table {
+    position: relative;
+}
+
+td,th {padding: .5em 1em;}
+
+tr.even td { background-color: yellow; }
+tr.odd td  { background-color: orange; }
+
+thead th:first-child:before {
+    content: "-";
+
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: -1;
+    padding: .75em 0;
+}
+
+thead th {
+    padding-bottom: 2em;
+}
+
+.order-summary-button-container {
+	padding-top: 20px;
+    padding-bottom: 20px;
+    width: 100%;
+}
 
 
 

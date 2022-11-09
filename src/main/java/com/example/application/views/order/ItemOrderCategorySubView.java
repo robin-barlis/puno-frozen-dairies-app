@@ -18,8 +18,8 @@ import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.Product;
 import com.example.application.data.entity.products.ProductPrice;
-import com.example.application.data.entity.products.Size;
 import com.example.application.data.entity.stock.ItemStock;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
@@ -32,20 +32,34 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 	private static final long serialVersionUID = -5585110820503078437L;
 
-	private Category category;
-	private List<Product> products;
+
 	private Customer customer;
 
-	private List<Items> itemsList;
-	public ItemOrderCategorySubView(Category category, List<Product> products, Customer customer) {
-		this.category = category;
-		this.products = products;
-		this.customer = customer;
-		createContent();
+	private List<Items> itemsList = new ArrayList<>();
+	
+	private BigDecimal currentTotalPrice = BigDecimal.valueOf(0);
+	
+	private H1 totalAmount = new H1(); 
 
+	public ItemOrderCategorySubView(List<Category> categories,  Customer customer, Map<String, List<Product>> productCategoryMap) {
+		this.customer = customer;
+		
+		
+		totalAmount.setText("Total Amount: " + currentTotalPrice);
+		totalAmount.addClassNames("mb-1", "mt-s", "text-l", "span-order-flavor-column-header");
+		categories.forEach(category -> {
+
+			List<Product> productsPerCategory = productCategoryMap.get(category.getCategoryName());
+			if (productsPerCategory != null && !productsPerCategory.isEmpty()) {
+
+				createContent(category, productsPerCategory);
+			}
+
+		});
+		
 	}
 
-	private void createContent() {
+	private void createContent(Category category, List<Product> products) {
 
 		VerticalLayout layout = new VerticalLayout();
 
@@ -60,18 +74,19 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 		category.getSizeSet();
 		
+	
+
 		boolean headerAlreadyRendered = false;
-		itemsList = new ArrayList<>();
 		for (Product product : products) {
 
 			CustomerTag customerTag = customer.getCustomerTagId();
-			
-			Map<String, ItemStock> itemStock = product.getItemStock().stream().collect(Collectors.toMap(e -> e.getSize().getSizeName(), Function.identity()));
-			Map<Integer, List<ProductPrice>> productPricePerCustomer = product.getProductPrices().stream().filter(productPrice -> {
-				return productPrice.getCustomerTagId() == customerTag.getId();
-			}).collect(Collectors.groupingBy(productPrice -> productPrice.getSizeId()));
 
-			
+			Map<String, ItemStock> itemStock = product.getItemStock().stream().collect(Collectors.toMap(e -> e.getSize().getSizeName(), Function.identity()));
+			Map<Integer, List<ProductPrice>> productPricePerCustomer = product.getProductPrices().stream()
+					.filter(productPrice -> {
+						return productPrice.getCustomerTagId() == customerTag.getId();
+					}).collect(Collectors.groupingBy(productPrice -> productPrice.getSizeId()));
+
 			if (!headerAlreadyRendered) {
 				VerticalLayout flavorColumnHeaderWrapper = new VerticalLayout();
 				flavorColumnHeaderWrapper.addClassName("span-order-flavor-column-header");
@@ -82,28 +97,29 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 				flavorColumnHeaderWrapper.add(flavorColumnHeader);
 				headerWrapper.add(flavorColumnHeaderWrapper);
 
-
 				category.getSizeSet().forEach(size -> {
 					VerticalLayout sizeColumnHeaderWrapper = new VerticalLayout();
 					sizeColumnHeaderWrapper.addClassName("span-order-size-column-header");
 
-					Set<String> customerTagNameSet = size.getCustomerTagSet().stream().map(CustomerTag::getCustomerTagName)
-							.collect(Collectors.toSet());
-					if (customerTagNameSet.contains(customerTag.getCustomerTagName()) && productPricePerCustomer.containsKey(size.getId())) {
+//					Set<String> customerTagNameSet = size.getCustomerTagSet().stream()
+//							.map(CustomerTag::getCustomerTagName).collect(Collectors.toSet());
+//					if (customerTagNameSet.contains(customerTag.getCustomerTagName())
+//							&& productPricePerCustomer.containsKey(size.getId())) {
 
 						Span sizeColumnHeader = new Span();
 						sizeColumnHeader.setText(size.getSizeName());
 						sizeColumnHeader.addClassNames("mb-1", "mt-s", "text-s");
 						sizeColumnHeaderWrapper.add(sizeColumnHeader);
 						headerWrapper.add(sizeColumnHeaderWrapper);
-					}
+				//	}
 
 				});
+
+
+				layout.add(headerWrapper);
+				layout.add(new Hr());
 				headerAlreadyRendered = true;
 			}
-
-			layout.add(headerWrapper);
-			layout.add(new Hr());
 
 			HorizontalLayout contentWrapper = new HorizontalLayout();
 			contentWrapper.setWidthFull();
@@ -123,17 +139,18 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 				Set<String> customerTagNameSet = size.getCustomerTagSet().stream().map(CustomerTag::getCustomerTagName)
 						.collect(Collectors.toSet());
-				
+
 				List<ProductPrice> prices = productPricePerCustomer.get(size.getId());
 				if (customerTagNameSet.contains(customerTag.getCustomerTagName()) && Objects.nonNull(prices)) {
-					
-					ProductPrice productPrice = prices.stream().filter(e-> {
-						return e.getCustomerTagId()	== customerTag.getId() && customer.getLocationTagId().getId() == e.getLocationTagId();
+
+					ProductPrice productPrice = prices.stream().filter(e -> {
+						return e.getCustomerTagId() == customerTag.getId()
+								&& customer.getLocationTagId().getId() == e.getLocationTagId();
 					}).findFirst().orElseGet(null);
 					IntegerField quantityField = new IntegerField();
-					
+
 					int quantity = 0;
-					
+
 					ItemStock stock = itemStock.get(size.getSizeName());
 					if (stock != null) {
 						quantity = itemStock.get(size.getSizeName()).getAvailableStock();
@@ -141,54 +158,87 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 					quantityField.setMax(quantity);
 					quantityField.addClassName("span-order-size-column");
-					quantityField.setHelperText("Stock: " + quantity);
+					quantityField.setHelperText("Stock: " + quantity + " size: " + size.getSizeName());
 					quantityField.setHasControls(true);
 					quantityField.setValue(0);
 					quantityField.setMin(0);
+					quantityField.addValueChangeListener(e -> {
+						BigDecimal oldAmount = productPrice.getTransferPrice().multiply(BigDecimal.valueOf(e.getOldValue()));
+						BigDecimal newAmount = productPrice.getTransferPrice().multiply(BigDecimal.valueOf(e.getValue()));
+						
+						currentTotalPrice = currentTotalPrice.subtract(oldAmount);
+						currentTotalPrice = currentTotalPrice.add(newAmount);
+						System.out.println("Old Amount : " + oldAmount);
+						System.out.println("New Amount : " + newAmount);
+
+						System.out.println("Current Total Amount : " + currentTotalPrice);
+
+						totalAmount.setText("Total Amount : " + currentTotalPrice);
+						add(totalAmount);
+						
+						
+					});
 					contentWrapper.add(quantityField);
-					
+
 					itemsList.add(new Items(quantityField, productPrice.getTransferPrice(), stock));
-					
-					
+
+				} else {
+					IntegerField quantityField = new IntegerField();
+					quantityField.setMax(0);
+					quantityField.addClassName("span-order-size-column");
+					quantityField.setHelperText("Stock: " + 0 + " size: " + size.getSizeName());
+					quantityField.setHasControls(true);
+					quantityField.setValue(0);
+					quantityField.setMin(0);
+					quantityField.setEnabled(false);
+					contentWrapper.add(quantityField);
 				}
 			});
 
 			layout.add(contentWrapper);
 
 		}
+		
 
-		add(layout);
+		
+		add(layout);	
 
 	}
-	
+
 	public Set<OrderItems> createOrderItems(AppUser user, LocalDateTime localDateTime, Order order) {
 		return itemsList.stream().map(items -> {
 			if (items.getNumberField().getValue() > 0) {
 
+				int quantity = items.getNumberField().getValue();
+
 				OrderItems orderItem = new OrderItems();
+
+				orderItem.setQuantity(quantity);
 				
-				orderItem.setQuantity(items.getNumberField().getValue());
-				orderItem.setItemInventory(items.getItemStock());
+				ItemStock stock = items.getItemStock();
+				int availableStock = stock.getAvailableStock();
+				int adjustment = availableStock - quantity;
+				stock.setAvailableStock(adjustment);
+				orderItem.setItemInventory(stock);
 				orderItem.setProductPrice(items.getPrice());
 				orderItem.setUpdatedDate(localDateTime);
 				orderItem.setCreatedBy(user);
 				orderItem.setCreatedDate(localDateTime);
 				orderItem.setUpdatedBy(user);
 				orderItem.setOrder(order);
-					
-				
+
 				return orderItem;
 			}
 			return null;
-		}).filter(Objects::nonNull).collect(Collectors.toSet());	
+		}).filter(Objects::nonNull).collect(Collectors.toSet());
 	}
-	
+
 	private class Items {
-		
+
 		private IntegerField numberField;
 		private BigDecimal price;
 		private ItemStock itemStock;
-		
+
 		public Items(IntegerField numberField, BigDecimal price, ItemStock itemStock) {
 			super();
 			this.numberField = numberField;
@@ -208,8 +258,6 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			return itemStock;
 		}
 
-		
 	}
-
 
 }

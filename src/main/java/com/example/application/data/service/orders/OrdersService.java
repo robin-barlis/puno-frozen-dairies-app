@@ -13,10 +13,9 @@ import org.springframework.stereotype.Service;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.stock.ItemStock;
 
-
 @Service
 public class OrdersService {
-	
+
 	private final OrdersRepository repository;
 
 	@Autowired
@@ -24,7 +23,6 @@ public class OrdersService {
 		this.repository = repository;
 	}
 
-	
 	public Optional<Order> get(Integer id) {
 		return repository.findById(id);
 	}
@@ -42,14 +40,18 @@ public class OrdersService {
 	}
 
 	public Order update(Object entity) {
-		return repository.save((Order)entity);
-		
-	}
-	
-	public List<Order> updateAll(Collection<Order> entities) {
-		return repository.saveAll(entities);
-		
+		return repository.save((Order) entity);
+
 	}
 
+	public List<Order> updateAll(Collection<Order> entities) {
+		return repository.saveAll(entities);
+
+	}
+
+	public Integer getLastId() {
+		Integer lastStockOrderNumnber = repository.findMaxSONumber();	
+		return lastStockOrderNumnber == null ? 0 : lastStockOrderNumnber;
+	}
 
 }

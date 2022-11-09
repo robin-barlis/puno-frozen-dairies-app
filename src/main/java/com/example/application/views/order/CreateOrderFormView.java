@@ -23,12 +23,9 @@ import com.example.application.data.service.customers.CustomerService;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.products.CategoryService;
 import com.example.application.data.service.products.ProductService;
-import com.example.application.data.service.stock.ItemStockService;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
-import com.example.application.views.products.ProductsView;
-import com.example.application.views.products.components.SizePricingSubView;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
@@ -46,6 +43,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 
 @PageTitle("Add New Product")
@@ -58,14 +56,10 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 	private DateTimePicker orderCreationDate;
 	private Select<Customer> storeName;
 	private Button cancelButton;
-	//private Button saveAsDraftButton;
-	private Button publishButton;
-	private Button saveAsDraftButton;
+	private Button nextButton;
 	private CategoryService categoryService;
 	private ProductService productService;
-	private HashSet<SizePricingSubView> pricingSubViewSet = new HashSet<>();
-
-	private ItemStockService itemStockService;
+	
 	private AuthenticatedUser authenticatedUser;
 	private CustomerService customerService;
 	private TextField ownerName;
@@ -74,11 +68,10 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 	
 
 	@Autowired
-	public CreateOrderFormView(AuthenticatedUser authenticatedUser, OrdersService stockOrderService, CustomerService customerService, ItemStockService itemStockService, ProductService prodcuctService, CategoryService categoryService, AccessAnnotationChecker accessChecker) {
-		super("add-new-product", "Crete Stock Order");
+	public CreateOrderFormView(OrdersService stockOrderService, AuthenticatedUser authenticatedUser, CustomerService customerService, ProductService prodcuctService, CategoryService categoryService, AccessAnnotationChecker accessChecker) {
+		super("add-new-product", "Create Stock Order");
 		//addClassNames("products-view");
 		this.customerService = customerService;
-		this.itemStockService = itemStockService;
 		this.authenticatedUser = authenticatedUser;
 		this.productService = prodcuctService;
 		this.categoryService = categoryService;
@@ -139,22 +132,21 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		cancelButton = new Button("Cancel");
 		
 		cancelButton.addClickListener(e -> {
-//			newAddSizeContainer.removeAll();
-//			category.setValue(null);
-//			productName.setValue(null);
 			UI.getCurrent().navigate(StockOrderView.class);
 			
 		});
 		
-		publishButton = new Button("Next");
-		publishButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		publishButton.addClickListener(e -> {
+		nextButton = new Button("Next");
+		nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		nextButton.addClickListener(e -> {
 
 			Order order = createNewOrder();
 			order = orderService.update(order);
-			//TODO update inventory
+			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+					
+			
 			Notification.show("Successfully created order.");
-			UI.getCurrent().navigate(StockOrderView.class);
+			UI.getCurrent().navigate(StockOrderSummaryView.class, parameters);
 		});
 		
 
@@ -172,7 +164,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		
 		
 		buttonsLayout.add(cancelButton);
-		buttonsLayout.add(publishButton);
+		buttonsLayout.add(nextButton);
 		
 		content.add(buttonsLayout);
 
@@ -187,7 +179,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		order.setCreatedByUser(user);
 		order.setCreationDate(orderCreationDate.getValue());
 		order.setCustomer(storeName.getValue());
-		order.setStatus("For Checking");
+		order.setStatus("Draft");
 		order.setUpdatedByUser(user);
 		order.setUpdatedDate(orderCreationDate.getValue());
 		
@@ -211,19 +203,9 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 			return e.getCategory().getCategoryName();	
 		}));
 		
-		categories.forEach(category -> {
-			
-			List<Product> productsPerCategory = productCategoryMap.get(category.getCategoryName());
-			
-			if (productsPerCategory != null && !productsPerCategory.isEmpty()) {
-				ItemOrderCategorySubView itemOrderCategorySubView = new ItemOrderCategorySubView(category, productsPerCategory, customer);
-				itemOrderCategorySubViewSet.add(itemOrderCategorySubView);
-				content.add(itemOrderCategorySubView);
-				
-			}
-		});
-		
-
+		ItemOrderCategorySubView itemOrderCategorySubView = new ItemOrderCategorySubView(categories, customer, productCategoryMap);
+		itemOrderCategorySubViewSet.add(itemOrderCategorySubView);
+		content.add(itemOrderCategorySubView);
 		
 	}
 
