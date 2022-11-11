@@ -17,11 +17,12 @@
 }
 
 .order-summary-div {
-	width: 100%;
 	background:#FFF;
 	flex: content;
 	height: auto;
 	padding-bottom:50px;
+	margin-left:20px;
+	margin-right:20px;
 }
 
 .stock-order-number-date-container {	
@@ -85,6 +86,21 @@ thead th {
     padding-bottom: 20px;
     width: 100%;
 }
+
+.order-summary-header-wrapper {
+	width: -webkit-fill-available;
+	height:50px;
+	margin-top:20px;
+	margin-bottom:20px;
+	margin-left:20px;
+	padding-right:20px;
+}
+
+.action-button-wrapper {
+	margin-right: 20px;
+    width: -webkit-fill-available;
+}
+
 
 
 

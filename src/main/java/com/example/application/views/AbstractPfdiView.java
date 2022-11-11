@@ -38,7 +38,9 @@ public abstract class AbstractPfdiView extends Main implements BeforeEnterObserv
 		createMainContentLayout(this.contentContainer); 
 
 		add(this.contentHeaderContainer);
-		add(new Hr());
+		Hr hr = new Hr();
+		hr.addClassName("hr-class-wrapper");
+		add(hr);
 		add(this.contentContainer);
 
 	}

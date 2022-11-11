@@ -1,6 +1,7 @@
 package com.example.application.views.order;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,25 +15,36 @@ import org.vaadin.stefan.table.TableHead;
 import org.vaadin.stefan.table.TableHeaderCell;
 import org.vaadin.stefan.table.TableRow;
 
+import com.example.application.data.OrderStatus;
+import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.service.orders.OrdersService;
+import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
 import com.example.application.views.MainLayout;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextArea;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
@@ -71,17 +83,97 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	private BigDecimal totalAmount = BigDecimal.valueOf(0);
 
 	private Span totalAmountLabel;
+	private AuthenticatedUser user;
+	private MenuItem editMenu;
+	private MenuItem checkMenu;
+	private MenuItem reject;
 
 
 	@Autowired
-	public StockOrderSummaryView(OrdersService ordersService) {
+	public StockOrderSummaryView(OrdersService ordersService, AuthenticatedUser user) {
 		this.ordersService = ordersService;
+		this.user = user;
 		addClassNames("administration-view");
 		
 		addChildrenToContentHeaderContainer(this);
+		
+		Div actionButtonDiv = new Div();
+		actionButtonDiv.addClassName("action-button-wrapper");
+		MenuBar menuBar = new MenuBar();
+		menuBar.addClassName("float-right");
+        menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON);
 
+        editMenu = createIconItem(menuBar, VaadinIcon.PENCIL, "Edit");
+        editMenu.addClickListener(e -> {
+        	System.out.println("editing");
+        });
+        checkMenu = createIconItem(menuBar, VaadinIcon.CHECK_CIRCLE, "Check");
+        checkMenu.addClickListener(e -> {
+        	ConfirmDialog confirmDialog = new ConfirmDialog();
+        	confirmDialog.setCancelable(true);
+        	confirmDialog.setHeader("Are you sure you want to approve this Stock Order?");
+        	confirmDialog.addConfirmListener(event -> {
+        		
+        		AppUser updatedBy = user.get().get();
+        		order.setStatus(OrderStatus.CHECKED.getOrderStatusName());
+        		order.setCheckedByUser(updatedBy);
+        		order.setCheckedDate(LocalDateTime.now());
+        		order.setUpdatedByUser(updatedBy);
+        		order.setUpdatedDate(LocalDateTime.now());
+        		ordersService.update(order);
+        		
+        		Notification.show("Successfully checked Order ID", 10000, Position.MIDDLE);
+        	});
+        	confirmDialog.open();
+        });
+        
+        reject = createIconItem(menuBar, VaadinIcon.CLOSE_CIRCLE, "Send Back to Sales");
+        reject.addClickListener(e -> {
+        	ConfirmDialog confirmDialog = new ConfirmDialog();
+      	
+        	confirmDialog.setCancelable(true);
+        	confirmDialog.setHeader("Are you sure you want to reject this Stock Order?");
+        	
+        	Button button = new Button("Confirm");
+        	button.setEnabled(false);
+        	button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
+        	
+        	TextArea textArea = new TextArea();
+        	textArea.setWidthFull();
+        	textArea.setLabel("Please add a note for Sales personnel.");
+        	textArea.setValueChangeMode(ValueChangeMode.EAGER);
+        	textArea.addValueChangeListener(valueChangeListener-> {
+        		button.setEnabled(true);
+        		
+        	});
+        	
+         	button.addClickListener(buttonClickListener -> {
+        		if (textArea.getValue() != null) {
+        			AppUser updatedBy = user.get().get();
+            		order.setStatus(OrderStatus.FOR_EDITING.getOrderStatusName());
+            		order.setCheckedByUser(updatedBy);
+            		order.setCheckedDate(LocalDateTime.now());
+            		order.setUpdatedByUser(updatedBy);
+            		order.setUpdatedDate(LocalDateTime.now());
+            		order.setNotes(textArea.getValue());
+            		ordersService.update(order);
+            		
+            		Notification.show("Successfully checked Order ID", 10000, Position.MIDDLE);
+            		confirmDialog.close();
+        		} 
+        	});
+         	
+         	confirmDialog.setConfirmButton(button);
+        	confirmDialog.add(textArea);
+        	confirmDialog.open();
+        });
+        
+        actionButtonDiv.add(menuBar);
+		add(actionButtonDiv);
+        
 		Div mainDiv = new Div();
 		mainDiv.addClassName("order-summary-div");
+
 		createSummaryHeader(mainDiv);
 		
 		createOrderDetailsDiv(mainDiv);
@@ -117,6 +209,12 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		buttonContainer.add(submit,saveAsDraft, back );
 		
 		add(buttonContainer);
+	}
+
+	private MenuItem createIconItem(MenuBar menu, VaadinIcon iconName, String tooltipText) {
+		Icon icon = new Icon(iconName);
+        MenuItem item = menu.addItem(icon);
+        return item;
 	}
 
 	@Override
@@ -184,6 +282,10 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			submit.setVisible(false);
 			saveAsDraft.setVisible(false);
 		}
+		
+		checkMenu.setEnabled(order.getStatus().equals(OrderStatus.FOR_CHECKING.getOrderStatusName()) || order.getStatus().equals(OrderStatus.FOR_EDITING.getOrderStatusName()));
+		editMenu.setEnabled(order.getStatus().equals(OrderStatus.FOR_CHECKING.getOrderStatusName()) || order.getStatus().equals(OrderStatus.FOR_EDITING.getOrderStatusName()) );
+		reject.setEnabled(order.getStatus().equals(OrderStatus.FOR_CHECKING.getOrderStatusName()) || order.getStatus().equals(OrderStatus.FOR_EDITING.getOrderStatusName()));
 	}
 
 	private void createSummaryHeader(Div mainDiv) {
@@ -283,6 +385,9 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 
 
 	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
+		Div headerWrapper = new Div();
+		headerWrapper.addClassName("order-summary-header-wrapper");
+		
 		HorizontalLayout headerContainer = new HorizontalLayout();
 		headerContainer.setWidthFull();
 
@@ -297,7 +402,17 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 
 		
 		headerContainer.add(headerNameWrapper);
-		contentHeaderContainer.add(headerContainer);
+		headerWrapper.add(headerContainer);
+
+		Hr hr = new Hr();
+
+		
+		Div hrWrapper = new Div();
+		hrWrapper.addClassName("hr-div-class-wrapper");
+		hrWrapper.add(hr);
+		
+		contentHeaderContainer.add(headerWrapper);
+		contentHeaderContainer.add(hrWrapper);
 
 	}
 

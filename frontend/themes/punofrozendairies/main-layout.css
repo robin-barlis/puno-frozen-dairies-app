@@ -21,8 +21,8 @@ header nav a[highlight] {
 }
 
 header nav a::before, header nav a::after {
-	background-color: var(- -lumo-contrast-60pct);
-	border-radius: var(- -lumo-border-radius) var(- -lumo-border-radius) 0 0;
+	background-color: var(--lumo-contrast-60pct);
+	border-radius: var(--lumo-border-radius) var(- -lumo-border-radius) 0 0;
 	bottom: 0;
 	content: "";
 	display: block;
@@ -119,45 +119,47 @@ header nav a[highlight]:not([active])::after {
 	width: 300px;
 	padding-bottom: 30px;
 }
-.pfdi-header-container{
-	height:50px;
+
+.pfdi-header-container {
+	height: 50px;
 }
 
 .background-div {
 	background-color: #C4C4C4;
 }
 
-.no-padding{
-	padding:0px;
+.no-padding {
+	padding: 0px;
 }
 
-.full-width{
-	width:100%;	
+.full-width {
+	width: 100%;
 }
 
-.padding-top-large{
-	padding-top:50px !important;
+.padding-top-large {
+	padding-top: 50px !important;
 }
 
-.padding-left-50px{
-	padding-left:50px !important;
+.padding-left-50px {
+	padding-left: 50px !important;
 }
 
-.padding-top-bottom-20px{
-	padding-top:20px !important;
-	padding-bottom:20px !important;
+.padding-top-bottom-20px {
+	padding-top: 20px !important;
+	padding-bottom: 20px !important;
 }
 
-.padding-top-medium{
-	padding-top:40px !important;
+.padding-top-medium {
+	padding-top: 40px !important;
 }
-.profile-picture{
-	width:10em;
+
+.profile-picture {
+	width: 10em;
 	height: 10em;
 }
 
 .float-right {
-	float:right;
+	float: right;
 }
 
 .text-align-left {
@@ -169,4 +171,15 @@ header nav a[highlight]:not([active])::after {
 }
 
 
+.header-container {
+	display: table-cell;
+  	vertical-align: middle;
+  	height: 50px;
+  	padding-left:20px;
+}
 
+.hr-div-class-wrapper {
+	width: -webkit-fill-available;
+    margin-left: 20px;
+    margin-right: 20px;
+}

@@ -65,6 +65,8 @@ public class Order implements Serializable {
 	
 	private LocalDateTime checkedDate;
 	
+	private String notes;
+	
 	
 	public AppUser getUpdatedByUserId() {
 		return updatedByUserId;
@@ -180,6 +182,14 @@ public class Order implements Serializable {
 			return false;
 		}
 		return getId().equals(other.getId());
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
 	}
 
 
