@@ -95,7 +95,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	private MenuItem editMenu;
 	private MenuItem checkMenu;
 	private MenuItem reject;
-	private MenuItem readyForDelivery;
+	//private MenuItem readyForDelivery;
 	private MenuItem delivered;
 	private DocumentTrackingNumberService documentTrackingNumberService;
 
@@ -134,7 +134,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
         	confirmDialog.open();
         });
         
-        reject = createIconItem(menuBar, VaadinIcon.CLOSE_CIRCLE, "Set order for editing");
+        reject = createIconItem(menuBar, VaadinIcon.CLOSE_CIRCLE, "Reject Order");
         reject.addClickListener(e -> {
         	ConfirmDialog confirmDialog = new ConfirmDialog();
       	
@@ -169,32 +169,32 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
         });
 
         
-        readyForDelivery = createIconItem(menuBar, VaadinIcon.TRUCK, "Set order for delivery");
-        readyForDelivery.addClickListener(e -> {
-        	ConfirmDialog confirmDialog = new ConfirmDialog();
-      	
-        	confirmDialog.setCancelable(true);
-        	confirmDialog.setHeader("Are you sure that this order is now ready for delivery?");
-        	
-        	Button confirmButton = new Button("Confirm");
-        	confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
-
-        	
-         	confirmButton.addClickListener(buttonClickListener -> {
-				setStatus(OrderStatus.FOR_DELIVERY);
-
-				Notification.show("Stock Order #" + order.getStockOrderNumber() + " is now ready for delivery. Delivery Receipt/ Stock Transfer is now available.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-				
-				//Go to Delivery Receipt
-				UI.getCurrent().navigate(StockOrderView.class);
-				confirmDialog.close();
-        	
-        	});
-         	
-         	confirmDialog.setConfirmButton(confirmButton);
-        	confirmDialog.open();
-        });
-        
+//        readyForDelivery = createIconItem(menuBar, VaadinIcon.TRUCK, "Set order for delivery");
+//        readyForDelivery.addClickListener(e -> {
+//        	ConfirmDialog confirmDialog = new ConfirmDialog();
+//      	
+//        	confirmDialog.setCancelable(true);
+//        	confirmDialog.setHeader("Are you sure that this order is now ready for delivery?");
+//        	
+//        	Button confirmButton = new Button("Confirm");
+//        	confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
+//
+//        	
+//         	confirmButton.addClickListener(buttonClickListener -> {
+//				setStatus(OrderStatus.FOR_DELIVERY);
+//
+//				Notification.show("Stock Order #" + order.getStockOrderNumber() + " is now ready for delivery. Delivery Receipt/ Stock Transfer is now available.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+//				
+//				//Go to Delivery Receipt
+//				UI.getCurrent().navigate(StockOrderView.class);
+//				confirmDialog.close();
+//        	
+//        	});
+//         	
+//         	confirmDialog.setConfirmButton(confirmButton);
+//        	confirmDialog.open();
+//        });
+//        
         delivered = createIconItem(menuBar, VaadinIcon.FLAG_CHECKERED, "Set order to delivered");
         delivered.addClickListener(e -> {
         	ConfirmDialog confirmDialog = new ConfirmDialog();
@@ -431,15 +431,15 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		reject.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_CHECKING)) 
 				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
 		
-		readyForDelivery.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.CHECKED))
-				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
-		
+//		readyForDelivery.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.CHECKED))
+//				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
+//		
 
 //		//Should only be visible to CHECKER && WHEN STATUS IS FOR CHECKING
 //		inTransit.setVisible(PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser));
 //		inTransit.setVisible(PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_DELIVERY));
 		
-		delivered.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.IN_TRANSIT))
+		delivered.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_DELIVERY))
 				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
 	}
 	
