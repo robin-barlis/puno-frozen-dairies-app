@@ -15,10 +15,13 @@ import org.vaadin.stefan.table.TableHead;
 import org.vaadin.stefan.table.TableHeaderCell;
 import org.vaadin.stefan.table.TableRow;
 
+import com.example.application.data.DocumentTrackingNumberEnum;
 import com.example.application.data.OrderStatus;
 import com.example.application.data.entity.AppUser;
+import com.example.application.data.entity.orders.DocumentTrackingNumber;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
+import com.example.application.data.service.orders.DocumentTrackingNumberService;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
@@ -38,7 +41,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.Notification.Position;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -54,13 +57,17 @@ import com.vaadin.flow.router.RouteAlias;
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrderSummary/:id", layout = MainLayout.class)
 @RouteAlias(value = "/order/stockOrderSummary/:id", layout = MainLayout.class)
-@RolesAllowed({ "Admin", "Superuser", "ADMIN" })
+@RolesAllowed({"Superuser", "Checker", "Sales", "CHECKER", "SALES" })
 @Uses(Icon.class)
 public class StockOrderSummaryView extends VerticalLayout implements BeforeEnterObserver {
 
 	private static final long serialVersionUID = 2754507440441771890L;
 
 	private Button saveAsDraft;
+	
+	private Button createSalesInvoice;
+	
+	private Button createStockTransfer;
 	
 	private Button submit;
 	
@@ -77,22 +84,27 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	private Span storeName;
 	private Span address;	
 	private Span ownerName;
+	private Span status;
 
 	private Table table;
 
 	private BigDecimal totalAmount = BigDecimal.valueOf(0);
 
 	private Span totalAmountLabel;
-	private AuthenticatedUser user;
+	private AppUser appUser;
 	private MenuItem editMenu;
 	private MenuItem checkMenu;
 	private MenuItem reject;
+	private MenuItem readyForDelivery;
+	private MenuItem delivered;
+	private DocumentTrackingNumberService documentTrackingNumberService;
 
 
 	@Autowired
-	public StockOrderSummaryView(OrdersService ordersService, AuthenticatedUser user) {
+	public StockOrderSummaryView(OrdersService ordersService, AuthenticatedUser user, DocumentTrackingNumberService documentTrackingNumberService) {
 		this.ordersService = ordersService;
-		this.user = user;
+		this.appUser = user.get().get();
+		this.documentTrackingNumberService = documentTrackingNumberService;
 		addClassNames("administration-view");
 		
 		addChildrenToContentHeaderContainer(this);
@@ -103,70 +115,110 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		menuBar.addClassName("float-right");
         menuBar.addThemeVariants(MenuBarVariant.LUMO_ICON);
 
-        editMenu = createIconItem(menuBar, VaadinIcon.PENCIL, "Edit");
+        editMenu = createIconItem(menuBar, VaadinIcon.EDIT, "Edit Stock Order");
         editMenu.addClickListener(e -> {
         	System.out.println("editing");
         });
-        checkMenu = createIconItem(menuBar, VaadinIcon.CHECK_CIRCLE, "Check");
+        checkMenu = createIconItem(menuBar, VaadinIcon.CLIPBOARD_CHECK, "Approve order");
         checkMenu.addClickListener(e -> {
         	ConfirmDialog confirmDialog = new ConfirmDialog();
         	confirmDialog.setCancelable(true);
         	confirmDialog.setHeader("Are you sure you want to approve this Stock Order?");
         	confirmDialog.addConfirmListener(event -> {
+    			setStatus(OrderStatus.CHECKED);
         		
-        		AppUser updatedBy = user.get().get();
-        		order.setStatus(OrderStatus.CHECKED.getOrderStatusName());
-        		order.setCheckedByUser(updatedBy);
-        		order.setCheckedDate(LocalDateTime.now());
-        		order.setUpdatedByUser(updatedBy);
-        		order.setUpdatedDate(LocalDateTime.now());
-        		ordersService.update(order);
-        		
-        		Notification.show("Successfully checked Order ID", 10000, Position.MIDDLE);
+    			Notification.show("Stock Order #" + order.getStockOrderNumber() + " checked. Now ready for delivery.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+    			
+    			UI.getCurrent().navigate(StockOrderView.class);
         	});
         	confirmDialog.open();
         });
         
-        reject = createIconItem(menuBar, VaadinIcon.CLOSE_CIRCLE, "Send Back to Sales");
+        reject = createIconItem(menuBar, VaadinIcon.CLOSE_CIRCLE, "Set order for editing");
         reject.addClickListener(e -> {
         	ConfirmDialog confirmDialog = new ConfirmDialog();
       	
         	confirmDialog.setCancelable(true);
         	confirmDialog.setHeader("Are you sure you want to reject this Stock Order?");
         	
-        	Button button = new Button("Confirm");
-        	button.setEnabled(false);
-        	button.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
+        	Button confirmButton = new Button("Confirm");
+        	confirmButton.setEnabled(false);
+        	confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
         	
         	TextArea textArea = new TextArea();
         	textArea.setWidthFull();
         	textArea.setLabel("Please add a note for Sales personnel.");
         	textArea.setValueChangeMode(ValueChangeMode.EAGER);
         	textArea.addValueChangeListener(valueChangeListener-> {
-        		button.setEnabled(true);
+        		confirmButton.setEnabled(true);
         		
         	});
         	
-         	button.addClickListener(buttonClickListener -> {
-        		if (textArea.getValue() != null) {
-        			AppUser updatedBy = user.get().get();
-            		order.setStatus(OrderStatus.FOR_EDITING.getOrderStatusName());
-            		order.setCheckedByUser(updatedBy);
-            		order.setCheckedDate(LocalDateTime.now());
-            		order.setUpdatedByUser(updatedBy);
-            		order.setUpdatedDate(LocalDateTime.now());
-            		order.setNotes(textArea.getValue());
-            		ordersService.update(order);
-            		
-            		Notification.show("Successfully checked Order ID", 10000, Position.MIDDLE);
+         	confirmButton.addClickListener(buttonClickListener -> {
+        		if (textArea.getValue() != null) {        			
+        			setStatus(OrderStatus.FOR_EDITING);
+        			Notification.show("Stock Order #" + order.getStockOrderNumber() + " sent back to Sales for editing.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+        			UI.getCurrent().navigate(StockOrderView.class);
             		confirmDialog.close();
         		} 
         	});
          	
-         	confirmDialog.setConfirmButton(button);
+         	confirmDialog.setConfirmButton(confirmButton);
         	confirmDialog.add(textArea);
         	confirmDialog.open();
         });
+
+        
+        readyForDelivery = createIconItem(menuBar, VaadinIcon.TRUCK, "Set order for delivery");
+        readyForDelivery.addClickListener(e -> {
+        	ConfirmDialog confirmDialog = new ConfirmDialog();
+      	
+        	confirmDialog.setCancelable(true);
+        	confirmDialog.setHeader("Are you sure that this order is now ready for delivery?");
+        	
+        	Button confirmButton = new Button("Confirm");
+        	confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
+
+        	
+         	confirmButton.addClickListener(buttonClickListener -> {
+				setStatus(OrderStatus.FOR_DELIVERY);
+
+				Notification.show("Stock Order #" + order.getStockOrderNumber() + " is now ready for delivery. Delivery Receipt/ Stock Transfer is now available.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				
+				//Go to Delivery Receipt
+				UI.getCurrent().navigate(StockOrderView.class);
+				confirmDialog.close();
+        	
+        	});
+         	
+         	confirmDialog.setConfirmButton(confirmButton);
+        	confirmDialog.open();
+        });
+        
+        delivered = createIconItem(menuBar, VaadinIcon.FLAG_CHECKERED, "Set order to delivered");
+        delivered.addClickListener(e -> {
+        	ConfirmDialog confirmDialog = new ConfirmDialog();
+      	
+        	confirmDialog.setCancelable(true);
+        	confirmDialog.setHeader("Are you sure that this order has already been delivered?");
+        	
+        	Button confirmButton = new Button("Confirm");
+        	confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
+
+        	
+         	confirmButton.addClickListener(buttonClickListener -> {
+				setStatus(OrderStatus.DELIVERED);
+
+				Notification.show("Stock Order #" + order.getStockOrderNumber() + " has been delivered.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				UI.getCurrent().navigate(StockOrderView.class);
+				confirmDialog.close();
+        	
+        	});
+         	
+         	confirmDialog.setConfirmButton(confirmButton);
+        	confirmDialog.open();
+        });
+        
         
         actionButtonDiv.add(menuBar);
 		add(actionButtonDiv);
@@ -185,20 +237,25 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		
 		back = new Button("Back");
 		back.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
-		back.addClassNames("submit-order-button", "float-right");
+		back.setVisible(true);
+		back.addClassNames("order-view-button", "float-right");
 		back.addClickListener(e -> {
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
 		
 		saveAsDraft = new Button("Save As Draft");
 		saveAsDraft.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
-		saveAsDraft.addClassNames("submit-order-button", "float-right");
+		saveAsDraft.setVisible(false);
+		saveAsDraft.addClassNames("order-view-button", "float-right");
 		saveAsDraft.addClickListener(e -> {
+			Notification.show("Order saved as draft.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
+		
 		submit = new Button("Submit");
+		submit.setVisible(false);
 		submit.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		submit.addClassNames("submit-order-button", "float-right");
+		submit.addClassNames("order-view-button", "float-right");
 		submit.addClickListener(e -> {
 			order.setStatus("For Checking");
 			order = ordersService.update(order);
@@ -206,14 +263,79 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
 		
-		buttonContainer.add(submit,saveAsDraft, back );
+		createSalesInvoice = new Button("Create S.I. & D.R.");
+		createSalesInvoice.setTooltipText("Create Sales Invoice and Delivery Receipt");
+		createSalesInvoice.setVisible(false);
+		createSalesInvoice.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		createSalesInvoice.addClassNames("order-view-button", "float-right");
+		createSalesInvoice.addClickListener(e -> {
+			
+			DocumentTrackingNumber invoiceNumber = documentTrackingNumberService.findByType(DocumentTrackingNumberEnum.INVOICE_NUMBER.name());
+			DocumentTrackingNumber deliveryReceiptNumber = documentTrackingNumberService.findByType(DocumentTrackingNumberEnum.DELIVERY_RECEIPT_NUMBER.name());
+			
+			Integer currentInvoiceNumber = invoiceNumber.getNumber()+1;
+			invoiceNumber.setNumber(currentInvoiceNumber);
+			
+			Integer currentDeliveryReceiptNumber = deliveryReceiptNumber.getNumber()+1;
+			deliveryReceiptNumber.setNumber(currentDeliveryReceiptNumber);
+			
+			invoiceNumber = documentTrackingNumberService.update(invoiceNumber);
+			deliveryReceiptNumber = documentTrackingNumberService.update(deliveryReceiptNumber);
+			
+			order.setStatus(OrderStatus.FOR_DELIVERY.getOrderStatusName());
+			order.setDeliveryReceiptId(deliveryReceiptNumber.getNumber());
+			order.setInvoiceId(invoiceNumber.getNumber());
+			
+			order = ordersService.update(order);
+			Notification.show("Delivery Receipt & Invoice numbers for" + order.getStockOrderNumber() + " successfully created.");
+			UI.getCurrent().navigate(DeliveryReceiptView.class);
+		});
+		
+		createStockTransfer = new Button("Create S.T. & D.R.");
+		createStockTransfer.setTooltipText("Create Stock Transfer and Delivery Receipt");
+		createStockTransfer.setVisible(false);
+		createStockTransfer.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		createStockTransfer.addClassNames("order-view-button", "float-right");
+		createStockTransfer.addClickListener(e -> {
+			DocumentTrackingNumber stockTransferNumber = documentTrackingNumberService.findByType(DocumentTrackingNumberEnum.STOCK_TRANSFER_NUMBER.name());
+			DocumentTrackingNumber deliveryReceiptNumber = documentTrackingNumberService.findByType(DocumentTrackingNumberEnum.DELIVERY_RECEIPT_NUMBER.name());
+			
+			Integer currentInvoiceNumber = stockTransferNumber.getNumber()+1;
+			stockTransferNumber.setNumber(currentInvoiceNumber);
+			
+			Integer currentDeliveryReceiptNumber = deliveryReceiptNumber.getNumber()+1;
+			deliveryReceiptNumber.setNumber(currentDeliveryReceiptNumber);
+			
+			stockTransferNumber = documentTrackingNumberService.update(stockTransferNumber);
+			deliveryReceiptNumber = documentTrackingNumberService.update(deliveryReceiptNumber);
+			
+			order.setStatus(OrderStatus.FOR_DELIVERY.getOrderStatusName());
+			order.setDeliveryReceiptId(deliveryReceiptNumber.getNumber());
+			order.setInvoiceId(stockTransferNumber.getNumber());
+			
+			order = ordersService.update(order);
+			Notification.show("Delivery Receipt & Invoice numbers for" + order.getStockOrderNumber() + " successfully created.");
+			UI.getCurrent().navigate(StockOrderView.class);
+		});
+		
+		buttonContainer.add(submit,saveAsDraft, createSalesInvoice, createStockTransfer, back );
 		
 		add(buttonContainer);
 	}
 
+	private Order setStatus(OrderStatus forDelivery) {
+		order.setStatus(forDelivery.getOrderStatusName());
+		order.setCheckedByUser(appUser);
+		order.setCheckedDate(LocalDateTime.now());
+		order.setUpdatedByUser(appUser);
+		order.setUpdatedDate(LocalDateTime.now());
+		
+		return ordersService.update(order);
+	}
+
 	private MenuItem createIconItem(MenuBar menu, VaadinIcon iconName, String tooltipText) {
 		Icon icon = new Icon(iconName);
-        MenuItem item = menu.addItem(icon);
+        MenuItem item = menu.addItem(icon, tooltipText);
         return item;
 	}
 
@@ -230,10 +352,11 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		}
 
 		stockOrderNumberSpam.setText("Stock Order #" + stockOrderNumber);
-		orderDate.setText(order.getCreationDate().toString());
+		orderDate.setText(PfdiUtil.formatDateWithHours(order.getCreationDate()));
 		storeName.setText(order.getCustomer().getStoreName());
 		address.setText(order.getCustomer().getAddress());
 		ownerName.setText(order.getCustomer().getOwnerName());
+		status.setText(order.getStatus());
 		
 		
 		//set table summary content
@@ -278,19 +401,51 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		
 		totalAmountLabel.setText("Total Amount : " + PfdiUtil.getFormatter().format(totalAmount));
 		
-		if ("For Checking".equals(order.getStatus())) {
-			submit.setVisible(false);
-			saveAsDraft.setVisible(false);
-		}
 		
-		checkMenu.setEnabled(order.getStatus().equals(OrderStatus.FOR_CHECKING.getOrderStatusName()) || order.getStatus().equals(OrderStatus.FOR_EDITING.getOrderStatusName()));
-		editMenu.setEnabled(order.getStatus().equals(OrderStatus.FOR_CHECKING.getOrderStatusName()) || order.getStatus().equals(OrderStatus.FOR_EDITING.getOrderStatusName()) );
-		reject.setEnabled(order.getStatus().equals(OrderStatus.FOR_CHECKING.getOrderStatusName()) || order.getStatus().equals(OrderStatus.FOR_EDITING.getOrderStatusName()));
+		//ONLY VISIBLE WHEN DRAFT, FOR EDITING
+		submit.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_EDITING)
+				|| PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
+				&& (PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser)));
+		saveAsDraft.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_EDITING)
+				|| PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
+				&& (PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser)));
+		
+		createStockTransfer.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.CHECKED))
+				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
+				&& PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId()));
+		createSalesInvoice.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.CHECKED))
+				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
+				&& !PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId()));
+
+		
+		editMenu.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_CHECKING)			
+				|| PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_EDITING)
+				|| PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
+				&& (PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser)));
+		
+		//Should only be visible to CHECKER && WHEN STATUS IS FOR CHECKING
+		checkMenu.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_CHECKING))
+				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
+		
+		//Should only be visible to CHECKER && WHEN STATUS IS FOR CHECKING
+		reject.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_CHECKING)) 
+				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
+		
+		readyForDelivery.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.CHECKED))
+				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
+		
+
+//		//Should only be visible to CHECKER && WHEN STATUS IS FOR CHECKING
+//		inTransit.setVisible(PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser));
+//		inTransit.setVisible(PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_DELIVERY));
+		
+		delivered.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.IN_TRANSIT))
+				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
 	}
+	
+	
 
 	private void createSummaryHeader(Div mainDiv) {
-		
-		System.out.println("here");
 		
 		Div header = new Div();	
 		
@@ -330,12 +485,20 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		ownerNameDiv.add(ownerNameLabel);
 		ownerNameDiv.add(ownerName);
 		
+		Div statusDiv = new Div();
+		Span statusLabel = new Span("Order Status : ");
+		status = new Span();
+		status.addClassName("bold-label");
+		statusDiv.add(statusLabel);
+		statusDiv.add(status);
+		
 		
 		header.add(stockOrderDiv);
 		
 		ownerDetailsWrapper.add(storeNameDiv);
 		ownerDetailsWrapper.add(addressDiv);
 		ownerDetailsWrapper.add(ownerNameDiv);
+		ownerDetailsWrapper.add(statusDiv);
 		
 		mainDiv.add(header);
 		mainDiv.add(ownerDetailsWrapper);
@@ -389,6 +552,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		headerWrapper.addClassName("order-summary-header-wrapper");
 		
 		HorizontalLayout headerContainer = new HorizontalLayout();
+		headerContainer.setHeightFull();
 		headerContainer.setWidthFull();
 
 		FlexLayout headerNameWrapper = new FlexLayout();

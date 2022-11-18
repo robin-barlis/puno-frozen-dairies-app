@@ -140,6 +140,15 @@ header nav a[highlight]:not([active])::after {
 	padding-top: 50px !important;
 }
 
+.padding-bottom-medium {
+	padding-bottom: 30px !important;
+}
+
+.padding-bottom-large {
+	padding-bottom: 50px !important;
+}
+
+
 .padding-left-50px {
 	padding-left: 50px !important;
 }
@@ -182,4 +191,24 @@ header nav a[highlight]:not([active])::after {
 	width: -webkit-fill-available;
     margin-left: 20px;
     margin-right: 20px;
+}
+
+.text-align-center {
+	text-align: center;
+}
+
+.report-header-text-subheading {
+	font-style: italic;
+	font-size: var(--lumo-font-size-s);
+	padding-right: 60px;
+    padding-left: 60px;
+}
+
+.report-header-text-heading {
+	font-weight: 700;
+	font-size: var(--lumo-font-size-xl);
+}
+
+.signature-line {
+    border-top:1px solid rgb(217, 217, 217);
 }

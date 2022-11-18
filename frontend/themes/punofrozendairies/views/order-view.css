@@ -34,6 +34,7 @@
 
 .owner-details-wrapper {
 	padding-left:40px;
+	padding-right:40px;
 	padding-bottom:30px;
 }
 
@@ -84,22 +85,40 @@ thead th {
 .order-summary-button-container {
 	padding-top: 20px;
     padding-bottom: 20px;
-    width: 100%;
+    width: -webkit-fill-available;
+    margin-right:20px;
 }
 
 .order-summary-header-wrapper {
 	width: -webkit-fill-available;
 	height:50px;
-	margin-top:20px;
-	margin-bottom:20px;
 	margin-left:20px;
 	padding-right:20px;
 }
+
+
 
 .action-button-wrapper {
 	margin-right: 20px;
     width: -webkit-fill-available;
 }
+
+.order-view-button {
+	width: 150px;
+	margin-left:20px;
+}
+
+.order-delivery-receipt-table {
+	width: 100%;
+    align-items: flex-start;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    padding-left: 100px;
+    padding-right: 100px;
+    table-layout: fixed;
+}
+
+
 
 
 

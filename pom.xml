@@ -10,7 +10,7 @@
 
 	<properties>
 		<java.version>18</java.version>
-		<vaadin.version>23.2.5</vaadin.version>
+		<vaadin.version>23.3.0.alpha1</vaadin.version>
 		<selenium.version>4.2.1</selenium.version>
 	</properties>
 
@@ -179,6 +179,11 @@
 			<groupId>org.vaadin.stefan</groupId>
 			<artifactId>html-table</artifactId>
 			<version>1.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>ar.com.fdvs</groupId>
+			<artifactId>DynamicJasper</artifactId>
+			<version>5.3.0</version>
 		</dependency>
 	</dependencies>
 

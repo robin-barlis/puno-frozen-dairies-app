@@ -65,6 +65,36 @@ public class Order implements Serializable {
 	
 	private LocalDateTime checkedDate;
 	
+	private Integer invoiceId;
+	
+	private Integer deliveryReceiptId;
+	
+	private Integer stockTransferId;
+	
+	public Integer getInvoiceId() {
+		return invoiceId;
+	}
+
+	public void setInvoiceId(Integer invoiceId) {
+		this.invoiceId = invoiceId;
+	}
+
+	public Integer getDeliveryReceiptId() {
+		return deliveryReceiptId;
+	}
+
+	public void setDeliveryReceiptId(Integer deliveryReceiptId) {
+		this.deliveryReceiptId = deliveryReceiptId;
+	}
+
+	public Integer getStockTransferId() {
+		return stockTransferId;
+	}
+
+	public void setStockTransferId(Integer stockTransferId) {
+		this.stockTransferId = stockTransferId;
+	}
+
 	private String notes;
 	
 	

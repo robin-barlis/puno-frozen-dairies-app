@@ -5,6 +5,7 @@ import java.util.List;
 import javax.annotation.security.RolesAllowed;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.sql.ordering.antlr.OrderByFragment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
@@ -12,9 +13,11 @@ import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.service.customers.CustomerService;
 import com.example.application.data.service.orders.OrdersService;
+import com.example.application.utils.PfdiUtil;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -26,6 +29,7 @@ import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -141,10 +145,36 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 			Integer stockOrderNumber = order.getStockOrderNumber();
 			
-			String path = stockOrderNumber != null ? "S.O.#" + stockOrderNumber : "Not Available";		
-			return new Anchor(route, path);
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Stock Order Number").setSortable(true);
+			String path = "S.O. No." + stockOrderNumber;	
+			Component component = stockOrderNumber != null ? new Anchor(route, path) : new Span("N/A");
+			return component;
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("S.O. No.").setSortable(true);
 		
+		grid.addComponentColumn(order -> {
+			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+			String deliveryReceipt = order.getDeliveryReceiptId() != null ? "D.R. No." + order.getDeliveryReceiptId() : "N/A";
+			String route = RouteConfiguration.forSessionScope().getUrl(DeliveryReceiptView.class, parameters);
+			
+			Component component = order.getDeliveryReceiptId()  != null ? new Anchor(route, deliveryReceipt)  : new Span("N/A");
+			return component;
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("D.R. No.").setSortable(true);
+
+		grid.addComponentColumn(order -> {	
+			boolean isCompanyOwned = PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId());
+			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+			Class<? extends Component> routeClass = isCompanyOwned ? StockTransferView.class : SalesInvoiceView.class;
+			
+			Integer docNumber = isCompanyOwned ? order.getStockOrderNumber() : order.getInvoiceId();
+			
+			String path = isCompanyOwned ? "S.T. No. " + docNumber : "Inv. No. " + docNumber;
+			
+			String route = RouteConfiguration.forSessionScope().getUrl(routeClass, parameters);
+			
+			Component component = docNumber != null ? new Anchor(route, path)  : new Span("N/A");
+			return component;
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Inv./S.T. No. ").setSortable(true);
+		
+			
 		grid.addColumn(order -> {			
 			return order.getCustomer().getStoreName();
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Store Name").setSortable(true);
@@ -154,7 +184,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Created By").setSortable(true);
 		
 		grid.addColumn(order -> {			
-			return order.getCreationDate();
+			return PfdiUtil.formatDate(order.getCreationDate());
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Created Date").setSortable(true);
 		
 		grid.addColumn(order -> {	
@@ -168,7 +198,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Checked By").setSortable(true);
 		
 		grid.addColumn(order -> {			
-			return order.getCheckedDate();
+			return PfdiUtil.formatDate(order.getCheckedDate());
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Checked Date").setSortable(true);
 		
 
@@ -196,13 +226,10 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		dataView.addFilter(customer -> {
 			String searchTerm = searchField.getValue().trim();
 
-			if (searchTerm.isEmpty())
+			if (searchTerm.isEmpty()) {
+
 				return true;
-
-//			boolean matchesCustomerName = matchesTerm(customer.getStoreName(), searchTerm);
-//			boolean matchesOwnerName = matchesTerm(customer.getOwnerName(), searchTerm);
-
-			//return matchesCustomerName || matchesOwnerName;
+			}
 			return true;
 		});
 
@@ -214,23 +241,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		grid.select(null);
 		grid.getListDataView().refreshAll();
 	}
-//
-//	private void refreshGrid(Order updatedOrder, boolean delete) {
-//		if (delete) {
-//
-//			grid.getListDataView().removeItem(updatedOrder);
-//		} else {
-//
-//			grid.getListDataView().addItem(updatedOrder);
-//		}
-//		ldp.refreshItem(updatedOrder);
-//		refreshGrid();
-//
-//	}
 
-//	private boolean matchesTerm(String value, String searchTerm) {
-//		return value.toLowerCase().contains(searchTerm.toLowerCase());
-//	}
 
 	@Override
 	protected void createMainContentLayout(VerticalLayout mainContentContainer) {

@@ -208,8 +208,8 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 				binder.writeBean(appUser);
 
 				if (appUser.getUsername() == null) {
-					String firstName = appUser.getFirstName();
-					String lastName = appUser.getLastName();
+					String firstName = appUser.getFirstName().strip().toLowerCase();
+					String lastName = appUser.getLastName().strip().toLowerCase();
 					String userName = firstName + "." + lastName;
 					appUser.setUsername(userName.replace(' ', '.'));
 				}
