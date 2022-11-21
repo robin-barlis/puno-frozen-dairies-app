@@ -41,9 +41,9 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 
 @PageTitle("Inventory")
-@Route(value = "products/inventory", layout = MainLayout.class)
-@RouteAlias(value = "products/inventory", layout = MainLayout.class)
-@RolesAllowed({ "Admin", "Superuser", "ADMIN" })
+@Route(value = "stocks/inventory", layout = MainLayout.class)
+@RouteAlias(value = "stocks/inventory", layout = MainLayout.class)
+@RolesAllowed({ "Admin", "Superuser", "ADMIN", "Checker", "CHECKER", "Sales", "SALES" })
 @Uses(Icon.class)
 public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterObserver {
 
@@ -135,7 +135,7 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 			
 			HorizontalLayout adjustmentFieldSaveWrapper = new HorizontalLayout();
 			IntegerField adjustmentField = new IntegerField();
-			adjustmentField.setValue(0);
+			//adjustmentField.setValue(0);
 			adjustmentField.setHasControls(true);
 			
 			Button saveButton = new Button(new Icon(VaadinIcon.PLUS)); // make this an icon

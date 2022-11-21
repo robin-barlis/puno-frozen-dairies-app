@@ -138,7 +138,7 @@ public class StockTransferView extends VerticalLayout implements BeforeEnterObse
 		Integer deliveryReceipt = order.getDeliveryReceiptId();
 
 		stockOrderNumberSpan.setText(stockOrderNumber.toString());
-		deliveryReceiptNumberSpan.setText(deliveryReceipt.toString());
+
 		orderDate.setText(PfdiUtil.formatDateWithHours(order.getCreationDate()));
 		storeName.setText(order.getCustomer().getStoreName());
 		address.setText(order.getCustomer().getAddress());

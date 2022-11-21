@@ -7,6 +7,7 @@ import com.cloudinary.Singleton;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.service.UserService;
 import com.example.application.security.AuthenticatedUser;
+import com.example.application.utils.PfdiUtil;
 import com.example.application.views.administration.AdministrationView;
 import com.example.application.views.constants.CssClassNamesConstants;
 import com.example.application.views.customer.CustomerView;
@@ -45,13 +46,15 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 
 /**
  * The main view is a top-level placeholder for other views.
  */
-public class MainLayout extends AppLayout {
+public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
 	private static final long serialVersionUID = 3493362210483888466L;
 	private AuthenticatedUser authenticatedUser;
@@ -60,12 +63,14 @@ public class MainLayout extends AppLayout {
 	private UserService userService;
 	private final Cloudinary cloudinary = Singleton.getCloudinary();
 	private AppUser currentUser;
+	private Tabs tabs;
 
 	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker,
 			UserService userService) {
 		this.authenticatedUser = authenticatedUser;
 		this.accessChecker = accessChecker;
 		this.userService = userService;
+		this.currentUser = authenticatedUser.get().get();
 
 		addToNavbar(createHeaderContent());
 	}
@@ -331,32 +336,41 @@ public class MainLayout extends AppLayout {
 	}
 
 	private Tabs getTabs() {
-		Tabs tabs = new Tabs();
+		tabs = new Tabs();
 		tabs.getStyle().set("margin", "auto");
 
-		Tab productsTab = createTab("Products", ProductsView.class, "product-view-tab");
-		MenuBar menuBar = new MenuBar();
-		menuBar.setOpenOnHover(true);
-		menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
-		MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
-		menuItem.getElement().setAttribute("aria-label", "More options");
-		SubMenu subMenu = menuItem.getSubMenu();
+		if (PfdiUtil.isAdmin(currentUser) || PfdiUtil.isSuperUser(currentUser)) {
+			Tab profilesTab = createTab("Profiles", AdministrationView.class, "admin-view-tab");
+			tabs.add(profilesTab);
+		}
 
-		//RouterLink productList = createNewRoute("Product List", ProductsView.class);
-		//RouterLink createNewProductPageLink = createNewRoute("Add Product", AddNewProductView.class);
-		RouterLink manageTag = createNewRoute("Tags", ManageTagsView.class);
-		RouterLink manageSizes = createNewRoute("Sizes", ManageSizesView.class);
-		RouterLink manageCategories = createNewRoute("Categories", ManageCategoriesView.class);
+		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser)) {
+			Tab productsTab = createTab("Products", ProductsView.class, "product-view-tab");
+			MenuBar menuBar = new MenuBar();
+			menuBar.setOpenOnHover(true);
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
 
-		//subMenu.addItem(productList);
-		//subMenu.addItem(createNewProductPageLink);
-		subMenu.addItem(manageTag);
-		subMenu.addItem(manageSizes);
-		subMenu.addItem(manageCategories);
-		productsTab.add(menuBar);
+			// RouterLink productList = createNewRoute("Product List", ProductsView.class);
+			// RouterLink createNewProductPageLink = createNewRoute("Add Product",
+			// AddNewProductView.class);
+			RouterLink manageTag = createNewRoute("Tags", ManageTagsView.class);
+			RouterLink manageSizes = createNewRoute("Sizes", ManageSizesView.class);
+			RouterLink manageCategories = createNewRoute("Categories", ManageCategoriesView.class);
 
-		Tab profilesTab = createTab("Profiles", AdministrationView.class, "admin-view-tab");
-		Tab customersTab = createTab("Customers", CustomerView.class, "admin-view-tab");
+			// subMenu.addItem(productList);
+			// subMenu.addItem(createNewProductPageLink);
+			subMenu.addItem(manageTag);
+			subMenu.addItem(manageSizes);
+			subMenu.addItem(manageCategories);
+			productsTab.add(menuBar);
+
+			Tab customersTab = createTab("Customers", CustomerView.class, "admin-view-tab");
+			tabs.add(productsTab, customersTab);
+		}
+
 //		MenuBar customersTabMenu = new MenuBar();
 //		customersTabMenu.setOpenOnHover(true);
 //		customersTabMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
@@ -372,28 +386,31 @@ public class MainLayout extends AppLayout {
 //
 //		customersTab.add(customersTabMenu);
 
-		Tab ordersTab = createTab("Orders", StockOrderView.class, "admin-view-tab");
-		MenuBar ordersTabMenu = new MenuBar();
-		ordersTabMenu.setOpenOnHover(true);
-		ordersTabMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
-		MenuItem ordersTabMenuItem = ordersTabMenu.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
-		menuItem.getElement().setAttribute("aria-label", "More options");
-		SubMenu ordersTabSubMenu = ordersTabMenuItem.getSubMenu();
+		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser) || PfdiUtil.isChecker(currentUser)) {
+			Tab ordersTab = createTab("Orders", StockOrderView.class, "admin-view-tab");
+			MenuBar ordersTabMenu = new MenuBar();
+			ordersTabMenu.setOpenOnHover(true);
+			ordersTabMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+			MenuItem ordersTabMenuItem = ordersTabMenu.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
+			ordersTabMenuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu ordersTabSubMenu = ordersTabMenuItem.getSubMenu();
 
-		ordersTab.add(ordersTabMenu);
+			//ordersTab.add(ordersTabMenu);
 
-		// RouterLink manageStocks = createNewRoute("Manage Stock Inventory",
-		// StocksInvetoryView.class);
-		RouterLink manageSalesInvoices = createNewRoute("Sales Invoices", InvoicesView.class);
-		RouterLink stockOrderList = createNewRoute("Stock Order List", StockOrderView.class);
+			// RouterLink manageStocks = createNewRoute("Manage Stock Inventory",
+			// StocksInvetoryView.class);
+			RouterLink manageSalesInvoices = createNewRoute("Sales Invoices", InvoicesView.class);
+			RouterLink stockOrderList = createNewRoute("Stock Order List", StockOrderView.class);
 
-		ordersTabSubMenu.addItem(stockOrderList);
-		// ordersTabSubMenu.addItem(manageStocks);
-		ordersTabSubMenu.addItem(manageSalesInvoices);
+			//ordersTabSubMenu.addItem(stockOrderList);
+			// ordersTabSubMenu.addItem(manageStocks);
+			//ordersTabSubMenu.addItem(manageSalesInvoices);
 
-		Tab stocksInventory = createTab("Inventory", StocksInvetoryView.class, "admin-view-tab");
+			Tab stocksInventory = createTab("Inventory", StocksInvetoryView.class, "admin-view-tab");
 
-		tabs.add(profilesTab, productsTab, customersTab, ordersTab, stocksInventory);
+			tabs.add(ordersTab, stocksInventory);
+		}
+
 		return tabs;
 	}
 
@@ -410,6 +427,11 @@ public class MainLayout extends AppLayout {
 		link.setText(viewName);
 		link.setRoute(viewClass);
 		return new Tab(link);
+	}
+
+	@Override
+	public void beforeEnter(BeforeEnterEvent event) {
+		
 	}
 
 }

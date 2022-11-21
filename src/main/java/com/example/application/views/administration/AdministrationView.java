@@ -66,7 +66,7 @@ import com.vaadin.flow.router.RouteAlias;
 
 @PageTitle("Administration")
 @Route(value = "admin/:samplePersonID?/:action?(edit)", layout = MainLayout.class)
-@RouteAlias(value = "/", layout = MainLayout.class)
+@RouteAlias(value = "/admin", layout = MainLayout.class)
 @RolesAllowed({ "Admin", "Superuser", "ADMIN" })
 @Uses(Icon.class)
 public class AdministrationView extends AbstractPfdiView implements BeforeEnterObserver {

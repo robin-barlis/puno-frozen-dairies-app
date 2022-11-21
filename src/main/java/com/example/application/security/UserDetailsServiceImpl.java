@@ -29,7 +29,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     	// Add the logic that checks if the user exists in the database
         List<AppUser> userList = userRepository.findAll();
         
-        AppUser user = userList.stream().filter(appUser -> appUser.getUsername().equals(username)).findFirst(). orElse(null);
+        AppUser user = userList.stream().filter(appUser -> appUser.getUsername().equalsIgnoreCase(username)).findFirst(). orElse(null);
         if (user == null) {
             throw new UsernameNotFoundException("No user present with username: " + username);
         } else {

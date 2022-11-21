@@ -9,10 +9,12 @@ import org.hibernate.sql.ordering.antlr.OrderByFragment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.service.customers.CustomerService;
 import com.example.application.data.service.orders.OrdersService;
+import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
@@ -54,7 +56,7 @@ import com.vaadin.flow.router.RouteParameters;
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrders", layout = MainLayout.class)
 @RouteAlias(value = "/order/stockOrders", layout = MainLayout.class)
-@RolesAllowed({ "Admin", "Superuser", "ADMIN" })
+@RolesAllowed({ "Admin", "Superuser", "ADMIN", "Checker", "CHECKER" })
 @Uses(Icon.class)
 public class StockOrderView extends AbstractPfdiView implements BeforeEnterObserver {
 
@@ -66,12 +68,14 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	private final CustomerService customerService;
 
 	private ListDataProvider<Order> ldp = null;
+	private AppUser appUser;
 
 	@Autowired
-	public StockOrderView(OrdersService ordersService, CustomerService customerService) {
+	public StockOrderView(OrdersService ordersService, CustomerService customerService, AuthenticatedUser user) {
 		super("Admin", "Admin");
 		this.customerService = customerService;
 		this.ordersService = ordersService;
+		this.appUser = user.get().get();
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
@@ -103,7 +107,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		addCustomerButton = new Button("Create Stock Order");
 		addCustomerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addCustomerButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
-	
+		//addCustomerButton.setVisible(PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser));
 		addCustomerButton.addClickListener(e -> {
 
 			UI.getCurrent().navigate(CreateOrderFormView.class);
@@ -197,8 +201,12 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			}
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Checked By").setSortable(true);
 		
-		grid.addColumn(order -> {			
-			return PfdiUtil.formatDate(order.getCheckedDate());
+		grid.addColumn(order -> {		
+			if (order.getCheckedDate() != null) {
+
+				return PfdiUtil.formatDate(order.getCheckedDate());
+			} 
+			return "";
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Checked Date").setSortable(true);
 		
 
