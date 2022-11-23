@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.security.RolesAllowed;
@@ -371,7 +372,12 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		
 		//set table summary content
 		
-		Map<String, List<OrderItems>> orderItems = order.getOrderItems().stream()
+		Set<OrderItems> filteredOrderItems = order.getOrderItems().stream().filter(oi -> {
+			System.out.println(oi.getItemInventory().getProduct().getCategory().getCategoryType());
+			return Categories.Flavors.name().equals(oi.getItemInventory().getProduct().getCategory().getCategoryType());
+		}).collect(Collectors.toSet());
+		
+		Map<String, List<OrderItems>> orderItems = filteredOrderItems.stream()
 				//.filter(e-> e.getItemInventory().getSize().getCategory().stream().anyMatch(cat -> Categories.Flavors.name().equals(cat.getCategoryName())))
 				.collect(Collectors.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getProductName()));;
 		
@@ -394,7 +400,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			dataCell.setText(itemName);
 			dataCell.addClassName("order-item-name-column");
 			
-			Map<String, List<OrderItems>> orderItemBySize = order.getOrderItems().stream()
+			Map<String, List<OrderItems>> orderItemBySize = sizeDetails.stream()
 					.collect(Collectors.groupingBy(orderItem -> orderItem.getItemInventory().getSize().getSizeName()));
 			
 			sizes.forEach(size -> {
