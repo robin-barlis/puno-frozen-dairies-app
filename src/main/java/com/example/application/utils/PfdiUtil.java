@@ -3,18 +3,28 @@ package com.example.application.utils;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 import com.example.application.data.OrderStatus;
 import com.example.application.data.Role;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.products.CustomerTag;
+import com.example.application.data.entity.products.Size;
+import com.example.application.data.entity.stock.ItemStock;
+import com.google.gwt.thirdparty.guava.common.collect.Ordering;
 import com.google.gwt.thirdparty.guava.common.collect.Sets;
 
 public class PfdiUtil {
 
-	private final static Set<String> COMPANY_OWNED_TAGS = Sets.newHashSet("Relative Owned", "Company Owned",
-			"Main Store");
+	private final static Set<String> COMPANY_OWNED_TAGS = Sets.newHashSet("Relative Owned", "Company Owned","Main Store");
+	
+	private final static List<String> SIZE_NAMES = Arrays.asList("T/C", "3.4L", "1.9L", "1.0L",  "CUP", "I.C. Cone", "1.5L","800mL","475mL","200mL");
+
+	
+	private final static Ordering<String> SIZE_NAME_ORDERING = Ordering.explicit(SIZE_NAMES);
 
 	public static final NumberFormat getFormatter() {
 
@@ -71,5 +81,22 @@ public class PfdiUtil {
 
 		return formatDateTime;
 	}
+ 
+	public static Comparator<Size> sizeComparator = new Comparator<Size>() {
+		
+        @Override
+        public int compare(Size arg0, Size arg1) {
+        	return SIZE_NAME_ORDERING.compare(arg0.getSizeName(),arg1.getSizeName());
+        }
+    };
+	
+    
+	public static Comparator<ItemStock> itemStockComparator = new Comparator<ItemStock>() {
+		
+        @Override
+        public int compare(ItemStock arg0,ItemStock arg1) {
+        	return SIZE_NAME_ORDERING.compare(arg0.getSize().getSizeName(),arg1.getSize().getSizeName());
+        }
+    };
 
 }

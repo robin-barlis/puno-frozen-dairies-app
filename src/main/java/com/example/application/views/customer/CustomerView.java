@@ -75,6 +75,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 
 	private IntegerField id;
 	private TextField storeName;
+	private TextField tinNumber;
 	private TextField address;
 	private TextField ownerName;
 	private IntegerField contactNumber;
@@ -176,6 +177,10 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		contactNumber = new IntegerField("Customer Contact Number");
 		contactNumber.setRequiredIndicatorVisible(true);
 
+		tinNumber = new TextField("Tin Number");
+		tinNumber.setRequired(true);
+		tinNumber.setRequiredIndicatorVisible(true);
+		
 		contractStartDate = new DatePicker("Contract Start Date");
 		contractStartDate.getStyle().set("padding-top", "20px");
 		contractStartDate.getStyle().set("padding-bottom", "40px");
@@ -219,7 +224,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		FormLayout formLayout = new FormLayout();
 		formLayout.setWidth("800px");
 		formLayout.add(addCustomerLabel, divider1, customerTag, locationTag, storeName, ownerName, address,
-				contactNumber, divider2, contractStartDate, contractEndDate, saveButton, cancelButton, id);
+				contactNumber, tinNumber, divider2, contractStartDate, contractEndDate, saveButton, cancelButton, id);
 
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("500px", 2));
 
@@ -307,14 +312,16 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		grid.addColumn("storeName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addColumn("ownerName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		
+		grid.addColumn("tinNumber").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addColumn(customer -> {
 			return customer.getCustomerTagId().getCustomerTagName();
-		}).setHeader("Customer Tag");
+		}).setHeader("Customer Tag").setAutoWidth(true);
 
 		grid.addColumn(customer -> {
 			return customer.getLocationTagId().getLocationTagName();
-		}).setHeader("Location Tag");
+		}).setHeader("Location Tag").setAutoWidth(true);
 
 		grid.addColumn("address").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 

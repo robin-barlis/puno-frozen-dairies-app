@@ -108,7 +108,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 						Span sizeColumnHeader = new Span();
 						sizeColumnHeader.setText(size.getSizeName());
-						sizeColumnHeader.addClassNames("mb-1", "mt-s", "text-s");
+						sizeColumnHeader.addClassNames("mb-1", "mt-s", "text-s", "order-column");
 						sizeColumnHeaderWrapper.add(sizeColumnHeader);
 						headerWrapper.add(sizeColumnHeaderWrapper);
 				//	}
@@ -158,7 +158,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 					quantityField.setMax(quantity);
 					quantityField.addClassName("span-order-size-column");
-					quantityField.setHelperText("Stock: " + quantity + " size: " + size.getSizeName());
+					quantityField.setHelperText("Stock: " + quantity);
 					quantityField.setHasControls(true);
 					quantityField.setValue(0);
 					quantityField.setMin(0);
@@ -186,7 +186,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 					IntegerField quantityField = new IntegerField();
 					quantityField.setMax(0);
 					quantityField.addClassName("span-order-size-column");
-					quantityField.setHelperText("Stock: " + 0 + " size: " + size.getSizeName());
+					quantityField.setHelperText("Stock: N/A");
 					quantityField.setHasControls(true);
 					quantityField.setValue(0);
 					quantityField.setMin(0);

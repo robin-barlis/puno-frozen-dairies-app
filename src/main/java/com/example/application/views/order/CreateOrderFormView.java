@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,10 +20,12 @@ import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.Product;
+import com.example.application.data.entity.stock.ItemStock;
 import com.example.application.data.service.customers.CustomerService;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.products.CategoryService;
 import com.example.application.data.service.products.ProductService;
+import com.example.application.data.service.stock.ItemStockService;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
@@ -62,13 +65,14 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 	
 	private AuthenticatedUser authenticatedUser;
 	private CustomerService customerService;
+	private ItemStockService itemStockService;
 	private TextField ownerName;
 	private OrdersService orderService;
 	private Set<ItemOrderCategorySubView> itemOrderCategorySubViewSet = new HashSet<>();
 	
 
 	@Autowired
-	public CreateOrderFormView(OrdersService stockOrderService, AuthenticatedUser authenticatedUser, CustomerService customerService, ProductService prodcuctService, CategoryService categoryService, AccessAnnotationChecker accessChecker) {
+	public CreateOrderFormView(OrdersService stockOrderService, AuthenticatedUser authenticatedUser, CustomerService customerService, ProductService prodcuctService, CategoryService categoryService, AccessAnnotationChecker accessChecker, ItemStockService itemStockService) {
 		super("add-new-product", "Create Stock Order");
 		//addClassNames("products-view");
 		this.customerService = customerService;
@@ -76,6 +80,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		this.productService = prodcuctService;
 		this.categoryService = categoryService;
 		this.orderService = stockOrderService;
+		this.itemStockService = itemStockService;
 		VerticalLayout content = new VerticalLayout();
 		createMainContent(content);
 		add(content);
@@ -114,7 +119,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		storeName.getStyle().set("padding-bottom", "20px");
 		storeName.setRequiredIndicatorVisible(true);
 		storeName.setEmptySelectionAllowed(false);
-		storeName.setPlaceholder("Select Position");
+		storeName.setPlaceholder("Store Name");
 		storeName.addValueChangeListener(e -> {
 			ownerName.setValue(e.getValue().getOwnerName());
 			
@@ -142,11 +147,17 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 
 			Order order = createNewOrder();
 			order = orderService.update(order);
+			
+			List<ItemStock> itemInventorList = order.getOrderItems().stream().map(ord -> ord.getItemInventory()).collect(Collectors.toList());
+			
+			if (Objects.nonNull(itemInventorList)) {
+				itemStockService.updateAll(itemInventorList);
+			}
 			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
 					
 			
 			Notification.show("Successfully created order.");
-			UI.getCurrent().navigate(StockOrderSummaryView.class, parameters);
+			UI.getCurrent().navigate(StockOrderSummaryView1.class, parameters);
 		});
 		
 

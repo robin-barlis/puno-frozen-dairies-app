@@ -41,6 +41,7 @@ public class Customer implements Serializable {
 	private LocationTag locationTagId;
 	
 	private String ownerName;
+	private String tinNumber;
 	private Integer contactNumber;
 	private String address;
 	private LocalDate contractStartDate;
@@ -136,6 +137,14 @@ public class Customer implements Serializable {
 			return false;
 		}
 		return getId().equals(other.getId());
+	}
+
+	public String getTinNumber() {
+		return tinNumber;
+	}
+
+	public void setTinNumber(String tinNumber) {
+		this.tinNumber = tinNumber;
 	}
 
 }

@@ -3,6 +3,7 @@ package com.example.application.data.service.orders;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -40,6 +41,9 @@ public class OrdersService {
 	}
 
 	public Order update(Object entity) {
+		Order order = repository.save((Order) entity);
+		
+		List<ItemStock> itemInv = order.getOrderItems().stream().map(e -> e.getItemInventory()).collect(Collectors.toList());
 		return repository.save((Order) entity);
 
 	}

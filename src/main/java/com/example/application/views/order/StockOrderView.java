@@ -148,9 +148,9 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	       
 
 			Integer stockOrderNumber = order.getStockOrderNumber();
-			
-			String path = "S.O. No." + stockOrderNumber;	
-			Component component = stockOrderNumber != null ? new Anchor(route, path) : new Span("N/A");
+			String pathString = stockOrderNumber != null ? stockOrderNumber.toString() : "N/A";
+			String path =  stockOrderNumber != null ? "S.O. No." + pathString : "N/A"; ;	
+			Component component = new Anchor(route, path);
 			return component;
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("S.O. No.").setSortable(true);
 		

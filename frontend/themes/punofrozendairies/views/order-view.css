@@ -118,6 +118,10 @@ thead th {
     table-layout: fixed;
 }
 
+.order-item-name-column{
+	width:200px;
+}
+
 
 
 

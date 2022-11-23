@@ -2,34 +2,27 @@ package com.example.application.views.order;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.annotation.security.RolesAllowed;
 
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.vaadin.stefan.table.Table;
 import org.vaadin.stefan.table.TableDataCell;
 import org.vaadin.stefan.table.TableHead;
 import org.vaadin.stefan.table.TableHeaderCell;
 import org.vaadin.stefan.table.TableRow;
 
-import com.example.application.data.Categories;
 import com.example.application.data.DocumentTrackingNumberEnum;
 import com.example.application.data.OrderStatus;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.orders.DocumentTrackingNumber;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
-import com.example.application.data.entity.products.Size;
 import com.example.application.data.service.orders.DocumentTrackingNumberService;
 import com.example.application.data.service.orders.OrdersService;
-import com.example.application.data.service.products.SizesService;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
 import com.example.application.views.MainLayout;
@@ -62,11 +55,11 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 
 @PageTitle("Stock Orders")
-@Route(value = "order/stockOrderSummary/:id", layout = MainLayout.class)
-@RouteAlias(value = "/order/stockOrderSummary/:id", layout = MainLayout.class)
+@Route(value = "order/stockOrderSummary2/:id", layout = MainLayout.class)
+@RouteAlias(value = "/order/stockOrderSummary2/:id", layout = MainLayout.class)
 @RolesAllowed({"Superuser", "Checker", "Sales", "CHECKER", "SALES" })
 @Uses(Icon.class)
-public class StockOrderSummaryView extends VerticalLayout implements BeforeEnterObserver {
+public class StockOrderSummaryView1 extends VerticalLayout implements BeforeEnterObserver {
 
 	private static final long serialVersionUID = 2754507440441771890L;
 
@@ -93,7 +86,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	private Span ownerName;
 	private Span status;
 
-	private Table flavorTable;
+	private Table table;
 
 	private BigDecimal totalAmount = BigDecimal.valueOf(0);
 
@@ -105,16 +98,13 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	//private MenuItem readyForDelivery;
 	private MenuItem delivered;
 	private DocumentTrackingNumberService documentTrackingNumberService;
-	private SizesService sizesService;
 
 
 	@Autowired
-	public StockOrderSummaryView(SizesService sizesService, OrdersService ordersService, AuthenticatedUser user, DocumentTrackingNumberService documentTrackingNumberService) {
+	public StockOrderSummaryView1(OrdersService ordersService, AuthenticatedUser user, DocumentTrackingNumberService documentTrackingNumberService) {
 		this.ordersService = ordersService;
 		this.appUser = user.get().get();
-		
 		this.documentTrackingNumberService = documentTrackingNumberService;
-		this.sizesService = sizesService;
 		addClassNames("administration-view");
 		
 		addChildrenToContentHeaderContainer(this);
@@ -371,49 +361,41 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		
 		//set table summary content
 		
-		Map<String, List<OrderItems>> orderItems = order.getOrderItems().stream()
-				//.filter(e-> e.getItemInventory().getSize().getCategory().stream().anyMatch(cat -> Categories.Flavors.name().equals(cat.getCategoryName())))
-				.collect(Collectors.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getProductName()));;
-		
-				
-		List<Size> sizes = sizesService.listAll(Sort.unsorted()).stream().filter(size-> {
-					return size.getCategory().stream().anyMatch(cat-> {
-						return Categories.Flavors.name().equals(cat.getCategoryType());
-					});
-				}).collect(Collectors.toList());
-		
-
-		Collections.sort(sizes, PfdiUtil.sizeComparator);	 
-		
-		
+		Map<String, List<OrderItems>> orderItems = order.getOrderItems().stream().collect(Collectors.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getProductName()));;
 		
 		
 		orderItems.forEach((itemName, sizeDetails) -> {
-			TableRow detailsRowFlavor = flavorTable.getBody().addRow();
+			TableRow detailsRowFlavor = table.getBody().addRow();
 			TableDataCell dataCell = detailsRowFlavor.addDataCell();
 			dataCell.setText(itemName);
-			dataCell.addClassName("order-item-name-column");
+			dataCell.setColSpan(4);
 			
-			Map<String, List<OrderItems>> orderItemBySize = order.getOrderItems().stream()
-					.collect(Collectors.groupingBy(orderItem -> orderItem.getItemInventory().getSize().getSizeName()));
-			
-			sizes.forEach(size -> {
-
+			sizeDetails.forEach(item -> {
+				String sizeName = item.getItemInventory().getSize().getSizeName();
+				Integer quantity = item.getQuantity();
 				
-				TableDataCell sizeDataCell = detailsRowFlavor.addDataCell();
-				List<OrderItems> orderItemsPerProductPerSize = orderItemBySize.get(size.getSizeName());
+				BigDecimal unitPrice = item.getProductPrice();
+				BigDecimal amount = item.getProductPrice().multiply(BigDecimal.valueOf(quantity));
+				totalAmount = totalAmount.add(amount);
 				
-				String text = Strings.EMPTY;
-				if (Objects.nonNull(orderItemsPerProductPerSize)) {
-
-					Integer quantity =0;
-					for (OrderItems item : orderItemsPerProductPerSize) {
-						quantity = quantity + item.getQuantity();
-					}
-					text = quantity.toString();
-				} 
-				sizeDataCell.setText(text);
+				TableRow itemDetailsRow = table.getBody().addRow();
+				TableDataCell sizeDataCell = itemDetailsRow.addDataCell();
+				sizeDataCell.setText(sizeName);
 				sizeDataCell.addClassNames("text-align-left", "padding-left-50px");
+				
+				
+				
+				TableDataCell quantityDataCell = itemDetailsRow.addDataCell();
+				quantityDataCell.setText(quantity.toString());
+				quantityDataCell.addClassName("text-align-right");
+				
+				TableDataCell unitPriceDataCell = itemDetailsRow.addDataCell();
+				unitPriceDataCell.setText(PfdiUtil.getFormatter().format(unitPrice));
+				unitPriceDataCell.addClassName("text-align-right");
+				
+				TableDataCell totalAmountDataCell = itemDetailsRow.addDataCell();
+				totalAmountDataCell.setText(PfdiUtil.getFormatter().format(amount));
+				totalAmountDataCell.addClassName("text-align-right");
 			});
 		});
 		
@@ -475,6 +457,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		stockOrderDiv.add(orderDate);
 		orderDate.addClassName("float-right");
 		
+		
 		stockOrderDiv.addClassName("stock-order-number-date-container");
 		
 		Div ownerDetailsWrapper = new Div();
@@ -524,30 +507,30 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 
 	private void createOrderDetailsDiv(Div mainDiv) {
 		
-		flavorTable = new Table();
-		flavorTable.addClassName("order-summary-table");
+		table = new Table();
+		table.addClassName("order-summary-table");
 
-		TableHead head = flavorTable.getHead();
+		TableHead head = table.getHead();
 		
 		TableRow headerRow = head.addRow();
 		
 		
 		TableHeaderCell itemHeaderCell =  headerRow.addHeaderCell();
 		itemHeaderCell.setText("Item");
-		itemHeaderCell.addClassNames("text-align-left", "order-item-name-column");
-		List<Size> sizes = sizesService.listAll(Sort.unsorted()).stream().filter(size-> {
-			return size.getCategory().stream().anyMatch(cat-> {
-				return Categories.Flavors.name().equals(cat.getCategoryType());
-			});
-		}).collect(Collectors.toList());
+		itemHeaderCell.addClassName("text-align-left");
 		
-		Collections.sort(sizes, PfdiUtil.sizeComparator);	 
-		sizes.forEach(size -> {
-			TableHeaderCell quantityHeaderCell = headerRow.addHeaderCell();
-			quantityHeaderCell.setText(size.getSizeName());
-			quantityHeaderCell.addClassName("text-align-right");
-		});
-		mainDiv.add(flavorTable);
+		TableHeaderCell quantityHeaderCell = headerRow.addHeaderCell();
+		quantityHeaderCell.setText("Quantity");
+		quantityHeaderCell.addClassName("text-align-right");
+		
+		TableHeaderCell unitPriceHeaderCell = headerRow.addHeaderCell();
+		unitPriceHeaderCell.setText("Unit Price");
+		unitPriceHeaderCell.addClassName("text-align-right");
+		
+		TableHeaderCell totalAmountHeaderCell = headerRow.addHeaderCell();
+		totalAmountHeaderCell.setText("Amount");
+		totalAmountHeaderCell.addClassName("text-align-right");
+		mainDiv.add(table);
 		mainDiv.add(new Hr());
 		
 		Div totalAmountWrapper = new Div();

@@ -36,14 +36,30 @@ public class Size implements Serializable {
 			joinColumns = {@JoinColumn(name = "size_id") },
 			inverseJoinColumns = { @JoinColumn(name = "customer_tag_id") })
 	@Fetch(FetchMode.SELECT)
-	private Set<CustomerTag> customerTagTagSet;
+	private Set<CustomerTag> customerTagSet;
+	
+	
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "pfdi_category_size_mapping", 
+			joinColumns = {@JoinColumn(name = "size_id") },
+			inverseJoinColumns = { @JoinColumn(name = "category_id") })
+	@Fetch(FetchMode.SELECT)
+	private Set<Category> category;
 
 	public Set<CustomerTag> getCustomerTagSet() {
-		return customerTagTagSet;
+		return customerTagSet;
 	}
 
 	public void setCustomerTagSet(Set<CustomerTag> locationTagSet) {
-		this.customerTagTagSet = locationTagSet;
+		this.customerTagSet = locationTagSet;
+	}
+	
+	public Set<Category> getCategory() {
+		return category;
+	}
+
+	public void setCategory(Set<Category> category) {
+		this.category = category;
 	}
 
 	public Integer getId() {
