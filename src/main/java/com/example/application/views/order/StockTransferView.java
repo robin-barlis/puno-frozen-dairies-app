@@ -66,8 +66,6 @@ public class StockTransferView extends VerticalLayout implements BeforeEnterObse
 	private Span orderDate;
 	private Span storeName;
 	private Span stockOrderNum;
-	private Span address;
-	private Span ownerName;
 	private Table table;
 
 
@@ -120,17 +118,9 @@ public class StockTransferView extends VerticalLayout implements BeforeEnterObse
 		orderId = event.getRouteParameters().get("id").get();
 
 		order = ordersService.get(Integer.parseInt(orderId)).get();
-		Integer stockOrderNumber = order.getStockOrderNumber();
-		if (stockOrderNumber == null) {
-			stockOrderNumber = generateStockOrderNumber();
-			order.setStockOrderNumber(stockOrderNumber);
-		}
-
 		
 		orderDate.setText(PfdiUtil.formatDateWithHours(order.getCreationDate()));
 		storeName.setText(order.getCustomer().getStoreName());
-		address.setText(order.getCustomer().getAddress());
-		ownerName.setText(order.getCustomer().getOwnerName());
 		stockOrderNum.setText(order.getStockOrderNumber().toString());
 
 		// set table summary content
@@ -240,7 +230,6 @@ public class StockTransferView extends VerticalLayout implements BeforeEnterObse
 		dateDiv.addClassNames("bold-label", "report-header-text-heading", "float-right");
 		orderDate = new Span();
 		orderDate.addClassName("float-right");
-		orderDate.getStyle().set("margin-right", "-50px");
 		dateDiv.add(orderDate);
 
 		headerSub2.add(addressMainStore, dateDiv);
@@ -270,7 +259,7 @@ public class StockTransferView extends VerticalLayout implements BeforeEnterObse
 		stockOrderNum.addClassName("bold-label");
 		
 		
-		stockOrderDiv.add(stockOrder);
+		stockOrderDiv.add(stockOrder, stockOrderNum);
 
 
 		header.add(headerName, headerSub2, line2);
