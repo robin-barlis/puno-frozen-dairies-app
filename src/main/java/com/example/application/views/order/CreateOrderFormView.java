@@ -157,7 +157,8 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 					
 			
 			Notification.show("Successfully created order.");
-			UI.getCurrent().navigate(StockOrderSummaryView1.class, parameters);
+			System.out.println("created order.");
+			UI.getCurrent().navigate(StockOrderSummaryView.class, parameters);
 		});
 		
 

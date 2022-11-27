@@ -19,12 +19,20 @@ import com.google.gwt.thirdparty.guava.common.collect.Sets;
 
 public class PfdiUtil {
 
-	private final static Set<String> COMPANY_OWNED_TAGS = Sets.newHashSet("Relative Owned", "Company Owned","Main Store");
-	
-	private final static List<String> SIZE_NAMES = Arrays.asList("T/C", "3.4L", "1.9L", "1.0L",  "CUP", "I.C. Cone", "1.5L","800mL","475mL","200mL");
+	private final static Set<String> COMPANY_OWNED_TAGS = Sets.newHashSet("Relative Owned", "Company Owned", "Main Store");
 
-	
+	private final static List<String> SIZE_NAMES = Arrays.asList("T/C", "3.4L", "1.9L", "1.0L", "Pint", "CUP",
+			"I.C. Cone", "1.5L", "800mL", "475mL", "200mL");
+
+	private final static List<String> CONES_SIZE_NAMES = Arrays.asList("BOX", "PACK");
+
+	private final static List<String> OTHERS_SIZE_NAMES = Arrays.asList("PC", "PACK");
+
 	private final static Ordering<String> SIZE_NAME_ORDERING = Ordering.explicit(SIZE_NAMES);
+	
+	private final static Ordering<String> CONE_SIZE_NAME_ORDERING = Ordering.explicit(CONES_SIZE_NAMES);
+	
+	private final static Ordering<String> OTHER_SIZE_NAME_ORDERING = Ordering.explicit(OTHERS_SIZE_NAMES);
 
 	public static final NumberFormat getFormatter() {
 
@@ -56,7 +64,6 @@ public class PfdiUtil {
 		return orderStatus.getOrderStatusName().equals(currentOrderStatus);
 	}
 
-	
 	public static final boolean isRelativeOrCompanyOwned(CustomerTag customerTag) {
 		return COMPANY_OWNED_TAGS.contains(customerTag.getCustomerTagName());
 	}
@@ -81,22 +88,53 @@ public class PfdiUtil {
 
 		return formatDateTime;
 	}
- 
+
 	public static Comparator<Size> sizeComparator = new Comparator<Size>() {
-		
-        @Override
-        public int compare(Size arg0, Size arg1) {
-        	return SIZE_NAME_ORDERING.compare(arg0.getSizeName(),arg1.getSizeName());
-        }
-    };
+
+		@Override
+		public int compare(Size arg0, Size arg1) {
+			return SIZE_NAME_ORDERING.compare(arg0.getSizeName(), arg1.getSizeName());
+		}
+	};
 	
-    
+	public static Comparator<Size> coneSizeComparator = new Comparator<Size>() {
+
+		@Override
+		public int compare(Size arg0, Size arg1) {
+			return CONE_SIZE_NAME_ORDERING.compare(arg0.getSizeName(), arg1.getSizeName());
+		}
+	};
+	
+	public static Comparator<Size> otherSizeComparator = new Comparator<Size>() {
+
+		@Override
+		public int compare(Size arg0, Size arg1) {
+			return OTHER_SIZE_NAME_ORDERING.compare(arg0.getSizeName(), arg1.getSizeName());
+		}
+	};
+
 	public static Comparator<ItemStock> itemStockComparator = new Comparator<ItemStock>() {
-		
-        @Override
-        public int compare(ItemStock arg0,ItemStock arg1) {
-        	return SIZE_NAME_ORDERING.compare(arg0.getSize().getSizeName(),arg1.getSize().getSizeName());
-        }
-    };
+
+		@Override
+		public int compare(ItemStock arg0, ItemStock arg1) {
+			return SIZE_NAME_ORDERING.compare(arg0.getSize().getSizeName(), arg1.getSize().getSizeName());
+		}
+	};
+
+	public static Comparator<ItemStock> coneSizeItemStockComparator = new Comparator<ItemStock>() {
+
+		@Override
+		public int compare(ItemStock arg0, ItemStock arg1) {
+			return CONE_SIZE_NAME_ORDERING.compare(arg0.getSize().getSizeName(), arg1.getSize().getSizeName());
+		}
+	};
+
+	public static Comparator<ItemStock> otherSizeItemStockComparator = new Comparator<ItemStock>() {
+
+		@Override
+		public int compare(ItemStock arg0, ItemStock arg1) {
+			return OTHER_SIZE_NAME_ORDERING.compare(arg0.getSize().getSizeName(), arg1.getSize().getSizeName());
+		}
+	};
 
 }

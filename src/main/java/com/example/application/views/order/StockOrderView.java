@@ -53,6 +53,8 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouteParameters;
 
+import net.sf.jasperreports.crosstabs.fill.calculation.BucketDefinition.OrderDecoratorBucket;
+
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrders", layout = MainLayout.class)
 @RouteAlias(value = "/order/stockOrders", layout = MainLayout.class)
@@ -168,7 +170,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
 			Class<? extends Component> routeClass = isCompanyOwned ? StockTransferView.class : SalesInvoiceView.class;
 			
-			Integer docNumber = isCompanyOwned ? order.getStockOrderNumber() : order.getInvoiceId();
+			Integer docNumber = isCompanyOwned ? order.getStockTransferId() : order.getInvoiceId();
 			
 			String path = isCompanyOwned ? "S.T. No. " + docNumber : "Inv. No. " + docNumber;
 			

@@ -123,6 +123,27 @@ thead th {
 }
 
 
+.fillup-line:after {
+  background-color: #000;
+  content: "";
+  display: inline-block;
+  height: 1px;
+  position: relative;
+  vertical-align: middle;
+  width: 50%;
+}
+
+.fillup-line:before {
+  right: 0.5em;
+  margin-left: -50%;
+}
+
+.fillup-line:after {
+  left: 0.5em;
+  margin-right: -50%;
+}
+
+
 
 
 
