@@ -339,7 +339,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			
 			order.setStatus(OrderStatus.FOR_DELIVERY.getOrderStatusName());
 			order.setDeliveryReceiptId(deliveryReceiptNumber.getNumber());
-			order.setInvoiceId(stockTransferNumber.getNumber());
+			order.setStockTransferId(stockTransferNumber.getNumber());
 			
 			order = ordersService.update(order);
 			Notification.show("Delivery Receipt & Invoice numbers for" + order.getStockOrderNumber() + " successfully created.");
