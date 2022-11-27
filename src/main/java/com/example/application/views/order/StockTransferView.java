@@ -63,7 +63,6 @@ public class StockTransferView extends VerticalLayout implements BeforeEnterObse
 
 	private String orderId;
 
-	private Span salesInvoiceSpan;
 	private Span orderDate;
 	private Span storeName;
 	private Span stockOrderNum;
@@ -127,9 +126,7 @@ public class StockTransferView extends VerticalLayout implements BeforeEnterObse
 			order.setStockOrderNumber(stockOrderNumber);
 		}
 
-		Integer salesInvoice = order.getInvoiceId();
-
-		salesInvoiceSpan.setText(salesInvoice.toString());
+		
 		orderDate.setText(PfdiUtil.formatDateWithHours(order.getCreationDate()));
 		storeName.setText(order.getCustomer().getStoreName());
 		address.setText(order.getCustomer().getAddress());
