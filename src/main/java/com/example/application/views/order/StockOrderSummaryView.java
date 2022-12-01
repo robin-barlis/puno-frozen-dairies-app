@@ -61,6 +61,7 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.router.RouteParameters;
 
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrderSummary/:id", layout = MainLayout.class)
@@ -316,7 +317,8 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			
 			order = ordersService.update(order);
 			Notification.show("Delivery Receipt & Invoice numbers for" + order.getStockOrderNumber() + " successfully created.");
-			UI.getCurrent().navigate(DeliveryReceiptView.class);
+			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+			UI.getCurrent().navigate(DeliveryReceiptView.class, parameters);
 		});
 		
 		createStockTransfer = new Button("Create S.T. & D.R.");
