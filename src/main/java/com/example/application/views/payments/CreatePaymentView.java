@@ -57,6 +57,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 	private static final long serialVersionUID = -6210105239749320428L;
 
 	private Button cancelButton;
+	private Button saveButton;
 	
 	private AuthenticatedUser authenticatedUser;
 	private CustomerService customerService;	
@@ -142,6 +143,13 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		buttonsLayout.setWidthFull();
 		buttonsLayout.setVerticalComponentAlignment(Alignment.END);
 		
+		saveButton = new Button("Save");
+		
+		saveButton.addClickListener(e -> {
+			UI.getCurrent().navigate(PaymentsView.class);
+			
+		});
+		
 		cancelButton = new Button("Cancel");
 		
 		cancelButton.addClickListener(e -> {
@@ -149,7 +157,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 			
 		});
 		
-		buttonsLayout.add(cancelButton);
+		buttonsLayout.add(cancelButton, saveButton);
 		
 		add(formLayout);
 
