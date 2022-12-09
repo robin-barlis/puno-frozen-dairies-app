@@ -1,6 +1,7 @@
 package com.example.application.views.order;
 
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -34,7 +35,10 @@ import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
@@ -62,13 +66,15 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 	private Button nextButton;
 	private CategoryService categoryService;
 	private ProductService productService;
+	private DatePicker dueDate;
+
 	
 	private AuthenticatedUser authenticatedUser;
 	private CustomerService customerService;
 	private ItemStockService itemStockService;
 	private TextField ownerName;
 	private OrdersService orderService;
-	private Set<ItemOrderCategorySubView> itemOrderCategorySubViewSet = new HashSet<>();
+	private ItemOrderCategorySubView itemOrderCategorySubView = null;
 	
 
 	@Autowired
@@ -89,15 +95,24 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 
 	private void createMainContent(VerticalLayout content) {
 		
-		VerticalLayout headerWrapper = new VerticalLayout();
-		orderCreationDate = new DateTimePicker("Order Creation Date & Time");
+		FormLayout formLayout = new FormLayout();
+		formLayout.setResponsiveSteps(
+		        // Use one column by default
+		        new ResponsiveStep("0", 1),
+		        // Use two columns, if layout's width exceeds 500px
+		        new ResponsiveStep("500px", 2));
+		
+		
+		orderCreationDate = new DateTimePicker("Order Date");
 		orderCreationDate.setWidth("50%");
 		orderCreationDate.setRequiredIndicatorVisible(true);
 		orderCreationDate.setValue(LocalDateTime.now());
 		
-		HorizontalLayout customerInfoWrapper = new HorizontalLayout();
-		customerInfoWrapper.setWidthFull();
-		
+		dueDate = new DatePicker("Due Date");
+		dueDate.setWidth("50%");
+		dueDate.setRequiredIndicatorVisible(true);
+		dueDate.setValue(LocalDate.now().plusDays(7));
+	
 		ownerName = new TextField();
 		ownerName = new TextField("Owner Name");
 		ownerName.setReadOnly(true);
@@ -123,16 +138,13 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		storeName.addValueChangeListener(e -> {
 			ownerName.setValue(e.getValue().getOwnerName());
 			
-			itemOrderCategorySubViewSet.forEach(item -> {
-				formContent.remove(item);
-			});
+			if (itemOrderCategorySubView != null) {
+				formContent.remove(itemOrderCategorySubView);
+			}
+
 			createOrderContent(formContent, e.getValue());
 		});
-		
-		customerInfoWrapper.add(storeName, ownerName);
-		
-		
-		headerWrapper.add(orderCreationDate, customerInfoWrapper);
+
 
 		cancelButton = new Button("Cancel");
 		
@@ -162,7 +174,8 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		});
 		
 
-		content.add(headerWrapper);
+		formLayout.add(orderCreationDate, dueDate, storeName, ownerName);
+		content.add(formLayout);
 		content.add(new Hr());
 		content.add(formContent);
 		
@@ -195,12 +208,16 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		order.setUpdatedByUser(user);
 		order.setUpdatedDate(orderCreationDate.getValue());
 		
+
 		Set<OrderItems> orderItemSet = new HashSet<>();
-		itemOrderCategorySubViewSet.forEach(itemOrderSubView -> {
-			orderItemSet.addAll(itemOrderSubView.createOrderItems(user, orderCreationDate.getValue(), order));
-		});
+		
+		orderItemSet.addAll(itemOrderCategorySubView.createOrderItems(user, orderCreationDate.getValue(), order));
+		
 		
 		order.setOrderItems(orderItemSet);
+		
+		order.setAmountDue(itemOrderCategorySubView.getTotalAmount());
+		order.setDueDate(dueDate.getValue());
 		return order;
 	}
 
@@ -215,8 +232,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 			return e.getCategory().getCategoryName();	
 		}));
 		
-		ItemOrderCategorySubView itemOrderCategorySubView = new ItemOrderCategorySubView(categories, customer, productCategoryMap);
-		itemOrderCategorySubViewSet.add(itemOrderCategorySubView);
+		itemOrderCategorySubView = new ItemOrderCategorySubView(categories, customer, productCategoryMap);
 		content.add(itemOrderCategorySubView);
 		
 	}

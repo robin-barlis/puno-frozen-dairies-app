@@ -1,6 +1,8 @@
 package com.example.application.data.entity.orders;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -67,9 +69,39 @@ public class Order implements Serializable {
 	
 	private Integer invoiceId;
 	
+	public LocalDate getDueDate() {
+		return dueDate;
+	}
+
+	public void setDueDate(LocalDate dueDate) {
+		this.dueDate = dueDate;
+	}
+
+	public BigDecimal getAmountDue() {
+		return amountDue;
+	}
+
+	public void setAmountDue(BigDecimal amountDue) {
+		this.amountDue = amountDue;
+	}
+
+	public BigDecimal getBalance() {
+		return balance;
+	}
+
+	public void setBalance(BigDecimal balance) {
+		this.balance = balance;
+	}
+
 	private Integer deliveryReceiptId;
 	
 	private Integer stockTransferId;
+	
+	private LocalDate dueDate;
+	
+	private BigDecimal amountDue;
+	
+	private BigDecimal balance;
 	
 	public Integer getInvoiceId() {
 		return invoiceId;

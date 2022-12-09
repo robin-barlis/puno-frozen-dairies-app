@@ -1,6 +1,7 @@
 package com.example.application.views.order;
 
 import java.math.BigDecimal;
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,7 @@ import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.Product;
 import com.example.application.data.entity.products.ProductPrice;
 import com.example.application.data.entity.stock.ItemStock;
+import com.example.application.utils.PfdiUtil;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Hr;
@@ -47,6 +49,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 		
 		totalAmount.setText("Total Amount: " + currentTotalPrice);
 		totalAmount.addClassNames("mb-1", "mt-s", "text-l", "span-order-flavor-column-header");
+		totalAmount.setWidthFull();
 		categories.forEach(category -> {
 
 			List<Product> productsPerCategory = productCategoryMap.get(category.getCategoryName());
@@ -170,10 +173,9 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 						currentTotalPrice = currentTotalPrice.add(newAmount);
 						System.out.println("Old Amount : " + oldAmount);
 						System.out.println("New Amount : " + newAmount);
-
 						System.out.println("Current Total Amount : " + currentTotalPrice);
 
-						totalAmount.setText("Total Amount : " + currentTotalPrice);
+						totalAmount.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
 						add(totalAmount);
 						
 						
@@ -231,6 +233,10 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			}
 			return null;
 		}).filter(Objects::nonNull).collect(Collectors.toSet());
+	}
+	
+	public BigDecimal getTotalAmount() {
+		return currentTotalPrice;
 	}
 
 	private class Items {

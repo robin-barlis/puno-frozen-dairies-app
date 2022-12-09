@@ -13,6 +13,7 @@ import com.example.application.views.constants.CssClassNamesConstants;
 import com.example.application.views.customer.CustomerView;
 import com.example.application.views.order.InvoicesView;
 import com.example.application.views.order.StockOrderView;
+import com.example.application.views.payments.PaymentsView;
 import com.example.application.views.products.ManageCategoriesView;
 import com.example.application.views.products.ManageSizesView;
 import com.example.application.views.products.ManageTagsView;
@@ -22,6 +23,7 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -42,6 +44,7 @@ import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -71,12 +74,13 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		this.accessChecker = accessChecker;
 		this.userService = userService;
 		this.currentUser = authenticatedUser.get().get();
-
-		addToNavbar(createHeaderContent());
+		createHeaderContent();
+		//addToNavbar(createHeaderContent());
 	}
 
 	private Component createHeaderContent() {
 		Header header = new Header();
+		header.setWidthFull();
 		header.addClassNames("bg-base", "border-b", "border-contrast-10", "box-border", "flex", "flex-col", "w-full");
 
 		Div layout = new Div();
@@ -84,8 +88,9 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
 		H2 appName = new H2("PFDI Business Management Application");
 		appName.addClassNames("my-0", "me-auto");
-
 		layout.add(appName);
+
+		//layout.add(appName);
 
 		Optional<AppUser> maybeUser = authenticatedUser.get();
 		if (maybeUser.isPresent()) {
@@ -95,12 +100,17 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			layout.add(loginLink);
 		}
 
+		
+		DrawerToggle toggle = new DrawerToggle();
 		Nav nav = new Nav();
 		nav.addClassNames("gap-s", "overflow-auto", "px-m", CssClassNamesConstants.NAV_BAR_WRAPPER);
 
 		Tabs tabs = getTabs();
 		nav.add(tabs);
-		header.add(layout, nav);
+		
+		addToDrawer(tabs);
+		addToNavbar(toggle, layout);
+//		nav.add(tabs);		header.add(layout, toggle);
 
 		return header;
 	}
@@ -337,15 +347,20 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
 	private Tabs getTabs() {
 		tabs = new Tabs();
-		tabs.getStyle().set("margin", "auto");
+		//tabs.getStyle().set("margin", "auto");
+		tabs.setOrientation(Tabs.Orientation.VERTICAL);
 
 		if (PfdiUtil.isAdmin(currentUser) || PfdiUtil.isSuperUser(currentUser)) {
-			Tab profilesTab = createTab("Profiles", AdministrationView.class, "admin-view-tab");
+			Icon icon = new Icon(VaadinIcon.USERS);
+			
+			Tab profilesTab = createTab("Profiles", AdministrationView.class, "admin-view-tab", icon);
 			tabs.add(profilesTab);
 		}
 
 		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser)) {
-			Tab productsTab = createTab("Products", ProductsView.class, "product-view-tab");
+			Icon packageIcon = new Icon(VaadinIcon.PACKAGE);
+			Tab productsTab = createTab("Products", ProductsView.class, "product-view-tab", packageIcon);
+			
 			MenuBar menuBar = new MenuBar();
 			menuBar.setOpenOnHover(true);
 			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
@@ -365,10 +380,13 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			subMenu.addItem(manageTag);
 			subMenu.addItem(manageSizes);
 			subMenu.addItem(manageCategories);
-			productsTab.add(menuBar);
-
-			Tab customersTab = createTab("Customers", CustomerView.class, "admin-view-tab");
+			//productsTab.add(menuBar);
+			Icon customerIcon = new Icon(VaadinIcon.USER_HEART);
+			Tab customersTab = createTab("Customers", CustomerView.class, "admin-view-tab",customerIcon);
 			tabs.add(productsTab, customersTab);
+			
+			
+			
 		}
 
 //		MenuBar customersTabMenu = new MenuBar();
@@ -387,7 +405,9 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 //		customersTab.add(customersTabMenu);
 
 		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser) || PfdiUtil.isChecker(currentUser)) {
-			Tab ordersTab = createTab("Orders", StockOrderView.class, "admin-view-tab");
+
+			Icon cartIcon = new Icon(VaadinIcon.CART);
+			Tab ordersTab = createTab("Orders", StockOrderView.class, "admin-view-tab", cartIcon);
 			MenuBar ordersTabMenu = new MenuBar();
 			ordersTabMenu.setOpenOnHover(true);
 			ordersTabMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
@@ -406,9 +426,14 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			// ordersTabSubMenu.addItem(manageStocks);
 			//ordersTabSubMenu.addItem(manageSalesInvoices);
 
-			Tab stocksInventory = createTab("Inventory", StocksInvetoryView.class, "admin-view-tab");
+			Tab stocksInventory = createTab("Inventory", StocksInvetoryView.class, "admin-view-tab", new Icon(VaadinIcon.STOCK));
 
 			tabs.add(ordersTab, stocksInventory);
+		}
+		
+		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser)) {		
+			Tab paymentTab = createTab("Payments", PaymentsView.class, "admin-view-tab", new Icon(VaadinIcon.MONEY_DEPOSIT));
+			tabs.add(paymentTab);
 		}
 
 		return tabs;
@@ -421,13 +446,15 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		return manageTag;
 	}
 
-	private Tab createTab(String viewName, Class<? extends Component> viewClass, String id) {
+	private Tab createTab(String viewName, Class<? extends Component> viewClass, String id, Icon icon) {
+		
 		RouterLink link = new RouterLink();
 		link.addClassName(id);
 		link.setText(viewName);
 		link.setRoute(viewClass);
-		return new Tab(link);
+		return new Tab(icon, link);
 	}
+
 
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {

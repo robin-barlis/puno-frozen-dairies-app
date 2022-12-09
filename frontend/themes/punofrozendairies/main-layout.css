@@ -72,12 +72,8 @@ header nav a[highlight]:not([active])::after {
 }
 
 .main-layout-header-wrapper {
-	background: white;
-	border-bottom-color: #1C7324;
-	border-bottom-style: solid;
 	padding-top: 10px;
-	padding-bottom: 10px;
-	border-bottom-width: thin;
+	width:100%
 }
 
 .nav-bar-wrapper {
@@ -214,3 +210,4 @@ header nav a[highlight]:not([active])::after {
     text-align: center;
     margin: 30px;
 }
+

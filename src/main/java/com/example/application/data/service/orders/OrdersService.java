@@ -39,11 +39,21 @@ public class OrdersService {
 	public List<Order> listAll(Sort sort) {
 		return repository.findAll(sort);
 	}
+	
+	public List<Order> findReadyForPaymentOrdersByCustomerName(String customerName) {
+		return repository.findReadyForPaymentOrdersByCustomerName(customerName);	
+	}
+	
+	public List<Order> findOrdersForPayment() {
+		return repository.findReadyForPaymentOrders();	
+	}
+
 
 	public Order update(Object entity) {
 		Order order = repository.save((Order) entity);
 		
 		List<ItemStock> itemInv = order.getOrderItems().stream().map(e -> e.getItemInventory()).collect(Collectors.toList());
+
 		return repository.save((Order) entity);
 
 	}

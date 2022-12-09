@@ -61,6 +61,8 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 		headerNameWrapper.setAlignItems(Alignment.CENTER);
 		H1 header = new H1("Product List");
 		header.addClassNames("mb-0", "mt-s", "text-xl");
+
+		//headerNameWrapper.add(tabs);
 		headerNameWrapper.add(header);
 		headerNameWrapper.setWidth("50%");
 
@@ -78,6 +80,7 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 		});
 		flexWrapper.add(addProductsButton);
 		flexWrapper.setWidth("50%");
+		
 
 		headerContainer.add(headerNameWrapper, flexWrapper);
 		contentHeaderContainer.add(headerContainer);
@@ -107,5 +110,6 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 
 		}
 	}
+	
 
 }

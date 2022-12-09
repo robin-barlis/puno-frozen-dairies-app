@@ -1,0 +1,7 @@
+[part='navbar']::before {
+    opacity: 0.8;
+    background: white;
+    border-bottom-color: green;
+    border-bottom-style: solid;
+    border-bottom-width: thin;
+}

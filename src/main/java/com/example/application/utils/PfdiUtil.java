@@ -6,16 +6,22 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import com.example.application.data.OrderStatus;
 import com.example.application.data.Role;
 import com.example.application.data.entity.AppUser;
+import com.example.application.data.entity.payment.Banks;
 import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.Size;
 import com.example.application.data.entity.stock.ItemStock;
 import com.google.gwt.thirdparty.guava.common.collect.Ordering;
 import com.google.gwt.thirdparty.guava.common.collect.Sets;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
+import com.vaadin.flow.component.textfield.TextField;
 
 public class PfdiUtil {
 
@@ -36,7 +42,8 @@ public class PfdiUtil {
 
 	public static final NumberFormat getFormatter() {
 
-		NumberFormat currencyInstanceFormat = NumberFormat.getCurrencyInstance();
+		Locale locale = new Locale("en", "PH");
+		NumberFormat currencyInstanceFormat = NumberFormat.getCurrencyInstance(locale);
 		currencyInstanceFormat.setMinimumFractionDigits(2);
 		currencyInstanceFormat.setMaximumFractionDigits(2);
 
@@ -136,5 +143,12 @@ public class PfdiUtil {
 			return OTHER_SIZE_NAME_ORDERING.compare(arg0.getSize().getSizeName(), arg1.getSize().getSizeName());
 		}
 	};
+
+	public static void setVisibility(boolean show, Component...components ) {
+		for (Component component : components) {
+			component.setVisible(show);
+		}
+		
+	}
 
 }
