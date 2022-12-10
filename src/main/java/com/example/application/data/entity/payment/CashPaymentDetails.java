@@ -53,7 +53,7 @@ public class CashPaymentDetails implements Serializable {
 	
 	private LocalDateTime updatedDate;
 	
-	private Integer totalAmount;
+	private BigDecimal totalAmount;
 
 
 	public Payment getPayment() {
@@ -85,12 +85,12 @@ public class CashPaymentDetails implements Serializable {
 		this.updatedBy = updatedBy;
 	}
 
-	public Integer getTotalAmount() {
+	public BigDecimal getTotalAmount() {
 		return totalAmount;
 	}
 
 
-	public void setTotalAmount(Integer totalAmount) {
+	public void setTotalAmount(BigDecimal totalAmount) {
 		this.totalAmount = totalAmount;
 	}
 

@@ -4,13 +4,13 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -52,17 +52,22 @@ public class BankRemittancePaymentDetails implements Serializable {
 	
 	private LocalDate depositDate;
 	private LocalDate salesDateCovered;
-	private String bankName;
+	private String accountName;
+	private String accountNumber;
+	
+	@OneToOne(mappedBy = "banks", cascade = CascadeType.ALL)
+	@Fetch(FetchMode.SELECT)
+	private Banks bankId;
 	private String referenceNumber;
 	
 
-	public String getBankName() {
-		return bankName;
+	public Banks getBankId() {
+		return bankId;
 	}
 
 
-	public void setBankName(String bankName) {
-		this.bankName = bankName;
+	public void setBankId(Banks bankId) {
+		this.bankId = bankId;
 	}
 
 
@@ -170,6 +175,26 @@ public class BankRemittancePaymentDetails implements Serializable {
 			return false;
 		}
 		return getId().equals(other.getId());
+	}
+
+
+	public String getAccountNumber() {
+		return accountNumber;
+	}
+
+
+	public void setAccountNumber(String accountNumber) {
+		this.accountNumber = accountNumber;
+	}
+
+
+	public String getAccountName() {
+		return accountName;
+	}
+
+
+	public void setAccountName(String accountName) {
+		this.accountName = accountName;
 	}
 
 

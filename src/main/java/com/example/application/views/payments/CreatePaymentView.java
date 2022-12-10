@@ -2,6 +2,8 @@ package com.example.application.views.payments;
 
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.annotation.security.PermitAll;
@@ -9,11 +11,18 @@ import javax.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import com.example.application.data.DocumentTrackingNumberEnum;
 import com.example.application.data.PaymentMode;
 import com.example.application.data.entity.customers.Customer;
+import com.example.application.data.entity.orders.DocumentTrackingNumber;
 import com.example.application.data.entity.orders.Order;
+import com.example.application.data.entity.payment.BankRemittancePaymentDetails;
 import com.example.application.data.entity.payment.Banks;
+import com.example.application.data.entity.payment.CashPaymentDetails;
+import com.example.application.data.entity.payment.ChequePaymentDetails;
+import com.example.application.data.entity.payment.Payment;
 import com.example.application.data.service.customers.CustomerService;
+import com.example.application.data.service.orders.DocumentTrackingNumberService;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.payment.BankService;
 import com.example.application.data.service.payment.PaymentsService;
@@ -29,20 +38,23 @@ import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.BeanValidationBinder;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.PageTitle;
@@ -108,7 +120,10 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		
 	private final List<Order> orders = Lists.newArrayList();
 	
-//	private BeanValidationBinder<Payment> paymentBinder;
+	private BeanValidationBinder<Payment> paymentBinder = new BeanValidationBinder<>(Payment.class);
+	private BeanValidationBinder<ChequePaymentDetails> chequePaymentBinder = new BeanValidationBinder<>(ChequePaymentDetails.class);
+	private BeanValidationBinder<BankRemittancePaymentDetails> onlineRemittancePaymentBinder = new BeanValidationBinder<>(BankRemittancePaymentDetails.class);
+	private DocumentTrackingNumberService documentTrackingNumberService;
 //	
 //	private BeanValidationBinder<CashPaymentDetails> cashPaymentDetailsBinder;
 //	
@@ -119,7 +134,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 	
 
 	@Autowired
-	public CreatePaymentView(BankService bankService, OrdersService stockOrderService, PaymentsService paymentService, AuthenticatedUser authenticatedUser, CustomerService customerService, ProductService prodcuctService, CategoryService categoryService, AccessAnnotationChecker accessChecker, ItemStockService itemStockService) {
+	public CreatePaymentView(DocumentTrackingNumberService documentTrackingNumberService, BankService bankService, OrdersService stockOrderService, PaymentsService paymentService, AuthenticatedUser authenticatedUser, CustomerService customerService, ProductService prodcuctService, CategoryService categoryService, AccessAnnotationChecker accessChecker, ItemStockService itemStockService) {
 		super("add-new-product", "Create Payment");
 		//addClassNames("products-view");
 		this.customerService = customerService;
@@ -128,6 +143,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		this.paymentsService = paymentService;
 		this.bankService = bankService;
 		this.banks = bankService.listAll(Sort.by("bankName"));
+		this.documentTrackingNumberService = documentTrackingNumberService;
 		FormLayout formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(
 		        // Use one column by default
@@ -136,22 +152,77 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		        new ResponsiveStep("500px",2 ));
 		createMainContent(formLayout);
 		
-		HorizontalLayout buttonsLayout = new HorizontalLayout();
-
-		buttonsLayout.setAlignItems(Alignment.END);
+		FlexLayout buttonsLayout = new FlexLayout();
+		buttonsLayout.setFlexDirection(FlexDirection.ROW);
 		buttonsLayout.setJustifyContentMode(JustifyContentMode.END);
-		buttonsLayout.setWidthFull();
-		buttonsLayout.setVerticalComponentAlignment(Alignment.END);
+		buttonsLayout.setClassName("button-layout payment-footer");
 		
 		saveButton = new Button("Save");
-		
+		saveButton.setClassName("float-right secondary-button-sm");
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		saveButton.addClickListener(e -> {
-			UI.getCurrent().navigate(PaymentsView.class);
+			Payment payment = new Payment();
+			DocumentTrackingNumber paymentNumber = documentTrackingNumberService.findByType(DocumentTrackingNumberEnum.PAYMENT_NUMBER.name());
+			try {
+				paymentBinder.writeBean(payment);
+				payment.setPaymentNumber(paymentNumber.getNumber());
+				payment.setDueDate(payment.getOrderId().getDueDate());
+				payment.setPaymentDate(LocalDate.now());
+				payment.setStatus("Paid");
+				payment.setCreatedBy(authenticatedUser.get().get());
+				payment.setCreatedDate(LocalDateTime.now());
+				payment.setUpdatedBy(authenticatedUser.get().get());
+				payment.setUpdatedDate(LocalDateTime.now());
+				
+				if (PaymentMode.CASH.equals(paymentMode.getValue())) {
+					CashPaymentDetails cashPaymentDetails = new CashPaymentDetails();
+					cashPaymentDetails.setCreatedBy(authenticatedUser.get().get());
+					cashPaymentDetails.setCreatedDate(LocalDateTime.now());
+					cashPaymentDetails.setUpdatedBy(authenticatedUser.get().get());
+					cashPaymentDetails.setUpdatedDate(LocalDateTime.now());
+					cashPaymentDetails.setPayment(payment);
+					cashPaymentDetails.setTotalAmount(payment.getAmount());
+					payment.setCashPaymentDetails(cashPaymentDetails);
+				} else if (PaymentMode.ONLINE_REMITTANCE.equals(paymentMode.getValue())) {
+					BankRemittancePaymentDetails bankRemittancePaymentDetails = new BankRemittancePaymentDetails();
+					onlineRemittancePaymentBinder.writeBean(bankRemittancePaymentDetails);
+					bankRemittancePaymentDetails.setCreatedBy(authenticatedUser.get().get());
+					bankRemittancePaymentDetails.setCreatedDate(LocalDateTime.now());
+					bankRemittancePaymentDetails.setUpdatedBy(authenticatedUser.get().get());
+					bankRemittancePaymentDetails.setUpdatedDate(LocalDateTime.now());
+					payment.setBankRemittanceDetails(bankRemittancePaymentDetails);
+					
+				} else if (PaymentMode.CHEQUE.equals(paymentMode.getValue())) {
+					ChequePaymentDetails chequePaymentDetails = new ChequePaymentDetails();
+					chequePaymentBinder.writeBean(chequePaymentDetails);
+					chequePaymentDetails.setCreatedBy(authenticatedUser.get().get());
+					chequePaymentDetails.setCreatedDate(LocalDateTime.now());
+					chequePaymentDetails.setUpdatedBy(authenticatedUser.get().get());
+					chequePaymentDetails.setUpdatedDate(LocalDateTime.now());
+					payment.setChequePaymentDetails(chequePaymentDetails);			
+				}
+				
+				
+				payment = paymentService.update(payment);
+				UI.getCurrent().navigate(PaymentsView.class);
+				
+				
+				
+			} catch (ValidationException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+//			
+//			UI.getCurrent().navigate(PaymentsView.class);
+			System.out.println("Here");
 			
 		});
 		
 		cancelButton = new Button("Cancel");
-		
+
+		cancelButton.setClassName("float-right secondary-button-sm");
+		cancelButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 		cancelButton.addClickListener(e -> {
 			UI.getCurrent().navigate(PaymentsView.class);
 			
@@ -160,7 +231,6 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		buttonsLayout.add(cancelButton, saveButton);
 		
 		add(formLayout);
-
 		add(buttonsLayout);
 	}
 
@@ -181,12 +251,10 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		storeName = new ComboBox<>();
 		storeName.setLabel("Store Name");
 		storeName.setWidth("50%");
+		storeName.setRequired(true);
 		storeName.setAllowCustomValue(false);
 		storeName.setItems(availableCustomers);
-		storeName.setItemLabelGenerator(e -> {
-			return e.getStoreName();
-		});
-		
+		storeName.setItemLabelGenerator(e -> e.getStoreName());
 		storeName.addValueChangeListener(storeName -> {			
 			Customer customer = storeName.getValue();
 			
@@ -198,15 +266,17 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 			}
 			order.setItems(orders);			
 		});
+		paymentBinder.forField(storeName).asRequired("Store name must not be empty.")
+			.bind(Payment::getCustomer, Payment::setCustomer);
 		
 		order= new ComboBox<>();
 		order.setLabel("Stock Order Number");
 		order.setWidth("50%");
 		order.setAllowCustomValue(false);
 		order.setItems(orders);
-		order.setItemLabelGenerator(e -> {
-			return e.getStockOrderNumber().toString();
-		});
+		order.setItemLabelGenerator(e -> e.getStockOrderNumber().toString());
+		order.setRequired(true);
+		paymentBinder.forField(order).asRequired("Stock order must not be empty.").bind(Payment::getOrderId, Payment::setOrderId);
 		
 		order.addValueChangeListener(orderEvent -> {
 			//set all values
@@ -263,11 +333,15 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 			}
 		});
 		paymentAmount.setPrefixComponent(new Span("₱"));
+		paymentAmount.setRequiredIndicatorVisible(true);
+		paymentBinder.forField(paymentAmount).asRequired("Payment Amount must not be empty").bind(Payment::getAmount, Payment::setAmount);
 		
 		balance = new BigDecimalField();
 		balance.setLabel("Balance");
 		balance.setReadOnly(true);
 		balance.setPrefixComponent(new Span("₱"));
+		balance.setRequiredIndicatorVisible(true);
+		paymentBinder.forField(balance).bind(Payment::getBalance, Payment::setBalance);
 		
 		paymentMode = new Select<>();
 		paymentMode.setItems(PaymentMode.values());
@@ -286,9 +360,16 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 			} else {
 				PfdiUtil.setVisibility(false, chequeBankName, chequeNumber, chequeAccountNumber, chequeIssueDate);
 				PfdiUtil.setVisibility(false, bankName, depositDate, bankAccountNumber, bankAccountName, bankReferenceNumber, salesDateCovered);
-
 			}
  		});
+		paymentBinder.forField(paymentMode).asRequired("Payment mode must not be empty. ")
+			.bind(e-> {
+				if (e.getPaymentMode() != null) {
+					return PaymentMode.valueOf(e.getPaymentMode());
+				} else {
+					return null;
+				}
+			}, (bean, field) -> bean.setPaymentMode(field.getName()));
 		
 		Hr paymentDetailsDivider = new Hr();
 		
@@ -300,6 +381,8 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		    e.getSource()
 		            .setHelperText(e.getValue().length() + "/500");
 		});
+		paymentBinder.forField(notes).bind(Payment::getNote, Payment::setNote);
+		
 
 		content.add(storeName, ownerName, order, deliveryReceiptNumber, invoiceNumber, orderDate, 
 				amountDue, dueDate, paymentAmount, balance, paymentMode, notes, paymentDetailsDivider);	
@@ -316,22 +399,33 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		chequeBankName.setItemLabelGenerator(e-> {
 			return e.getBankName();
 		});
+		chequePaymentBinder.forField(chequeBankName).asRequired("Bank must be selected.")
+			.bind(ChequePaymentDetails::getBankId, ChequePaymentDetails::setBankId);
 		
 		chequeNumber = new TextField();
 		chequeNumber.setLabel("Cheque Number");	
 		chequeNumber.setVisible(false);
+		chequePaymentBinder.forField(chequeNumber).asRequired("Cheque number must not be empty.")
+				.bind(ChequePaymentDetails::getChequeNumber, ChequePaymentDetails::setChequeNumber);
+		
 		
 		chequeAccountNumber = new TextField();
 		chequeAccountNumber.setLabel("Account Number");	
 		chequeAccountNumber.setVisible(false);
+		chequePaymentBinder.forField(chequeAccountNumber).asRequired("Account number must not be empty.")
+			.bind(ChequePaymentDetails::getAccountNumber, ChequePaymentDetails::setAccountName);
 		
 		chequeAccountName = new TextField();
 		chequeAccountName.setLabel("Account Name");	
 		chequeAccountName.setVisible(false);
+		chequePaymentBinder.forField(chequeAccountName).asRequired("Account name must not be empty.")
+			.bind(ChequePaymentDetails::getAccountName, ChequePaymentDetails::setAccountName);
 		
 		chequeIssueDate = new DatePicker();
 		chequeIssueDate.setLabel("Cheque Issue Date");	
 		chequeIssueDate.setVisible(false);
+		chequePaymentBinder.forField(chequeIssueDate).asRequired("Cheque issue date must not be empty.")
+			.bind(ChequePaymentDetails::getChequeIssueDate, ChequePaymentDetails::setChequeIssueDate);
 		
 		
 		content.add(chequeBankName, chequeNumber, chequeAccountNumber, chequeIssueDate);	
@@ -343,26 +437,38 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		bankName.setItemLabelGenerator(e-> {
 			return e.getBankName();
 		});
+		onlineRemittancePaymentBinder.forField(bankName).asRequired("Bank must not be empty.")
+			.bind(BankRemittancePaymentDetails::getBankId, BankRemittancePaymentDetails::setBankId);
 		
 		depositDate = new DatePicker();
 		depositDate.setLabel("Deposit Date");	
 		depositDate.setVisible(false);
+		onlineRemittancePaymentBinder.forField(depositDate).asRequired("Deposit Datenot be empty.")
+			.bind(BankRemittancePaymentDetails::getDepositDate, BankRemittancePaymentDetails::setDepositDate);
 		
 		bankAccountNumber = new TextField();
 		bankAccountNumber.setLabel("Account Number");	
 		bankAccountNumber.setVisible(false);
+		onlineRemittancePaymentBinder.forField(bankAccountNumber).asRequired("Deposit Datenot be empty.")
+			.bind(BankRemittancePaymentDetails::getAccountNumber, BankRemittancePaymentDetails::setAccountName);
 		
 		bankAccountName = new TextField();
 		bankAccountName.setLabel("Account Name");	
 		bankAccountName.setVisible(false);
+		onlineRemittancePaymentBinder.forField(bankAccountName).asRequired("Deposit Datenot be empty.")
+			.bind(BankRemittancePaymentDetails::getAccountName, BankRemittancePaymentDetails::setAccountName);
 		
 		bankReferenceNumber = new TextField();
 		bankReferenceNumber.setLabel("Reference Number");	
 		bankReferenceNumber.setVisible(false);
+		onlineRemittancePaymentBinder.forField(bankReferenceNumber).asRequired("Deposit Datenot be empty.")
+			.bind(BankRemittancePaymentDetails::getReferenceNumber, BankRemittancePaymentDetails::setReferenceNumber);
 		
 		salesDateCovered = new DatePicker();
 		salesDateCovered.setLabel("Sales Date Covered");	
 		salesDateCovered.setVisible(false);
+		onlineRemittancePaymentBinder.forField(salesDateCovered).asRequired("Deposit Datenot be empty.")
+			.bind(BankRemittancePaymentDetails::getSalesDateCovered, BankRemittancePaymentDetails::setSalesDateCovered);
 		
 		
 		content.add(bankName, depositDate, bankAccountNumber, bankAccountName, bankReferenceNumber, salesDateCovered);	
