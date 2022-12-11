@@ -55,7 +55,8 @@ public class BankRemittancePaymentDetails implements Serializable {
 	private String accountName;
 	private String accountNumber;
 	
-	@OneToOne(mappedBy = "banks", cascade = CascadeType.ALL)
+	@OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "bankId", nullable = false)
 	@Fetch(FetchMode.SELECT)
 	private Banks bankId;
 	private String referenceNumber;

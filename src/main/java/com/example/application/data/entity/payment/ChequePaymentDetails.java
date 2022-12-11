@@ -51,7 +51,8 @@ public class ChequePaymentDetails implements Serializable {
 	private LocalDateTime updatedDate;
 	private String chequeNumber;
 	
-	@OneToOne(mappedBy = "banks", cascade = CascadeType.ALL)
+	@OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "bankId", nullable = false)
 	@Fetch(FetchMode.SELECT)
 	private Banks bankId;
 	private LocalDate chequeIssueDate;
