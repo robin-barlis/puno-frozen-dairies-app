@@ -22,7 +22,7 @@ import com.example.application.data.entity.orders.Order;
 
 
 @Entity
-@Table(name = "pfdi_payments_cash_details")
+@Table(name = "pfdi_payments_cheque_details")
 public class ChequePaymentDetails implements Serializable {
 
 	private static final long serialVersionUID = 8250019492935742153L;
@@ -51,13 +51,14 @@ public class ChequePaymentDetails implements Serializable {
 	private LocalDateTime updatedDate;
 	private String chequeNumber;
 	
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne()
     @JoinColumn(name = "bankId", nullable = false)
 	@Fetch(FetchMode.SELECT)
 	private Banks bankId;
 	private LocalDate chequeIssueDate;
 	private String accountNumber;
 	private String accountName;
+	private String chequeStatus;
 	
 
 	public String getChequeNumber() {
@@ -184,6 +185,16 @@ public class ChequePaymentDetails implements Serializable {
 
 	public void setAccountNumber(String accountNumber) {
 		this.accountNumber = accountNumber;
+	}
+
+
+	public String getChequeStatus() {
+		return chequeStatus;
+	}
+
+
+	public void setChequeStatus(String chequeStatus) {
+		this.chequeStatus = chequeStatus;
 	}
 
 

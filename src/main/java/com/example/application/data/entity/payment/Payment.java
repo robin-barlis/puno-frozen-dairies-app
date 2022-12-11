@@ -14,7 +14,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.validation.constraints.NotEmpty;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -37,13 +36,11 @@ public class Payment implements Serializable {
 	@OneToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "order_id", nullable = false)
 	@Fetch(FetchMode.SELECT)
-	@NotEmpty(message = "Order must be selected")
 	private Order orderId;
 	
 	@OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id", nullable = false)
 	@Fetch(FetchMode.SELECT)
-	@NotEmpty(message = "Customer must be selected")
 	private Customer customer;
 	
 	@OneToOne(fetch = FetchType.EAGER)
@@ -69,7 +66,6 @@ public class Payment implements Serializable {
 	
 	private Integer paymentNumber;
 	
-	@NotEmpty(message = "Amount must have a value")
 	private BigDecimal amount;
 	
 	private LocalDate paymentDate;

@@ -11,8 +11,10 @@ import javax.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import com.example.application.data.ChequeStatus;
 import com.example.application.data.DocumentTrackingNumberEnum;
 import com.example.application.data.PaymentMode;
+import com.example.application.data.PaymentStatus;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.DocumentTrackingNumber;
 import com.example.application.data.entity.orders.Order;
@@ -98,6 +100,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 	
 	// CHEQUE PAYMENTS
 	private TextField chequeNumber;
+	private Select<ChequeStatus> chequeStatus;
 	private ComboBox<Banks> chequeBankName;
 	private TextField chequeAccountNumber;
 	private DatePicker chequeIssueDate;
@@ -168,11 +171,16 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 				payment.setPaymentNumber(paymentNumber.getNumber());
 				payment.setDueDate(payment.getOrderId().getDueDate());
 				payment.setPaymentDate(LocalDate.now());
-				payment.setStatus("Paid");
 				payment.setCreatedBy(authenticatedUser.get().get());
 				payment.setCreatedDate(LocalDateTime.now());
 				payment.setUpdatedBy(authenticatedUser.get().get());
 				payment.setUpdatedDate(LocalDateTime.now());
+				
+				if (BigDecimal.ZERO.compareTo(balance.getValue()) == 0) {
+					payment.setStatus(PaymentStatus.PAID.name());
+				} else {
+					payment.setStatus(PaymentStatus.PARTIALLY_PAID.name());
+				}
 				
 				if (PaymentMode.CASH.equals(paymentMode.getValue())) {
 					CashPaymentDetails cashPaymentDetails = new CashPaymentDetails();
@@ -183,6 +191,8 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 					cashPaymentDetails.setPayment(payment);
 					cashPaymentDetails.setTotalAmount(payment.getAmount());
 					payment.setCashPaymentDetails(cashPaymentDetails);
+					
+	
 				} else if (PaymentMode.ONLINE_REMITTANCE.equals(paymentMode.getValue())) {
 					BankRemittancePaymentDetails bankRemittancePaymentDetails = new BankRemittancePaymentDetails();
 					onlineRemittancePaymentBinder.writeBean(bankRemittancePaymentDetails);
@@ -190,6 +200,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 					bankRemittancePaymentDetails.setCreatedDate(LocalDateTime.now());
 					bankRemittancePaymentDetails.setUpdatedBy(authenticatedUser.get().get());
 					bankRemittancePaymentDetails.setUpdatedDate(LocalDateTime.now());
+					bankRemittancePaymentDetails.setPayment(payment);
 					payment.setBankRemittanceDetails(bankRemittancePaymentDetails);
 					
 				} else if (PaymentMode.CHEQUE.equals(paymentMode.getValue())) {
@@ -199,6 +210,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 					chequePaymentDetails.setCreatedDate(LocalDateTime.now());
 					chequePaymentDetails.setUpdatedBy(authenticatedUser.get().get());
 					chequePaymentDetails.setUpdatedDate(LocalDateTime.now());
+					chequePaymentDetails.setPayment(payment);
 					payment.setChequePaymentDetails(chequePaymentDetails);			
 				}
 				
@@ -351,14 +363,14 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		});
 		paymentMode.addValueChangeListener(e -> {
 			if (PaymentMode.CHEQUE.equals(e.getValue())) {	
-				PfdiUtil.setVisibility(true, chequeBankName, chequeNumber, chequeAccountNumber, chequeIssueDate);
+				PfdiUtil.setVisibility(true, chequeBankName, chequeNumber, chequeAccountNumber, chequeAccountName,chequeIssueDate,chequeStatus);
 				PfdiUtil.setVisibility(false, bankName, depositDate, bankAccountNumber, bankAccountName, bankReferenceNumber, salesDateCovered);
 			} else if (PaymentMode.ONLINE_REMITTANCE.equals(e.getValue())) {
-				PfdiUtil.setVisibility(false, chequeBankName, chequeNumber, chequeAccountNumber, chequeIssueDate);
+				PfdiUtil.setVisibility(false, chequeBankName, chequeNumber, chequeAccountNumber, chequeAccountName, chequeIssueDate, chequeStatus);
 				PfdiUtil.setVisibility(true, bankName, depositDate, bankAccountNumber, bankAccountName, bankReferenceNumber, salesDateCovered);
 
 			} else {
-				PfdiUtil.setVisibility(false, chequeBankName, chequeNumber, chequeAccountNumber, chequeIssueDate);
+				PfdiUtil.setVisibility(false, chequeBankName, chequeNumber, chequeAccountNumber, chequeAccountName, chequeIssueDate, chequeStatus);
 				PfdiUtil.setVisibility(false, bankName, depositDate, bankAccountNumber, bankAccountName, bankReferenceNumber, salesDateCovered);
 			}
  		});
@@ -413,7 +425,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		chequeAccountNumber.setLabel("Account Number");	
 		chequeAccountNumber.setVisible(false);
 		chequePaymentBinder.forField(chequeAccountNumber).asRequired("Account number must not be empty.")
-			.bind(ChequePaymentDetails::getAccountNumber, ChequePaymentDetails::setAccountName);
+			.bind(ChequePaymentDetails::getAccountNumber, ChequePaymentDetails::setAccountNumber);
 		
 		chequeAccountName = new TextField();
 		chequeAccountName.setLabel("Account Name");	
@@ -427,8 +439,21 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		chequePaymentBinder.forField(chequeIssueDate).asRequired("Cheque issue date must not be empty.")
 			.bind(ChequePaymentDetails::getChequeIssueDate, ChequePaymentDetails::setChequeIssueDate);
 		
+		chequeStatus = new Select<ChequeStatus>();
+		chequeStatus.setLabel("Cheque Status");	
+		chequeStatus.setValue(ChequeStatus.RECEIVED);
+		chequeStatus.setVisible(false);
+		chequeStatus.setItems(ChequeStatus.values());
+		chequePaymentBinder.forField(chequeStatus).asRequired("Cheque issue date must not be empty.")
+			.bind(e-> {
+				if (e.getChequeStatus() != null) {
+					return ChequeStatus.valueOf(e.getChequeStatus());
+				} else {
+					return null;
+				}
+			}, (bean, field) -> bean.setChequeStatus(field.getChequeStatus()));
 		
-		content.add(chequeBankName, chequeNumber, chequeAccountNumber, chequeIssueDate);	
+		content.add(chequeBankName, chequeNumber, chequeAccountNumber, chequeAccountName,chequeIssueDate, chequeStatus);	
 		
 		bankName = new ComboBox<>();
 		bankName.setItems(banks);
@@ -450,7 +475,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		bankAccountNumber.setLabel("Account Number");	
 		bankAccountNumber.setVisible(false);
 		onlineRemittancePaymentBinder.forField(bankAccountNumber).asRequired("Deposit Datenot be empty.")
-			.bind(BankRemittancePaymentDetails::getAccountNumber, BankRemittancePaymentDetails::setAccountName);
+			.bind(BankRemittancePaymentDetails::getAccountNumber, BankRemittancePaymentDetails::setAccountNumber);
 		
 		bankAccountName = new TextField();
 		bankAccountName.setLabel("Account Name");	
