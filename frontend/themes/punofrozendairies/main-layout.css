@@ -215,3 +215,7 @@ header nav a[highlight]:not([active])::after {
     margin: 30px;
 }
 
+.padding-left-40px {
+	padding-left: 40px;
+}
+

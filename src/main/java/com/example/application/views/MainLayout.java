@@ -44,7 +44,6 @@ import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.splitlayout.SplitLayout.Orientation;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -67,6 +66,8 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 	private final Cloudinary cloudinary = Singleton.getCloudinary();
 	private AppUser currentUser;
 	private Tabs tabs;
+	private Button showChildrenButton = new Button(new Icon(VaadinIcon.CARET_DOWN));
+	private boolean showIcon = false;
 
 	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker,
 			UserService userService) {
@@ -359,7 +360,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
 		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser)) {
 			Icon packageIcon = new Icon(VaadinIcon.PACKAGE);
-			Tab productsTab = createTab("Products", ProductsView.class, "product-view-tab", packageIcon);
+			Tab productsTab = createTabWtihChildren("Products", ProductsView.class, "product-view-tab", packageIcon);
 			
 			MenuBar menuBar = new MenuBar();
 			menuBar.setOpenOnHover(true);
@@ -374,6 +375,35 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			RouterLink manageTag = createNewRoute("Tags", ManageTagsView.class);
 			RouterLink manageSizes = createNewRoute("Sizes", ManageSizesView.class);
 			RouterLink manageCategories = createNewRoute("Categories", ManageCategoriesView.class);
+			
+
+			
+			Tab customerTagTab = createChildTab("Tags", ManageTagsView.class, "admin-view-tab", null);
+			customerTagTab.setVisible(false);
+			
+			Tab sizesTab = createChildTab("Sizes", ManageSizesView.class, "admin-view-tab", null);
+			sizesTab.setVisible(false);
+			
+			Tab categoriesTab = createChildTab("Categories", ManageCategoriesView.class, "admin-view-tab", null);
+			categoriesTab.setVisible(false);
+			
+			showChildrenButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+			showChildrenButton.addClickListener(e-> {
+				
+				if (!showIcon) {
+					showChildrenButton.setIcon(new Icon(VaadinIcon.ANGLE_DOWN));
+					customerTagTab.setVisible(true);
+					sizesTab.setVisible(true);
+					categoriesTab.setVisible(true);
+					showIcon = true;
+				} else {
+					showChildrenButton.setIcon(new Icon(VaadinIcon.ANGLE_RIGHT));
+					customerTagTab.setVisible(false);
+					sizesTab.setVisible(false);
+					categoriesTab.setVisible(false);
+					showIcon = false;
+				}
+			});
 
 			// subMenu.addItem(productList);
 			// subMenu.addItem(createNewProductPageLink);
@@ -383,7 +413,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			//productsTab.add(menuBar);
 			Icon customerIcon = new Icon(VaadinIcon.USER_HEART);
 			Tab customersTab = createTab("Customers", CustomerView.class, "admin-view-tab",customerIcon);
-			tabs.add(productsTab, customersTab);
+			tabs.add(productsTab,customerTagTab,sizesTab,categoriesTab , customersTab);
 			
 			
 			
@@ -437,6 +467,43 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		}
 
 		return tabs;
+	}
+
+	private Tab createTabWtihChildren(String viewName, Class<? extends Component> viewClass, String id, Icon icon) {
+		
+		HorizontalLayout tabContainer= new HorizontalLayout();
+
+		RouterLink link = new RouterLink();
+		link.addClassName(id);
+		link.setText(viewName);
+		link.setRoute(viewClass);
+
+		tabContainer.setVerticalComponentAlignment(Alignment.CENTER, link);
+		tabContainer.setAlignItems(Alignment.CENTER);
+		
+		
+		
+		
+		tabContainer.add(link);
+
+		tabContainer.add(showChildrenButton);
+		return new Tab(icon, tabContainer);
+	}
+	
+	private Tab createChildTab(String viewName, Class<? extends Component> viewClass, String id, Icon icon) {
+		
+		HorizontalLayout tabContainer= new HorizontalLayout();
+		tabContainer.setClassName("padding-left-40px");
+		RouterLink link = new RouterLink();
+		link.addClassName(id);
+		link.setText(viewName);
+		link.setRoute(viewClass);
+
+		tabContainer.setVerticalComponentAlignment(Alignment.CENTER, link);
+		tabContainer.setAlignItems(Alignment.CENTER);		
+		tabContainer.add(link);
+		
+		return new Tab(tabContainer);
 	}
 
 	private RouterLink createNewRoute(String routeText, Class<? extends Component> routeClass) {
