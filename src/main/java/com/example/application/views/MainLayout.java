@@ -66,7 +66,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 	private final Cloudinary cloudinary = Singleton.getCloudinary();
 	private AppUser currentUser;
 	private Tabs tabs;
-	private Button showChildrenButton = new Button(new Icon(VaadinIcon.CARET_DOWN));
+	private Button showChildrenButton = new Button(new Icon(VaadinIcon.ANGLE_DOWN));
 	private boolean showIcon = false;
 
 	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker,
@@ -365,7 +365,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			MenuBar menuBar = new MenuBar();
 			menuBar.setOpenOnHover(true);
 			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
-			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
+			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ANGLE_RIGHT));
 			menuItem.getElement().setAttribute("aria-label", "More options");
 			SubMenu subMenu = menuItem.getSubMenu();
 

@@ -106,8 +106,6 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	private Span totalAmountLabel;
 	private AppUser appUser;
 	private MenuItem editMenu;
-	private MenuItem checkMenu;
-	private MenuItem reject;
 	//private MenuItem readyForDelivery;
 	private MenuItem delivered;
 	private DocumentTrackingNumberService documentTrackingNumberService;
@@ -135,54 +133,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
         editMenu.addClickListener(e -> {
         	System.out.println("editing");
         });
-        checkMenu = createIconItem(menuBar, VaadinIcon.CLIPBOARD_CHECK, "Approve order");
-        checkMenu.addClickListener(e -> {
-        	ConfirmDialog confirmDialog = new ConfirmDialog();
-        	confirmDialog.setCancelable(true);
-        	confirmDialog.setHeader("Are you sure you want to approve this Stock Order?");
-        	confirmDialog.addConfirmListener(event -> {
-    			setStatus(OrderStatus.CHECKED);
-        		
-    			Notification.show("Stock Order #" + order.getStockOrderNumber() + " checked. Now ready for delivery.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-    			
-    			UI.getCurrent().navigate(StockOrderView.class);
-        	});
-        	confirmDialog.open();
-        });
-        
-        reject = createIconItem(menuBar, VaadinIcon.CLOSE_CIRCLE, "Reject Order");
-        reject.addClickListener(e -> {
-        	ConfirmDialog confirmDialog = new ConfirmDialog();
-      	
-        	confirmDialog.setCancelable(true);
-        	confirmDialog.setHeader("Are you sure you want to reject this Stock Order?");
-        	
-        	Button confirmButton = new Button("Confirm");
-        	confirmButton.setEnabled(false);
-        	confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
-        	
-        	TextArea textArea = new TextArea();
-        	textArea.setWidthFull();
-        	textArea.setLabel("Please add a note for Sales personnel.");
-        	textArea.setValueChangeMode(ValueChangeMode.EAGER);
-        	textArea.addValueChangeListener(valueChangeListener-> {
-        		confirmButton.setEnabled(true);
-        		
-        	});
-        	
-         	confirmButton.addClickListener(buttonClickListener -> {
-        		if (textArea.getValue() != null) {        			
-        			setStatus(OrderStatus.FOR_EDITING);
-        			Notification.show("Stock Order #" + order.getStockOrderNumber() + " sent back to Sales for editing.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-        			UI.getCurrent().navigate(StockOrderView.class);
-            		confirmDialog.close();
-        		} 
-        	});
-         	
-         	confirmDialog.setConfirmButton(confirmButton);
-        	confirmDialog.add(textArea);
-        	confirmDialog.open();
-        });
+       
 
         
 //        readyForDelivery = createIconItem(menuBar, VaadinIcon.TRUCK, "Set order for delivery");
@@ -463,34 +414,14 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 				|| PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
 				&& (PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser)));
 		
-		createStockTransfer.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.CHECKED))
-				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
+		createStockTransfer.setVisible((PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
 				&& PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId()));
-		createSalesInvoice.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.CHECKED))
-				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
+		createSalesInvoice.setVisible((PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
 				&& !PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId()));
 
 		
-		editMenu.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_CHECKING)			
-				|| PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_EDITING)
-				|| PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
+		editMenu.setVisible(PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT)
 				&& (PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser)));
-		
-		//Should only be visible to CHECKER && WHEN STATUS IS FOR CHECKING
-		checkMenu.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_CHECKING))
-				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
-		
-		//Should only be visible to CHECKER && WHEN STATUS IS FOR CHECKING
-		reject.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_CHECKING)) 
-				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
-		
-//		readyForDelivery.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.CHECKED))
-//				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));
-//		
-
-//		//Should only be visible to CHECKER && WHEN STATUS IS FOR CHECKING
-//		inTransit.setVisible(PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser));
-//		inTransit.setVisible(PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_DELIVERY));
 		
 		delivered.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_DELIVERY))
 				&& (PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser)));

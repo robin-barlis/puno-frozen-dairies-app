@@ -191,30 +191,9 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		
 		grid.addColumn(order -> {			
 			return PfdiUtil.formatDate(order.getCreationDate());
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Created Date").setSortable(true);
-		
-		grid.addColumn(order -> {	
-			
-			if (order.getCheckedByUser() != null) {
-
-				return order.getCheckedByUser().getUsername();
-			} else {
-				return StringUtils.EMPTY;
-			}
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Checked By").setSortable(true);
-		
-		grid.addColumn(order -> {		
-			if (order.getCheckedDate() != null) {
-
-				return PfdiUtil.formatDate(order.getCheckedDate());
-			} 
-			return "";
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Checked Date").setSortable(true);
-		
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Created Date").setSortable(true);	
 
 		grid.addColumn("status").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-
-		
 
 		ldp = DataProvider.ofCollection(ordersService.listAll(Sort.by("id")));
 
