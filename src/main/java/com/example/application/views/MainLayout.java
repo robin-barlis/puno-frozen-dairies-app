@@ -76,7 +76,6 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		this.userService = userService;
 		this.currentUser = authenticatedUser.get().get();
 		createHeaderContent();
-		//addToNavbar(createHeaderContent());
 	}
 
 	private Component createHeaderContent() {
@@ -360,7 +359,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
 		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser)) {
 			Icon packageIcon = new Icon(VaadinIcon.PACKAGE);
-			Tab productsTab = createTabWtihChildren("Products", ProductsView.class, "product-view-tab", packageIcon);
+			Tab productsTab = createTabWtihChildren("Products", ProductsView.class, "admin-view-tab", packageIcon);
 			
 			MenuBar menuBar = new MenuBar();
 			menuBar.setOpenOnHover(true);

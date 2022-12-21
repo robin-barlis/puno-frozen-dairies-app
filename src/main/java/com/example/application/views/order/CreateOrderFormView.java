@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,15 +49,20 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 
-@PageTitle("Add New Product")
-@Route(value = "order/createOrder", layout = MainLayout.class)
+@PageTitle("Create Order")
+@Route(value = "order/createOrder/:orderId?", layout = MainLayout.class)
+@RouteAlias(value = "/order/createOrder", layout = MainLayout.class)
 @PermitAll
-public class CreateOrderFormView extends AbstractPfdiView implements HasComponents, HasStyle {
+public class CreateOrderFormView extends AbstractPfdiView implements HasComponents, HasStyle, HasUrlParameter<String>  {
 
 	private static final long serialVersionUID = -6210105239749320428L;
 
@@ -75,6 +81,10 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 	private TextField ownerName;
 	private OrdersService orderService;
 	private ItemOrderCategorySubView itemOrderCategorySubView = null;
+	private Order order = null;
+	List<Customer> availableCustomers = null;
+
+	private Integer orderId = null;
 	
 
 	@Autowired
@@ -94,12 +104,11 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 	}
 
 	private void createMainContent(VerticalLayout content) {
+		System.out.println("creating main Content");
 		
 		FormLayout formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(
-		        // Use one column by default
 		        new ResponsiveStep("0", 1),
-		        // Use two columns, if layout's width exceeds 500px
 		        new ResponsiveStep("500px", 2));
 		
 		
@@ -122,7 +131,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 
 		VerticalLayout formContent = new VerticalLayout();
 		
-		List<Customer> availableCustomers = customerService.listAll(Sort.unsorted());
+		availableCustomers = customerService.listAll(Sort.unsorted());
 		storeName = new Select<>();
 		storeName.setLabel("Outlet Name");
 		storeName.setWidth("50%");
@@ -156,8 +165,14 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		nextButton = new Button("Next");
 		nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		nextButton.addClickListener(e -> {
+			if (order == null) {
+				order = createNewOrder();
+			} else {
+				order.setOrderItems(itemOrderCategorySubView.updateOrderItems(authenticatedUser.get().get()));
+				order.setAmountDue(itemOrderCategorySubView.getTotalAmount());
+			}
+			
 
-			Order order = createNewOrder();
 			order = orderService.update(order);
 			
 			List<ItemStock> itemInventorList = order.getOrderItems().stream().map(ord -> ord.getItemInventory()).collect(Collectors.toList());
@@ -169,7 +184,6 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 					
 			
 			Notification.show("Successfully created order.");
-			System.out.println("created order.");
 			UI.getCurrent().navigate(StockOrderSummaryView.class, parameters);
 		});
 		
@@ -194,6 +208,11 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		content.add(buttonsLayout);
 
 
+	}
+
+	private void updateOrder() {
+		
+		
 	}
 
 	private Order createNewOrder() {
@@ -233,6 +252,10 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		}));
 		
 		itemOrderCategorySubView = new ItemOrderCategorySubView(categories, customer, productCategoryMap);
+		
+		if (order != null) {
+			itemOrderCategorySubView.setOrderItems(order.getOrderItems());
+		}
 		content.add(itemOrderCategorySubView);
 		
 	}
@@ -245,5 +268,28 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {
 
+	}
+
+	@Override
+	public void setParameter(BeforeEvent event, @OptionalParameter String parameter) {
+		RouteParameters params = event.getRouteParameters();
+		String orderIdString = params.get("orderId").orElse(null);
+		
+		if (orderIdString != null) {
+			orderId = Integer.parseInt(orderIdString);
+			order = orderService.get(orderId).orElse(null);
+			if (order != null) {
+				
+				Optional<Customer> optionalCustomer = availableCustomers.stream().filter(customer -> customer.getStoreName().equalsIgnoreCase(order.getCustomer().getStoreName())).findFirst();
+				storeName.setValue(optionalCustomer.get());
+				storeName.setReadOnly(true);
+				
+			}
+			orderCreationDate.setValue(order.getCreationDate());
+			orderCreationDate.setReadOnly(true);
+			
+			dueDate.setReadOnly(true);
+		}
+		
 	}
 }

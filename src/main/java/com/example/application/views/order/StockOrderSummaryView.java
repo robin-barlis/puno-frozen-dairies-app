@@ -54,13 +54,12 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.TextArea;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.router.RouteParam;
 import com.vaadin.flow.router.RouteParameters;
 
 @PageTitle("Stock Orders")
@@ -131,37 +130,11 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 
         editMenu = createIconItem(menuBar, VaadinIcon.EDIT, "Edit Stock Order");
         editMenu.addClickListener(e -> {
-        	System.out.println("editing");
+        	RouteParam param = new RouteParam("orderId", orderId);
+        	RouteParameters routeParams = new RouteParameters(param);
+        	UI.getCurrent().navigate(CreateOrderFormView.class, routeParams);
         });
        
-
-        
-//        readyForDelivery = createIconItem(menuBar, VaadinIcon.TRUCK, "Set order for delivery");
-//        readyForDelivery.addClickListener(e -> {
-//        	ConfirmDialog confirmDialog = new ConfirmDialog();
-//      	
-//        	confirmDialog.setCancelable(true);
-//        	confirmDialog.setHeader("Are you sure that this order is now ready for delivery?");
-//        	
-//        	Button confirmButton = new Button("Confirm");
-//        	confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
-//
-//        	
-//         	confirmButton.addClickListener(buttonClickListener -> {
-//				setStatus(OrderStatus.FOR_DELIVERY);
-//
-//				Notification.show("Stock Order #" + order.getStockOrderNumber() + " is now ready for delivery. Delivery Receipt/ Stock Transfer is now available.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-//				
-//				//Go to Delivery Receipt
-//				UI.getCurrent().navigate(StockOrderView.class);
-//				confirmDialog.close();
-//        	
-//        	});
-//         	
-//         	confirmDialog.setConfirmButton(confirmButton);
-//        	confirmDialog.open();
-//        });
-//        
         delivered = createIconItem(menuBar, VaadinIcon.FLAG_CHECKERED, "Set order to delivered");
         delivered.addClickListener(e -> {
         	ConfirmDialog confirmDialog = new ConfirmDialog();
@@ -237,7 +210,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		submit.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		submit.addClassNames("order-view-button", "float-right");
 		submit.addClickListener(e -> {
-			order.setStatus("For Checking");
+			order.setStatus(OrderStatus.FOR_DELIVERY.getOrderStatusName());
 			order = ordersService.update(order);
 			Notification.show("Stock Order #" + order.getStockOrderNumber() + " successfully created.");
 			UI.getCurrent().navigate(StockOrderView.class);
@@ -407,16 +380,16 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		
 		
 		//ONLY VISIBLE WHEN DRAFT, FOR EDITING
-		submit.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_EDITING)
-				|| PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
+		submit.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
 				&& (PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser)));
-		saveAsDraft.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_EDITING)
-				|| PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
+		saveAsDraft.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
 				&& (PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser)));
 		
-		createStockTransfer.setVisible((PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
+		createStockTransfer.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_DELIVERY)) &&
+				(PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
 				&& PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId()));
-		createSalesInvoice.setVisible((PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
+		createSalesInvoice.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_DELIVERY)) &&
+				(PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
 				&& !PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId()));
 
 		

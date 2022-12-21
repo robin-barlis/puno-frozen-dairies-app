@@ -1,12 +1,12 @@
 package com.example.application.views.order;
 
 import java.math.BigDecimal;
-import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -39,9 +39,12 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 	private List<Items> itemsList = new ArrayList<>();
 	
+	private Set<OrderItems> orderItems;
+
 	private BigDecimal currentTotalPrice = BigDecimal.valueOf(0);
 	
 	private H1 totalAmount = new H1(); 
+	private Map<String, OrderItems> orderItemMap = null;
 
 	public ItemOrderCategorySubView(List<Category> categories,  Customer customer, Map<String, List<Product>> productCategoryMap) {
 		this.customer = customer;
@@ -146,44 +149,56 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 				List<ProductPrice> prices = productPricePerCustomer.get(size.getId());
 				if (customerTagNameSet.contains(customerTag.getCustomerTagName()) && Objects.nonNull(prices)) {
 
-					ProductPrice productPrice = prices.stream().filter(e -> {
+					Optional<ProductPrice> productPriceOpt = prices.stream().filter(e -> {
 						return e.getCustomerTagId() == customerTag.getId()
 								&& customer.getLocationTagId().getId() == e.getLocationTagId();
-					}).findFirst().orElseGet(null);
-					IntegerField quantityField = new IntegerField();
+					}).findFirst();
+					
+					if (!productPriceOpt.isEmpty()) {
+						ProductPrice productPrice = productPriceOpt.get();
+						if (productPrice != null) {
+							IntegerField quantityField = new IntegerField();
 
-					int quantity = 0;
+							int quantity = 0;
 
-					ItemStock stock = itemStock.get(size.getSizeName());
-					if (stock != null) {
-						quantity = itemStock.get(size.getSizeName()).getAvailableStock();
+							ItemStock stock = itemStock.get(size.getSizeName());
+							if (stock != null) {
+								quantity = itemStock.get(size.getSizeName()).getAvailableStock();
+							}
+
+							quantityField.setMax(quantity);
+							quantityField.setId("id-" + product.getProductShortCode() + "-" + size.getSizeName());
+							quantityField.addClassName("span-order-size-column");
+							quantityField.setHelperText("Stock: " + quantity);
+							quantityField.setHasControls(true);
+							quantityField.setValue(0);
+							quantityField.setMin(0);
+							System.out.println("id-" + product.getProductShortCode() + "-" + size.getSizeName());
+							quantityField.addValueChangeListener(e -> {
+								
+								BigDecimal oldAmount = productPrice.getTransferPrice()
+										.multiply(BigDecimal.valueOf(e.getOldValue() != null ? e.getOldValue() : 0));
+								BigDecimal newAmount = productPrice.getTransferPrice()
+										.multiply(BigDecimal.valueOf(e.getValue() != null ? e.getValue() : 0));
+
+								currentTotalPrice = currentTotalPrice.subtract(oldAmount);
+								currentTotalPrice = currentTotalPrice.add(newAmount);
+								System.out.println("Old Amount : " + oldAmount);
+								System.out.println("New Amount : " + newAmount);
+								System.out.println("Current Total Amount : " + currentTotalPrice);
+								
+
+								totalAmount.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
+								add(totalAmount);
+
+							});
+							contentWrapper.add(quantityField);
+
+							itemsList.add(new Items(quantityField, productPrice.getTransferPrice(), stock));	
+						}
+						
 					}
-
-					quantityField.setMax(quantity);
-					quantityField.addClassName("span-order-size-column");
-					quantityField.setHelperText("Stock: " + quantity);
-					quantityField.setHasControls(true);
-					quantityField.setValue(0);
-					quantityField.setMin(0);
-					quantityField.addValueChangeListener(e -> {
-						BigDecimal oldAmount = productPrice.getTransferPrice().multiply(BigDecimal.valueOf(e.getOldValue()));
-						BigDecimal newAmount = productPrice.getTransferPrice().multiply(BigDecimal.valueOf(e.getValue()));
-						
-						currentTotalPrice = currentTotalPrice.subtract(oldAmount);
-						currentTotalPrice = currentTotalPrice.add(newAmount);
-						System.out.println("Old Amount : " + oldAmount);
-						System.out.println("New Amount : " + newAmount);
-						System.out.println("Current Total Amount : " + currentTotalPrice);
-
-						totalAmount.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
-						add(totalAmount);
-						
-						
-					});
-					contentWrapper.add(quantityField);
-
-					itemsList.add(new Items(quantityField, productPrice.getTransferPrice(), stock));
-
+					
 				} else {
 					IntegerField quantityField = new IntegerField();
 					quantityField.setMax(0);
@@ -262,8 +277,71 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 		public ItemStock getItemStock() {
 			return itemStock;
+		
 		}
+	}
+	
+	public void setOrderItems(Set<OrderItems> orderItems) {
+		this.orderItems = orderItems;
 
+		setValues();
+	}
+
+	public Set<OrderItems> updateOrderItems(AppUser user) {
+		itemsList.forEach(itemField -> {
+			IntegerField field = itemField.getNumberField();
+			String itemFieldId = field.getId().orElse(null);
+			if (itemFieldId != null) {
+				Integer quantity = field.getValue();
+				OrderItems orderItem = orderItemMap.get(itemFieldId);
+				if (orderItem != null) {
+					Integer oldValue = orderItem.getQuantity();
+					
+					if (!quantity.equals(oldValue)) {
+						orderItem.setQuantity(quantity);
+						ItemStock inventory = orderItem.getItemInventory();
+						
+						Integer availableStock = inventory.getAvailableStock();
+						
+						Integer currentStock = availableStock + oldValue - quantity; 
+						
+						inventory.setAvailableStock(currentStock);
+						orderItem.setUpdatedDate(LocalDateTime.now());
+						orderItem.setUpdatedBy(user);
+					}
+				}
+				
+			}
+		});
+		return orderItemMap.values().stream().collect(Collectors.toSet());
+	}
+
+	private void setValues() {
+		 orderItemMap = orderItems.stream().collect(Collectors.toMap(e -> {
+			
+			String productShortCode = e.getItemInventory().getProduct().getProductShortCode();
+			String sizeName = e.getItemInventory().getSize().getSizeName();
+			return "id-" + productShortCode + "-" + sizeName;
+		}, Function.identity()));
+		
+		
+		itemsList.forEach(itemField -> {
+			
+			IntegerField field = itemField.getNumberField();
+			String fieldId = field.getId().orElse(null);
+			
+			if (fieldId != null) {
+				System.out.println("Field ID: " + fieldId);
+				OrderItems orderItem = orderItemMap.get(fieldId);
+				Integer value = orderItem != null ? orderItem.getQuantity() : 0;
+				field.setValue(value);
+			}
+			
+			
+		});
+		
+		// TODO Auto-generated method stub
+		
 	}
 
 }
