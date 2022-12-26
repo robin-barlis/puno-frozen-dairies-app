@@ -20,6 +20,7 @@ public class SizePricingSubView extends VerticalLayout {
 	private Category category;
 	private TextField sizeField;
 	private Size size;	
+
 	private HashSet<LocationTagPriceFieldMapping> fieldMapping = new HashSet<>();
 
 	public SizePricingSubView(Size size, Category category) {
@@ -136,6 +137,11 @@ public class SizePricingSubView extends VerticalLayout {
 
 		}
 		
+	}
+	
+
+	public Size getSize() {
+		return size;
 	}
 
 }

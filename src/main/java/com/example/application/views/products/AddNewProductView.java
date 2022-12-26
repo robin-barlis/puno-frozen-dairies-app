@@ -3,6 +3,7 @@ package com.example.application.views.products;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.security.PermitAll;
 
@@ -23,6 +24,7 @@ import com.example.application.security.AuthenticatedUser;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.products.components.SizePricingSubView;
+import com.google.gwt.thirdparty.guava.common.collect.Sets;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
@@ -170,15 +172,24 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		sizes.setItemLabelGenerator(e -> e.getSizeName());
 		sizes.setWidthFull();
 		sizes.addValueChangeListener(e -> {
-			if (!e.getHasValue().isEmpty()) {
-				pricingSubViewSet.clear();
-				newAddSizeContainer.removeAll();
-				for (Size size : e.getValue()) {
-					addNewSizeFormSection(newAddSizeContainer, size);
-				}		
-			} else {
-				pricingSubViewSet.clear();
-				newAddSizeContainer.removeAll();
+			
+			Set<Size> newValue = e.getValue();
+			Set<Size> oldValue = e.getOldValue();
+			
+			
+			Set<Size> added = Sets.difference(newValue, oldValue);
+			Set<Size> deleted = Sets.difference(oldValue, newValue);
+			
+			for (Size size : added) {
+				addNewSizeFormSection(newAddSizeContainer, size);
+			}
+			
+			for (Size removedSize : deleted) {
+				pricingSubViewSet.forEach(subView -> {
+					if (subView.getSize().getSizeName().equalsIgnoreCase(removedSize.getSizeName())) {
+						newAddSizeContainer.remove(subView);
+					}
+				});
 			}
 		}); //TODO add a prompt that will ask the user if they want to change the selection
 		
