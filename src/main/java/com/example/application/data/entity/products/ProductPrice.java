@@ -10,7 +10,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 
 @Entity
@@ -23,8 +27,20 @@ public class ProductPrice implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 		
-	private Integer sizeId;
+//	private Integer sizeId;
 	
+	@OneToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "size_id", nullable = false)
+	private Size size;
+	
+	public Size getSize() {
+		return size;
+	}
+
+	public void setSize(Size size) {
+		this.size = size;
+	}
+
 	private Integer customerTagId;
 	
 	private Integer locationTagId;
@@ -33,8 +49,9 @@ public class ProductPrice implements Serializable {
 		
 	private BigDecimal transferPrice;
 
-	@ManyToOne(fetch = FetchType.EAGER, optional = false)
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_id", nullable = false)
+	@Fetch(FetchMode.SELECT)
 	private Product product;
 	
 	public Product getProduct() {
@@ -45,13 +62,13 @@ public class ProductPrice implements Serializable {
 		this.product = product;
 	}
 
-	public Integer getSizeId() {
-		return sizeId;
-	}
-
-	public void setSizeId(Integer sizeId) {
-		this.sizeId = sizeId;
-	}
+//	public Integer getSizeId() {
+//		return sizeId;
+//	}
+//
+//	public void setSizeId(Integer sizeId) {
+//		this.sizeId = sizeId;
+//	}
 
 	public Integer getCustomerTagId() {
 		return customerTagId;

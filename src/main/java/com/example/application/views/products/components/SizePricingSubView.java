@@ -20,12 +20,15 @@ public class SizePricingSubView extends VerticalLayout {
 	private Category category;
 	private TextField sizeField;
 	private Size size;	
+	private ProductPrice productPrice = null;
+	
 
 	private HashSet<LocationTagPriceFieldMapping> fieldMapping = new HashSet<>();
 
-	public SizePricingSubView(Size size, Category category) {
+	public SizePricingSubView(Size size, Category category, ProductPrice productPrice) {
 		this.category = category;
 		this.size = size;
+		this.productPrice = productPrice;
 		createContent();
 
 	}
@@ -71,10 +74,13 @@ public class SizePricingSubView extends VerticalLayout {
 			tpField.setRequiredIndicatorVisible(true);
 			tpField.setPlaceholder("0.00");
 			
+			if (productPrice != null) {
+				tpField.setValue(productPrice.getTransferPrice());
+			}
 			priceTextFieldWrapper.add(tpField);
 			locationTagWrapper.add(priceTextFieldWrapper);	
 			
-			LocationTagPriceFieldMapping currentFieldMapping = new LocationTagPriceFieldMapping(locationTag.getId(), customerTag.getId(), size.getId(), tpField);
+			LocationTagPriceFieldMapping currentFieldMapping = new LocationTagPriceFieldMapping(locationTag.getId(), customerTag.getId(), size, tpField);
 			fieldMapping.add(currentFieldMapping);
 		}	
 
@@ -90,7 +96,7 @@ public class SizePricingSubView extends VerticalLayout {
 
 			ProductPrice productPrice = new ProductPrice();
 			productPrice.setProduct(product);
-			productPrice.setSizeId(locationTagPriceFieldMapping.getSizeId());
+			productPrice.setSize(locationTagPriceFieldMapping.getSizeId());
 			productPrice.setCategoryId(category.getId());
 			productPrice.setLocationTagId(locationTagPriceFieldMapping.getLocationTagId());
 			productPrice.setCustomerTagId(locationTagPriceFieldMapping.getCustomerTagId());
@@ -108,7 +114,7 @@ public class SizePricingSubView extends VerticalLayout {
 		//private Integer categoryId;
 		private Integer locationTagId;
 		private Integer customerTagId;
-		private Integer sizeId;
+		private Size size;
 		private BigDecimalField transferPrice;
 		
 		private Integer getLocationTagId() {
@@ -119,27 +125,26 @@ public class SizePricingSubView extends VerticalLayout {
 			return customerTagId;
 		}
 
-		private Integer getSizeId() {
-			return sizeId;
+		private Size getSizeId() {
+			return size;
 		}
 
 		private BigDecimalField getTransferPrice() {
 			return transferPrice;
 		}
 
-		public LocationTagPriceFieldMapping(Integer locationTagId, Integer customerTagId, Integer sizeId,
+		public LocationTagPriceFieldMapping(Integer locationTagId, Integer customerTagId, Size size,
 				BigDecimalField transferPrice) {
 			super();
 			this.locationTagId = locationTagId;
 			this.customerTagId = customerTagId;
-			this.sizeId = sizeId;
+			this.size = size;
 			this.transferPrice = transferPrice;
 
 		}
 		
 	}
 	
-
 	public Size getSize() {
 		return size;
 	}

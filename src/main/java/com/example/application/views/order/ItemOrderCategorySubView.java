@@ -91,7 +91,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			Map<Integer, List<ProductPrice>> productPricePerCustomer = product.getProductPrices().stream()
 					.filter(productPrice -> {
 						return productPrice.getCustomerTagId() == customerTag.getId();
-					}).collect(Collectors.groupingBy(productPrice -> productPrice.getSizeId()));
+					}).collect(Collectors.groupingBy(productPrice -> productPrice.getSize().getId()));
 
 			if (!headerAlreadyRendered) {
 				VerticalLayout flavorColumnHeaderWrapper = new VerticalLayout();

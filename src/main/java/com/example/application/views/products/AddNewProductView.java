@@ -3,7 +3,9 @@ package com.example.application.views.products;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
 
@@ -17,6 +19,7 @@ import com.example.application.data.entity.products.ProductPrice;
 import com.example.application.data.entity.products.Size;
 import com.example.application.data.entity.stock.ItemStock;
 import com.example.application.data.service.products.CategoryService;
+import com.example.application.data.service.products.ProductPriceService;
 import com.example.application.data.service.products.ProductService;
 import com.example.application.data.service.products.SizesService;
 import com.example.application.data.service.stock.ItemStockService;
@@ -44,13 +47,19 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEvent;
+import com.vaadin.flow.router.HasUrlParameter;
+import com.vaadin.flow.router.OptionalParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.router.RouteParameters;
 
-@PageTitle("Add New Product")
-@Route(value = "addProduct", layout = MainLayout.class)
+@PageTitle("Products")
+@Route(value = "addProduct/:productId?", layout = MainLayout.class)
+@RouteAlias(value = "/addProduct", layout = MainLayout.class)
 @PermitAll
-public class AddNewProductView extends AbstractPfdiView implements HasComponents, HasStyle {
+public class AddNewProductView extends AbstractPfdiView implements HasComponents, HasStyle,HasUrlParameter<String>  {
 
 	private static final long serialVersionUID = -6210105239749320428L;
 
@@ -61,22 +70,27 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 	private Button cancelButton;
 	//private Button saveAsDraftButton;
 	private Button publishButton;
-	private CategoryService categoryService;
 	private ProductService productService;
 	private HashSet<SizePricingSubView> pricingSubViewSet = new HashSet<>();
-	private SizesService sizesService;
 	private ItemStockService itemStockService;
 	private AuthenticatedUser authenticatedUser;
+	private ProductPriceService priceService;
+	private Integer productId;
+	List<Category> categories;
+	Set<ProductPrice> productPrice= null;
+
+	private Product product;
 
 	@Autowired
-	public AddNewProductView(AuthenticatedUser authenticatedUser, CategoryService categoryService, ProductService productService, SizesService sizesService, ItemStockService itemStockService) {
+	public AddNewProductView(AuthenticatedUser authenticatedUser, ProductPriceService priceService, CategoryService categoryService, ProductService productService, SizesService sizesService, ItemStockService itemStockService) {
 		super("add-new-product", "Add New Product");
 		addClassNames("products-view");
-		this.categoryService = categoryService;
 		this.productService = productService;
-		this.sizesService = sizesService;
 		this.itemStockService = itemStockService;
 		this.authenticatedUser = authenticatedUser;
+		this.priceService = priceService;
+
+		this.categories = categoryService.listAll(Sort.by("id"));
 		VerticalLayout content = new VerticalLayout();
 		createMainContent(content);
 		add(content);
@@ -135,8 +149,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		category = new Select<>();
 		category.setLabel("Category");
 		category.setEmptySelectionAllowed(false);
-
-		category.setItems(categoryService.listAll(Sort.by("id")));
+		category.setItems(categories);
 		category.setRequiredIndicatorVisible(true);
 		category.setEmptySelectionAllowed(false);
 		category.setPlaceholder("Select Category");
@@ -181,7 +194,12 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 			Set<Size> deleted = Sets.difference(oldValue, newValue);
 			
 			for (Size size : added) {
-				addNewSizeFormSection(newAddSizeContainer, size);
+				ProductPrice sizeProductPrice = null;
+				
+				if (productPrice != null) {
+					sizeProductPrice = productPrice.stream().filter(ps -> ps.getSize().getId().equals(size.getId())).findFirst().orElse(null);
+				}
+				addNewSizeFormSection(newAddSizeContainer, size, sizeProductPrice);
 			}
 			
 			for (Size removedSize : deleted) {
@@ -224,11 +242,15 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		publishButton = new Button("Publish");
 		publishButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		publishButton.addClickListener(e -> {
+			product = createProduct();
 
-			Product product = createNewProduct();
 			product = productService.update(product);
-			itemStockService.updateAll(createInitialItemStockData(product));
-			Notification.show("Successfully added new product: " + product.getProductName());
+			if (productId == null) {
+
+				itemStockService.updateAll(createInitialItemStockData(product));
+			}
+
+			Notification.show("Successfully updated the product: " + product.getProductName());
 			UI.getCurrent().navigate(ProductsView.class);
 		});
 		
@@ -264,23 +286,39 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		return itemStocks;
 	}
 
-	private Product createNewProduct() {
-		Product product = new Product();
+	private Product createProduct() {
+		if (product == null) {
+
+			product = new Product();
+			
+		} else {
+			// delete all prices in db for editting
+//			product.getProductPrices().forEach(e -> {
+//				priceService.delete(e.getId());
+//			});
+//			
+			priceService.deleteByProduct(product);
+		}
+		
 		
 		product.setProductName(productName.getValue());
 		product.setProductShortCode(shortCode.getValue());
 		product.setProductDescription("product test"); //TODO add field description
 		product.setCategory(category.getValue());
-		
-		
+
 		HashSet<ProductPrice> prices = new HashSet<>();
 		for (SizePricingSubView pricingView : pricingSubViewSet ) {
 			
 			prices.addAll(pricingView.extractFieldValues(product));
 			
 		}
+
+		product.setProductPrices(prices);
+
 		
-		product.setProductPrices(prices);	
+		
+		
+			
 		return product;
 		
 	}
@@ -290,8 +328,8 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 
 	}
 
-	private void addNewSizeFormSection(VerticalLayout addSizeButtonLayout, Size size) {
-		SizePricingSubView pricingSubView = new SizePricingSubView(size, category.getValue());
+	private void addNewSizeFormSection(VerticalLayout addSizeButtonLayout, Size size, ProductPrice productPrice) {
+		SizePricingSubView pricingSubView = new SizePricingSubView(size, category.getValue(), productPrice);
 		pricingSubViewSet.add(pricingSubView);
 		addSizeButtonLayout.add(pricingSubView);
 
@@ -300,5 +338,33 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {
 
+	}
+	
+
+	@Override
+	public void setParameter(BeforeEvent event, @OptionalParameter String parameter) {
+		RouteParameters params = event.getRouteParameters();
+		String productIdString = params.get("productId").orElse(null);
+		
+		if (productIdString != null) {
+			productId = Integer.parseInt(productIdString);
+			product = productService.get(productId).orElse(null);
+			productPrice = product.getProductPrices();
+			if (product != null) {
+				productName.setValue(product.getProductName());
+				shortCode.setValue(product.getProductShortCode());
+				Optional<Category> optionalCategory = categories.stream().filter(category -> category.getId().equals(product.getCategory().getId())).findFirst();
+				if (optionalCategory.isPresent()) {
+					category.setValue(optionalCategory.get());
+				}
+				
+				
+				Set<Integer> sizesMap = product.getProductPrices().stream().map(e-> e.getSize().getId()).collect(Collectors.toSet());
+				Set<Size> productSizes = category.getValue().getSizeSet().stream().filter(catSizes -> sizesMap.contains(catSizes.getId())).collect(Collectors.toSet());
+				sizes.setValue(productSizes);
+				
+			}
+		}
+		
 	}
 }

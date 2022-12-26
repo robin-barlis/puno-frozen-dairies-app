@@ -5,13 +5,20 @@ import java.util.stream.Collectors;
 
 import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.Product;
+import com.example.application.views.products.AddNewProductView;
+import com.vaadin.flow.component.ClickEvent;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
+import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.RouteParam;
+import com.vaadin.flow.router.RouteParameters;
+import com.vaadin.flow.router.RouterLink;
 
 public class ProductsViewCard extends ListItem {
 
@@ -22,10 +29,10 @@ public class ProductsViewCard extends ListItem {
 	public ProductsViewCard(Product product, Category category, String url) {
         addClassNames("bg-contrast-5", "flex", "flex-col", "items-start", "rounded-l");
 
-        Div div = new Div();
-        div.addClassNames("background-div", "flex items-center", "justify-center", "mb-m", "overflow-product-view-card",
+        Div imageDiv = new Div();
+        imageDiv.addClassNames("background-div", "flex items-center", "justify-center", "mb-m", "overflow-product-view-card",
                 "rounded-top w-full");
-        div.setHeight("242px");
+        imageDiv.setHeight("242px");
 
         Image image = new Image();
         image.setWidth("100%");
@@ -33,7 +40,7 @@ public class ProductsViewCard extends ListItem {
         image.setAlt(product.getProductName());
         image.addClassName("product-view-image-attributes");
 
-        div.add(image);
+        imageDiv.add(image);
         
 
         Span iceCreamName = new Span();
@@ -52,8 +59,22 @@ public class ProductsViewCard extends ListItem {
         VerticalLayout iceCreamDescriptionContainer = new VerticalLayout();
         iceCreamDescriptionContainer.setAlignItems(Alignment.START);
         iceCreamDescriptionContainer.add(iceCreamName, sizesContainer, categorySpan );
+        
+        
 
-        add(div, iceCreamDescriptionContainer);
+        RouterLink productLink = new RouterLink();
+        
+
+    	RouteParam param = new RouteParam("productId", product.getId().toString());
+    	RouteParameters routeParams = new RouteParameters(param);
+        
+        productLink.setRoute(AddNewProductView.class, routeParams);
+        productLink.setQueryParameters(null);
+        productLink.add(imageDiv);
+        
+        
+
+        add(productLink, iceCreamDescriptionContainer);
 
     }
 }
