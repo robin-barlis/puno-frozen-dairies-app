@@ -293,11 +293,11 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 			
 		} else {
 			// delete all prices in db for editting
-//			product.getProductPrices().forEach(e -> {
-//				priceService.delete(e.getId());
-//			});
+			product.getProductPrices().forEach(e -> {
+				priceService.delete(e.getId());
+			});
 //			
-			priceService.deleteByProduct(product);
+//			priceService.deleteByProduct(product);
 		}
 		
 		
