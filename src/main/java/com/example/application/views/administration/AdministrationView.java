@@ -353,12 +353,6 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 				currentAppUser.setEnabled(!currentAppUser.getEnabled());
 
 			});
-			
-			subMenu.addItem("Delete Profile", e -> {
-				this.appUser = currentAppUser;
-				userService.delete(appUser.getId());
-
-			});
 
 			return menuBar;
 		}).setWidth("70px").setFlexGrow(0);
