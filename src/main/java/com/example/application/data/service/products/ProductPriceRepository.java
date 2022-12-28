@@ -11,7 +11,7 @@ import com.example.application.data.entity.products.ProductPrice;
 @Repository
 public interface ProductPriceRepository extends JpaRepository<ProductPrice, Integer> {
 	
-    @Query(value = "DELETE FROM ProductPrice pp WHERE pp.product = :product", nativeQuery = true)
+    @Query(value = "DELETE FROM ProductPrice WHERE product = :product", nativeQuery = true)
     void deleteByProduct(@Param("product") Product productId);
 
 }

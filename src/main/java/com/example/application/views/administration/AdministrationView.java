@@ -1,9 +1,13 @@
 package com.example.application.views.administration;
 
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.security.RolesAllowed;
+import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -14,13 +18,15 @@ import com.example.application.data.entity.PfdiLocation;
 import com.example.application.data.entity.PfdiPosition;
 import com.example.application.data.entity.PfdiRoles;
 import com.example.application.data.service.LocationsService;
+import com.example.application.data.service.PasswordResetService;
 import com.example.application.data.service.PositionsService;
 import com.example.application.data.service.RolesService;
 import com.example.application.data.service.UserService;
+import com.example.application.utils.service.EmailService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
-import com.flowingcode.vaadin.addons.fontawesome.FontAwesome;
+import com.example.application.views.login.LoginView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -47,6 +53,7 @@ import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -57,6 +64,7 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.LitRenderer;
+import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -98,17 +106,22 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 	private final RolesService rolesService;
 	private final LocationsService locationsService;
 	private final PositionsService positionsService;
+	private final PasswordResetService passwordResetService;
 	ListDataProvider<AppUser> ldp = null;
 	private AppUser appUser;
+	private EmailService emailService;
+	private String domain;
 
 	@Autowired
 	public AdministrationView(UserService userService, RolesService rolesService, LocationsService locationsService,
-			PositionsService positionsService) {
+			PositionsService positionsService, EmailService emailService, PasswordResetService passwordResetService) {
 		super("Admin", "Admin");
 		this.userService = userService;
 		this.rolesService = rolesService;
 		this.locationsService = locationsService;
 		this.positionsService = positionsService;
+		this.emailService = emailService;
+		this.passwordResetService = passwordResetService;
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
@@ -206,6 +219,7 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 
 				prepareAppUser();
 				binder.writeBean(appUser);
+				boolean isNewUser = appUser.getId() == null;
 
 				if (appUser.getUsername() == null) {
 					String firstName = appUser.getFirstName().strip().toLowerCase();
@@ -215,10 +229,22 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 				}
 
 				AppUser updatedAppUser = userService.update(appUser);
+				addProfileDialog.close();
+				if (isNewUser) {
+
+					try {
+						
+						String message = passwordResetService.composeResetPasswordMessage(updatedAppUser);
+						emailService.sendMail("No Reply: Set Password", message,
+								updatedAppUser.getEmailAddress());
+					} catch (MessagingException | IOException e1) {
+						Notification.show("Could not send the email. Please check with the Administrator.")
+						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+					}
+				}
 				clearForm();
 				refreshGrid(updatedAppUser);
 
-				addProfileDialog.close();
 				Notification.show("Profile successfully created/updated")
 						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 				UI.getCurrent().navigate(AdministrationView.class);
@@ -253,8 +279,6 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 	}
 
 	private void createTableFunctions(VerticalLayout tableFunctions) {
-		VerticalLayout verticalLayout = new VerticalLayout();
-		verticalLayout.setClassName("flex-layout");
 
 		addProfileButton = new Button("Add Profile");
 		addProfileButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
@@ -265,14 +289,7 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		flexWrapper.setClassName("button-layout");
 		flexWrapper.add(addProfileButton);
 
-		Icon addUserIcon = FontAwesome.Solid.USER_PLUS.create();
-		addUserIcon.setColor("#FFFFFF");
-		addProfileButton.setIcon(addUserIcon);
-
-		verticalLayout.add(flexWrapper);
-		// flexWrapper.setClassName("button-layout");
-
-		tableFunctions.add(verticalLayout);
+		tableFunctions.add(flexWrapper);
 	}
 
 	@Override
@@ -295,21 +312,12 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
-		grid.addColumn("username").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-
-		grid.addColumn(currentAppUser -> {
-			String firstName = currentAppUser.getFirstName();
-			String lastName = currentAppUser.getLastName();
-			String fullName = lastName + ", " + firstName;
-			return fullName;
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Name").setSortable(true);
-
-		grid.addColumn("emailAddress").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(createEmployeeRenderer()).setHeader("Employee").setAutoWidth(true).setFlexGrow(0)
+				.setComparator(AppUser::getLastName);
 		grid.addColumn("role").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		grid.addColumn("position").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		grid.addColumn("location").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-		grid.addColumn("startDateOfAccess").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
-		grid.addColumn("endDateOfAccess").setAutoWidth(true).setTextAlign(ColumnTextAlign.CENTER);
+		grid.addColumn(createEmployeeAccessDates()).setHeader("Access Dates").setAutoWidth(true).setFlexGrow(0);
 
 		LitRenderer<AppUser> statusColumnRenderer = LitRenderer
 				.<AppUser>of("<vaadin-icon icon='vaadin:${item.icon}' " + "style='width: var(--lumo-icon-size-xs); "
@@ -321,7 +329,7 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 								: "var(--lumo-disabled-text-color)")
 				.withProperty("status", user -> user.getEnabled() ? "Active" : "Inactive");
 
-		grid.addColumn(statusColumnRenderer).setHeader("Status").setAutoWidth(true).setSortable(true)
+		grid.addColumn(statusColumnRenderer).setHeader("Status").setSortable(true)
 				.setTextAlign(ColumnTextAlign.START);
 
 		grid.addComponentColumn(currentAppUser -> {
@@ -334,7 +342,10 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 			subMenu.addItem("Edit Profile", e -> {
 				this.appUser = currentAppUser;
 				populateDataAndCallDialog();
+
 			});
+			
+			
 
 			subMenu.addItem(currentAppUser.getEnabled() ? "Deactivate" : "Activate", event -> {
 				this.appUser = currentAppUser;
@@ -342,11 +353,24 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 				currentAppUser.setEnabled(!currentAppUser.getEnabled());
 
 			});
+			
+			subMenu.addItem("Delete Profile", e -> {
+				this.appUser = currentAppUser;
+				userService.delete(appUser.getId());
+
+			});
 
 			return menuBar;
 		}).setWidth("70px").setFlexGrow(0);
 
 		ldp = DataProvider.ofCollection(userService.listAll(Sort.by("id")));
+		
+		HorizontalLayout searchFiltersLayout = new HorizontalLayout();
+		searchFiltersLayout.addClassName("padding-bottom-medium");
+		
+		
+		
+		Button filterButton = new Button(new Icon(VaadinIcon.SLIDERS));
 
 		GridListDataView<AppUser> dataView = grid.setItems(ldp);
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
@@ -362,6 +386,10 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		searchField.setValueChangeMode(ValueChangeMode.EAGER);
 		searchField.addValueChangeListener(e -> dataView.refreshAll());
 		searchField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);
+		
+		searchFiltersLayout.add(searchField, filterButton);
+		
+		
 
 		dataView.addFilter(person -> {
 			String searchTerm = searchField.getValue().trim();
@@ -375,8 +403,9 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 
 			return matchesFullName || matchesEmail || matchesLastName;
 		});
-
-		wrapper.add(searchField, grid);
+		Hr gridDivider = new Hr();
+		gridDivider.addClassName("hr-class-wrapper");
+		wrapper.add(searchFiltersLayout,gridDivider,grid);
 		verticalLayout.addAndExpand(wrapper);
 	}
 
@@ -416,7 +445,8 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 			appUser.setLocked(false);
 
 			BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-			appUser.setPassword(encoder.encode("Password123!"));
+			UUID uuidToken = UUID.randomUUID();
+			appUser.setPassword(encoder.encode(uuidToken.toString()));
 		}
 
 	}
@@ -447,4 +477,40 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		contentHeaderContainer.add(tableFunctions);
 	}
 
+	private static Renderer<AppUser> createEmployeeRenderer() {
+		return LitRenderer.<AppUser>of("<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
+				+ "  <vaadin-avatar img=\"${item.pictureUrl}\" name=\"${item.fullName}\"></vaadin-avatar>"
+				+ "  <vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
+				+ "    <span> ${item.fullName}</span>"
+				+ "    <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">"
+				+ "     Email: ${item.email}" + "    </span>" 
+				+ "    <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">"
+				+ "     Username: ${item.userName}" + "    </span>" 
+				+ "  </vaadin-vertical-layout>" 
+				+ "</vaadin-horizontal-layout>")
+				.withProperty("pictureUrl", AppUser::getProfilePictureUrl)
+					.withProperty("email", AppUser::getEmailAddress)
+				.withProperty("fullName", e -> {
+					return e.getLastName() + ", " + e.getFirstName();
+				})
+				.withProperty("userName", AppUser::getUsername);
+	}
+	
+	private static Renderer<AppUser> createEmployeeAccessDates() {
+		return LitRenderer.<AppUser>of(
+				"<vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"
+				+ "    <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">"
+				+ "     Start Date: ${item.startDate}</span>" 
+				+ "    <span style=\"font-size: var(--lumo-font-size-s); color: var(--lumo-secondary-text-color);\">"
+				+ "     End Date: ${item.endDate}</span>" 
+				+ "  </vaadin-vertical-layout>")
+				.withProperty("startDate", e -> {
+					return e.getStartDateOfAccess().toString();
+				})
+				.withProperty("endDate", e -> {
+					LocalDate date = e.getEndDateOfAccess();
+					
+					return date != null ? e.getEndDateOfAccess().toString() : "N/A";
+				});
+	}
 }

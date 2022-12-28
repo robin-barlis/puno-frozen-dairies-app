@@ -1,12 +1,3 @@
-input {
-	box-shadow: inset 0 0 0 1px var(- -lumo-contrast-30pct);
-	background-color: var(- -lumo-base-color);
-}
-
-:host([invalid]) [part="input-field"] {
-	box-shadow: inset 0 0 0 1px var(- -lumo-error-color);
-}
-
 header vaadin-context-menu {
 	align-items: center;
 	display: flex;
@@ -17,7 +8,7 @@ header nav a:hover {
 }
 
 header nav a[highlight] {
-	color: var(- -lumo-primary-text-color);
+	color: var(--lumo-primary-text-color);
 }
 
 header nav a::before, header nav a::after {
@@ -31,7 +22,7 @@ header nav a::before, header nav a::after {
 	position: absolute;
 	transform: translateX(-50%) scale(0);
 	transform-origin: 50% 100%;
-	width: var(- -lumo-size-s);
+	width: var(--lumo-size-s);
 	will-change: transform;
 }
 
@@ -40,13 +31,13 @@ header nav a::before {
 }
 
 header nav a::after {
-	box-shadow: 0 0 0 4px var(- -lumo-primary-color);
+	box-shadow: 0 0 0 4px var(--lumo-primary-color);
 	opacity: 0.15;
 	transition: 0.15s 0.02s transform, 0.8s 0.17s opacity;
 }
 
 header nav a[highlight]::before, nav a[highlight]::after {
-	background-color: var(- -lumo-primary-color);
+	background-color: var(--lumo-primary-color);
 }
 
 header nav a[highlight]::before, header nav a[highlight]::after {
@@ -63,7 +54,7 @@ header nav a[highlight]:not([active])::after {
 	right: 0px;
 	top: 70px;
 	background-color: #FFFFFF;
-	font-size: var(- -lumo-font-size-s);
+	font-size: var(--lumo-font-size-s);
 	z-index: 1
 }
 
@@ -73,7 +64,7 @@ header nav a[highlight]:not([active])::after {
 
 .main-layout-header-wrapper {
 	padding-top: 10px;
-	width:100%
+	width: 100%
 }
 
 .nav-bar-wrapper {
@@ -86,21 +77,21 @@ header nav a[highlight]:not([active])::after {
 .profile-details-accordion {
 	background-color: #f7f7f7;
 	padding-left: 10px;
-	font-size: var(- -lumo-font-size-s);
+	font-size: var(--lumo-font-size-s);
 }
 
 .profile-details-name-avatar-wrapper {
 	padding-top: 1.5em;
-	font-size: var(- -lumo-font-size-s);
+	font-size: var(--lumo-font-size-s);
 }
 
 .profile-details-label-wrapper {
 	font-weight: bold;
-	font-size: var(- -lumo-font-size-s);
+	font-size: var(--lumo-font-size-s);
 }
 
 .profile-details-value-wrapper {
-	font-size: var(- -lumo-font-size-s);
+	font-size: var(--lumo-font-size-s);
 }
 
 .profile-details-wrapper {
@@ -112,8 +103,7 @@ header nav a[highlight]:not([active])::after {
 }
 
 .search-field-filter {
-	width: 300px;
-	padding-bottom: 30px;
+	width: 400px;
 }
 
 .pfdi-header-container {
@@ -143,7 +133,6 @@ header nav a[highlight]:not([active])::after {
 .padding-bottom-large {
 	padding-bottom: 50px !important;
 }
-
 
 .padding-left-50px {
 	padding-left: 50px !important;
@@ -179,18 +168,17 @@ header nav a[highlight]:not([active])::after {
 	text-align: right;
 }
 
-
 .header-container {
 	display: table-cell;
-  	vertical-align: middle;
-  	height: 50px;
-  	padding-left:20px;
+	vertical-align: middle;
+	height: 50px;
+	padding-left: 20px;
 }
 
 .hr-div-class-wrapper {
 	width: -webkit-fill-available;
-    margin-left: 20px;
-    margin-right: 20px;
+	margin-left: 20px;
+	margin-right: 20px;
 }
 
 .text-align-center {
@@ -201,7 +189,7 @@ header nav a[highlight]:not([active])::after {
 	font-style: italic;
 	font-size: var(--lumo-font-size-s);
 	padding-right: 60px;
-    padding-left: 60px;
+	padding-left: 60px;
 }
 
 .report-header-text-heading {
@@ -210,12 +198,44 @@ header nav a[highlight]:not([active])::after {
 }
 
 .signature-line {
-    border-top:1px solid rgb(0, 0, 0);
-    text-align: center;
-    margin: 30px;
+	border-top: 1px solid rgb(0, 0, 0);
+	text-align: center;
+	margin: 30px;
 }
 
 .padding-left-40px {
 	padding-left: 40px;
 }
 
+.reset-password-container {
+	height: 420px;
+	width: 320px !important;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	background: var(--lumo-base-color);
+	background-color: var(--lumo-base-color);
+    background-image: linear-gradient(var(--lumo-tint-5pct), var(--lumo-tint-5pct));
+    border-radius: var(--lumo-border-radius-l);
+    box-shadow: 0 0 0 1px var(--lumo-shade-5pct), var(--lumo-box-shadow-m);
+    color: var(--lumo-body-text-color);
+    font-family: var(--lumo-font-family);
+    font-size: var(--lumo-font-size-m);
+    font-weight: 400;
+    line-height: var(--lumo-line-height-m);
+    letter-spacing: 0;
+    text-transform: none;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+   	padding: var(--lumo-space-xl);
+}
+
+.overlay-class{
+	background: #ebedef !important;
+    border-radius: 0;
+    box-shadow: none;
+    width: 100%;
+    height: 100%;
+	
+}

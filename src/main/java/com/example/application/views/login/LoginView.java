@@ -3,29 +3,32 @@ package com.example.application.views.login;
 import java.util.Optional;
 
 import com.example.application.data.entity.AppUser;
+import com.example.application.data.service.PasswordResetService;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
 import com.example.application.views.administration.AdministrationView;
+import com.example.application.views.administration.RequestPasswordView;
 import com.example.application.views.order.StockOrderView;
 import com.example.application.views.products.ProductsView;
-import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.shared.Registration;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
 
 @PageTitle("Login")
 @Route(value = "login")
+@AnonymousAllowed
 public class LoginView extends LoginOverlay implements BeforeEnterObserver {
 
     private static final long serialVersionUID = -1370960994436472023L;
 	private final AuthenticatedUser authenticatedUser;
 
-    public LoginView(AuthenticatedUser authenticatedUser) {
+    public LoginView(AuthenticatedUser authenticatedUser, PasswordResetService passwordResetService) {
         this.authenticatedUser = authenticatedUser;
         setAction("login");
 
@@ -37,8 +40,20 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
         setI18n(i18n);
         
 
-        setForgotPasswordButtonVisible(false);
+        setForgotPasswordButtonVisible(true);
         setOpened(true);
+        ComponentEventListener<ForgotPasswordEvent> forgotPasswordEventListener = new ComponentEventListener<ForgotPasswordEvent>() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void onComponentEvent(ForgotPasswordEvent event) {
+				
+				UI.getCurrent().navigate(RequestPasswordView.class);
+				
+			}
+		};
+        addForgotPasswordListener(forgotPasswordEventListener);
     }
     
    
@@ -70,6 +85,5 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
 
         setError(event.getLocation().getQueryParameters().getParameters().containsKey("error"));
     }
-    
    
 }

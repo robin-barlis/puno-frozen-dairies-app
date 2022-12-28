@@ -14,6 +14,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
+import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
+import com.vaadin.flow.theme.lumo.LumoUtility.MaxWidth;
+import com.vaadin.flow.theme.lumo.LumoUtility.Padding;
 
 @SpringComponent
 @UIScope
@@ -29,12 +32,13 @@ public abstract class AbstractPfdiView extends Main implements BeforeEnterObserv
 	public AbstractPfdiView(String className, String headerName) {
 		this.headerName = headerName;
 		addClassNames(className, "mx-auto", "pb-l", "px-l");
+		addClassNames(Margin.Horizontal.AUTO, Padding.Bottom.LARGE, Padding.Horizontal.LARGE);
 
 		this.contentHeaderContainer = createContentHeaderContainer();
 		addChildrenToContentHeaderContainer(contentHeaderContainer);
 		
 		this.contentContainer = new VerticalLayout();
-		//this.contentContainer.addClassNames("flex-layout");
+		this.contentContainer.addClassNames("flex-layout");
 		createMainContentLayout(this.contentContainer); 
 
 		add(this.contentHeaderContainer);
