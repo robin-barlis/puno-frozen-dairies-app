@@ -89,7 +89,7 @@ public class PasswordResetService {
 		sb.append("<br>");
 		sb.append("<span><a href=\"");
 		sb.append(url);
-		sb.append("\">Click here</a> to reset your password. This password reset is only valid for the next 48 hours.");
+		sb.append("\">Click here</a> to reset your password for the username " + user.getUsername() +". This password reset is only valid for the next 48 hours.");
 		sb.append("<br>");
 
 		sb.append("<br>");
@@ -99,7 +99,6 @@ public class PasswordResetService {
 		sb.append("<br>");
 		sb.append("<span>This is a system-generated e-mail. Please do not reply.<span>");
 		
-				System.out.println("composing email");
 		return sb.toString();
 		
 	}
