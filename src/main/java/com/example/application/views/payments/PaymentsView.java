@@ -132,8 +132,6 @@ public class PaymentsView extends AbstractPfdiView implements BeforeEnterObserve
 		
 		grid.addColumn("paymentDate").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		
-		grid.addColumn("paymentNumber").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-		
 		grid.addColumn(payment -> {			
 			return payment.getCustomer().getStoreName();
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Store Name").setSortable(true);
@@ -141,10 +139,10 @@ public class PaymentsView extends AbstractPfdiView implements BeforeEnterObserve
 			return payment.getOrderId().getStockOrderNumber();
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Stock Order").setSortable(true);
 		grid.addColumn(payment -> {			
-			return payment.getOrderId().getStockOrderNumber();
+			return payment.getOrderId().getInvoiceId();
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Invoice Number").setSortable(true);
 		grid.addColumn(payment -> {			
-			return payment.getOrderId().getStockOrderNumber();
+			return payment.getOrderId().getDeliveryReceiptId();
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Delivery Receipt").setSortable(true);
 		
 		grid.addColumn("paymentMode").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);

@@ -144,6 +144,28 @@ thead th {
 }
 
 
+.order-row-label, .owner-row-secondary-text{
+	font-size: var(--lumo-font-size-xs);
+	color: var(--lumo-secondary-text-color);
+	width:100px;
+}
+
+a.order-row-value,  .order-row-value, .order-row-value-amount{
+	font-size: var(--lumo-font-size-s);
+    font-weight: 500;
+
+}
+
+.order-row-value-customer{
+	font-size: var(--lumo-font-size-s);
+    font-weight: 450;
+
+}
+
+.order-row-value-amount {
+	color: var(--lumo-primary-color);
+}
+
 
 
 

@@ -211,11 +211,15 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 					chequePaymentDetails.setUpdatedBy(authenticatedUser.get().get());
 					chequePaymentDetails.setUpdatedDate(LocalDateTime.now());
 					chequePaymentDetails.setPayment(payment);
-					payment.setChequePaymentDetails(chequePaymentDetails);			
+					payment.setChequePaymentDetails(chequePaymentDetails);	
+					
 				}
 				
+				Order order = payment.getOrderId();
+				order.setBalance(balance.getValue());
 				
 				payment = paymentService.update(payment);
+				order = orderService.update(order);
 				UI.getCurrent().navigate(PaymentsView.class);
 				
 				

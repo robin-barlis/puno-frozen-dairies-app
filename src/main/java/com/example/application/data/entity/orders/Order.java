@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -22,6 +23,7 @@ import org.hibernate.annotations.FetchMode;
 
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
+import com.example.application.data.entity.payment.Payment;
 
 
 @Entity
@@ -61,6 +63,18 @@ public class Order implements Serializable {
 	@JoinColumn(name = "order_id")
 	private Set<OrderItems> orderItems;
 	
+	@OneToMany(mappedBy = "orderId", fetch = FetchType.EAGER)
+	@Fetch(value = FetchMode.SELECT)
+	private List<Payment> payments;
+	
+	public List<Payment> getPayments() {
+		return payments;
+	}
+
+	public void setPayments(List<Payment> payments) {
+		this.payments = payments;
+	}
+
 	private LocalDateTime creationDate;
 	
 	private LocalDateTime updatedDate;

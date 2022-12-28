@@ -2,3 +2,8 @@
 	background:transparent;
 }
 
+vaadin-icon.grid-icons [icon^='vaadin:']{
+	background:transparent;
+	width: var(--lumo-icon-size-s) !important;
+    height: var(--lumo-icon-size-s)!important;
+}

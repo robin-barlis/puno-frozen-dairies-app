@@ -1,17 +1,18 @@
 package com.example.application.views.order;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import javax.annotation.security.RolesAllowed;
 
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.sql.ordering.antlr.OrderByFragment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import com.example.application.data.PaymentStatus;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
+import com.example.application.data.entity.payment.Payment;
 import com.example.application.data.service.customers.CustomerService;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.security.AuthenticatedUser;
@@ -52,8 +53,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouteParameters;
-
-import net.sf.jasperreports.crosstabs.fill.calculation.BucketDefinition.OrderDecoratorBucket;
 
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrders", layout = MainLayout.class)
@@ -142,56 +141,203 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
+		grid.addComponentColumn(order -> {			
+			
+			VerticalLayout customerLayout = new VerticalLayout();
+			customerLayout.setWidthFull();
+			customerLayout.setSpacing(false);
+			
+			Customer customer = order.getCustomer();
+			
+			HorizontalLayout storeNameLayout = new HorizontalLayout();
+			storeNameLayout.setWidthFull();
+			Icon icon = new Icon(VaadinIcon.SHOP);
+			icon.setClassName("grid-icons");
+			Span storeIcon = new Span(icon);
+			Span storeNameValue = new Span(customer.getStoreName());
+			storeNameValue.setClassName("order-row-value-customer");
+			storeNameLayout.add(storeIcon, storeNameValue);
+			
+			HorizontalLayout ownerNameLayout = new HorizontalLayout();
+			ownerNameLayout.setWidthFull();
+			Span ownerNameValue = new Span(customer.getOwnerName());
+			ownerNameLayout.add(ownerNameValue);
+			ownerNameLayout.setClassName("owner-row-secondary-text");
+			
+			HorizontalLayout storeAddressLayout = new HorizontalLayout();
+			storeAddressLayout.setWidthFull();
+			Span storeAddressValue = new Span(customer.getAddress());
+			storeAddressLayout.add(storeAddressValue);
+			storeAddressLayout.setClassName("owner-row-secondary-text");
+			
+			
+			
+			customerLayout.add(storeNameLayout, ownerNameLayout, storeAddressLayout);
+
+			return customerLayout;
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Customer").setSortable(true).setComparator(e -> {return e.getCustomer().getStoreName();});
+
 		
 		grid.addComponentColumn(order -> {	
 			
-			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
-			String route = RouteConfiguration.forSessionScope().getUrl(StockOrderSummaryView.class, parameters);
-	       
-
-			Integer stockOrderNumber = order.getStockOrderNumber();
-			String pathString = stockOrderNumber != null ? stockOrderNumber.toString() : "N/A";
-			String path =  stockOrderNumber != null ? "S.O. No." + pathString : "N/A"; ;	
-			Component component = new Anchor(route, path);
-			return component;
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("S.O. No.").setSortable(true);
-		
-		grid.addComponentColumn(order -> {
-			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
-			String deliveryReceipt = order.getDeliveryReceiptId() != null ? "D.R. No." + order.getDeliveryReceiptId() : "N/A";
-			String route = RouteConfiguration.forSessionScope().getUrl(DeliveryReceiptView.class, parameters);
+			VerticalLayout orderLayout = new VerticalLayout();
+			orderLayout.setWidthFull();
+			orderLayout.setSpacing(false);
 			
-			Component component = order.getDeliveryReceiptId()  != null ? new Anchor(route, deliveryReceipt)  : new Span("N/A");
-			return component;
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("D.R. No.").setSortable(true);
-
-		grid.addComponentColumn(order -> {	
+			
+			HorizontalLayout orderIdLayout = new HorizontalLayout();
+			orderIdLayout.setWidthFull();
+			Span orderIdSpan = new Span("Stock Order:");
+			orderIdSpan.setClassName("order-row-label");
+			Span orderIdValue = new Span(getStockOrderLink(order));
+			orderIdValue.setClassName("order-row-value");
+			
+			orderIdLayout.add(orderIdSpan, orderIdValue);
+			
+			
+			HorizontalLayout deliveryReceiptLayout = new HorizontalLayout();
+			deliveryReceiptLayout.setWidthFull();
+			Span deliveryReceiptLabel = new Span("Delivery Receipt:");
+			deliveryReceiptLabel.setClassName("order-row-label");
+			Span deliveryReceiptValue = new Span(getDeliveryReceiptLink(order));
+			deliveryReceiptValue.setClassName("order-row-value");
+			
+			deliveryReceiptLayout.add(deliveryReceiptLabel, deliveryReceiptValue);
+			
+			
 			boolean isCompanyOwned = PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId());
-			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
-			Class<? extends Component> routeClass = isCompanyOwned ? StockTransferView.class : SalesInvoiceView.class;
 			
-			Integer docNumber = isCompanyOwned ? order.getStockTransferId() : order.getInvoiceId();
 			
-			String path = isCompanyOwned ? "S.T. No. " + docNumber : "Inv. No. " + docNumber;
+			HorizontalLayout invoiceLayout = new HorizontalLayout();
+			String label = isCompanyOwned ? "Invoice:" : "Stock Transfer:";
+			invoiceLayout.setWidthFull();
+			Span invoiceLayoutLabel = new Span(label);
+			invoiceLayoutLabel.setClassName("order-row-label");
+			Span invoiceLayoutValue = new Span(getInvoiceLink(order, isCompanyOwned));
+			invoiceLayoutValue.setClassName("order-row-value");
+					
+			invoiceLayout.add(invoiceLayoutLabel, invoiceLayoutValue);
 			
-			String route = RouteConfiguration.forSessionScope().getUrl(routeClass, parameters);
+			orderLayout.add(orderIdLayout,deliveryReceiptLayout, invoiceLayout);
+			return orderLayout;
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Order").setSortable(true).setComparator(Order::getStockOrderNumber);
+
+		grid.addComponentColumn(order -> {			
 			
-			Component component = docNumber != null ? new Anchor(route, path)  : new Span("N/A");
-			return component;
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Inv./S.T. No. ").setSortable(true);
+			VerticalLayout orderDetailsLayout = new VerticalLayout();
+			orderDetailsLayout.setWidthFull();
+			orderDetailsLayout.setHeightFull();
+			orderDetailsLayout.setSpacing(false);
+			
+			
+			HorizontalLayout amountDueLayout = new HorizontalLayout();
+			amountDueLayout.setWidthFull();
+			Span amountDueValue = new Span(PfdiUtil.getFormatter().format(order.getAmountDue()));
+			amountDueValue.setClassName("order-row-value-amount");
+			amountDueLayout.add(amountDueValue);
+			
+			HorizontalLayout orderedFrom = new HorizontalLayout();
+			orderedFrom.setWidthFull();
+			Span orderedFromValue = new Span("Sales Rep: " + order.getCreatedByUser().getFirstName() + " " + order.getCreatedByUser().getLastName());
+			orderedFrom.add(orderedFromValue);
+			orderedFrom.setClassName("owner-row-secondary-text");
+			
+			HorizontalLayout orderDate = new HorizontalLayout();
+			orderDate.setWidthFull();
+			Span storeAddressValue = new Span("Order Date : " + order.getCreationDate().toLocalDate());
+			orderDate.add(storeAddressValue);
+			orderDate.setClassName("owner-row-secondary-text");
+			
+			
+			
+			orderDetailsLayout.add(amountDueLayout, orderedFrom, orderDate);
+
+			return orderDetailsLayout;
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START)
+			.setHeader("Order Details").setSortable(true)
+			.setComparator(e -> {
+				return e.getAmountDue();
+			}
+		);
+
+			
+		grid.addComponentColumn(order -> {			
+			
+			VerticalLayout paymentDetailsLayout = new VerticalLayout();
+			paymentDetailsLayout.setWidthFull();
+			paymentDetailsLayout.setSpacing(false);
+			
+			Customer customer = order.getCustomer();
+			
+			List<Payment> payments = order.getPayments();
+			
+			HorizontalLayout paymentStatusWrapper = new HorizontalLayout();
+			paymentStatusWrapper.setWidthFull();
+			
+			
+			PaymentStatus paymentStatus = PaymentStatus.UNPAID;
+			
 		
+			if (payments.isEmpty()) {
+				paymentStatus = PaymentStatus.UNPAID;
+			} else  {
+				boolean hasForVerification = payments.stream().anyMatch(e -> PaymentStatus.FOR_VERIFICATION.name().equalsIgnoreCase(e.getStatus()));
+				if (hasForVerification) {
+					
+					if (BigDecimal.ZERO.equals(order.getBalance())) {
+
+						paymentStatus = PaymentStatus.FOR_VERIFICATION;
+					} else {
+						paymentStatus = PaymentStatus.PARTIAL_FOR_VERIFICATION;
+					}
+				} else if (BigDecimal.ZERO.equals(order.getBalance())) {
+					paymentStatus = PaymentStatus.PAID;
+				} else {
+					paymentStatus = PaymentStatus.PARTIALLY_PAID;
+				}
+			}
 			
-		grid.addColumn(order -> {			
-			return order.getCustomer().getStoreName();
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Store Name").setSortable(true);
+			Span paymentStatusBadge = new Span(paymentStatus.getPaymentStatusName());
+			paymentStatusBadge.getElement().getThemeList().add(paymentStatus.getBadge());
+			paymentStatusWrapper.add( paymentStatusBadge);
+			paymentDetailsLayout.add(paymentStatusWrapper);
+
+			if (paymentStatus.equals(PaymentStatus.UNPAID)) {
+					
+				HorizontalLayout dueDateWrapper = new HorizontalLayout();
+				dueDateWrapper.setWidthFull();
+				Span dueDateValue = new Span("Due Date: " + order.getDueDate().toString());
+				dueDateWrapper.add(dueDateValue);
+				dueDateWrapper.setClassName("owner-row-secondary-text");		
+				
+				paymentDetailsLayout.add(dueDateWrapper);
+			} else if (paymentStatus.equals(PaymentStatus.PARTIALLY_PAID)){
+				
+				HorizontalLayout balanceWrapper = new HorizontalLayout();
+				balanceWrapper.setWidthFull();
+				Span balanceValue = new Span("Balance: " + order.getBalance());
+				balanceWrapper.add(balanceValue);
+				balanceWrapper.setClassName("owner-row-secondary-text");	
+				
+				paymentDetailsLayout.add(balanceWrapper);
+				
+				HorizontalLayout dueDateWrapper = new HorizontalLayout();
+				dueDateWrapper.setWidthFull();
+				Span dueDateValue = new Span("Due Date: " + order.getDueDate().toString());
+				dueDateWrapper.add(dueDateValue);
+				dueDateWrapper.setClassName("owner-row-secondary-text");	
+				
+				paymentDetailsLayout.add(dueDateWrapper);
+				
+
+			}
+			
+			return paymentDetailsLayout;
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Payment Details").setSortable(true).setComparator(e -> {return e.getCustomer().getStoreName();});
 		
-		grid.addColumn(order -> {			
-			return order.getCreatedByUser().getUsername();
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Created By").setSortable(true);
-		
-		grid.addColumn(order -> {			
-			return PfdiUtil.formatDate(order.getCreationDate());
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Created Date").setSortable(true);	
+
+				
+			
 
 		grid.addColumn("status").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
@@ -224,6 +370,50 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 		wrapper.add(searchField, grid);
 		verticalLayout.addAndExpand(wrapper);
+	}
+
+	private Component getInvoiceLink(Order order, boolean isCompanyOwned) {
+		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+		Class<? extends Component> routeClass = isCompanyOwned ? StockTransferView.class : SalesInvoiceView.class;
+		
+		Integer docNumber = isCompanyOwned ? order.getStockTransferId() : order.getInvoiceId();
+		
+		String path = "#" + docNumber;
+		
+		String route = RouteConfiguration.forSessionScope().getUrl(routeClass, parameters);
+		Anchor anchor= new Anchor(route, path);
+		anchor.setClassName("order-row-value");
+		Span span = new Span("N/A");
+		span.setClassName("order-row-value");
+		Component component = docNumber != null ? anchor  : span;
+		return component;
+
+	}
+
+	private Component getDeliveryReceiptLink(Order order) {
+		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+		String deliveryReceipt = order.getDeliveryReceiptId() != null ? "#" + order.getDeliveryReceiptId() : "N/A";
+		String route = RouteConfiguration.forSessionScope().getUrl(DeliveryReceiptView.class, parameters);
+		
+		Anchor anchor= new Anchor(route, deliveryReceipt);
+		anchor.setClassName("order-row-value");
+		Span span = new Span("N/A");
+		span.setClassName("order-row-value");
+		Component component = order.getDeliveryReceiptId()  != null ? anchor : span;
+		return component;
+	}
+
+	private Component getStockOrderLink(Order order) {
+		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+		String route = RouteConfiguration.forSessionScope().getUrl(StockOrderSummaryView.class, parameters);
+       
+
+		Integer stockOrderNumber = order.getStockOrderNumber();
+		String pathString = stockOrderNumber != null ? stockOrderNumber.toString() : "N/A";
+		String path =  stockOrderNumber != null ? "#" + pathString : "N/A"; ;	
+		Anchor component = new Anchor(route, path);
+		component.setClassName("order-row-value");
+		return component;
 	}
 
 	private void refreshGrid() {

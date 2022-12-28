@@ -1,5 +1,6 @@
 package com.example.application.data.service.orders;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +42,11 @@ public class OrdersService {
 	}
 	
 	public List<Order> findReadyForPaymentOrdersByCustomerName(String customerName) {
-		return repository.findReadyForPaymentOrdersByCustomerName(customerName);	
+		
+		List<Order> ordersWithInvoices =repository.findReadyForPaymentOrdersByCustomerName(customerName);
+			
+		
+		return ordersWithInvoices.stream().filter(e -> !BigDecimal.ZERO.equals(e.getBalance())).collect(Collectors.toList());	
 	}
 	
 	public List<Order> findOrdersForPayment() {

@@ -170,6 +170,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 			} else {
 				order.setOrderItems(itemOrderCategorySubView.updateOrderItems(authenticatedUser.get().get()));
 				order.setAmountDue(itemOrderCategorySubView.getTotalAmount());
+				order.setBalance(itemOrderCategorySubView.getTotalAmount());
 			}
 			
 
@@ -237,6 +238,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		
 		order.setAmountDue(itemOrderCategorySubView.getTotalAmount());
 		order.setDueDate(dueDate.getValue());
+		order.setBalance(itemOrderCategorySubView.getTotalAmount());
 		return order;
 	}
 
