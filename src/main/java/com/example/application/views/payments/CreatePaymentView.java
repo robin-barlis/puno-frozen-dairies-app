@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
 
@@ -259,7 +260,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		ownerName.setWidth("50%");
 		
 	
-		List<Customer> availableCustomers = customerService.listAll(Sort.unsorted());
+		List<Customer> availableCustomers = customerService.listAll(Sort.unsorted()).stream().filter(e -> PfdiUtil.isRelativeOrCompanyOwned(e.getCustomerTagId())).collect(Collectors.toList());
 		
 		orders.clear();
 		orders.addAll(orderService.findOrdersForPayment());

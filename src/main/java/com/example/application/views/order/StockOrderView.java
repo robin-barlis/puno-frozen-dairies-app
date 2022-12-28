@@ -209,7 +209,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			
 			
 			HorizontalLayout invoiceLayout = new HorizontalLayout();
-			String label = isCompanyOwned ? "Invoice:" : "Stock Transfer:";
+			String label = isCompanyOwned ?"Stock Transfer:" : "Invoice:";
 			invoiceLayout.setWidthFull();
 			Span invoiceLayoutLabel = new Span(label);
 			invoiceLayoutLabel.setClassName("order-row-label");
