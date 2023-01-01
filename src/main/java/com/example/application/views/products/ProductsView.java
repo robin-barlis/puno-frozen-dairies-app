@@ -104,7 +104,7 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 					.collect(Collectors.toList());
 			Integer categoryId = categoryIdList.get(0);
 			String imageUrl = product.getProductPictureUrl() != null ? product.getProductPictureUrl()
-					: "https://images.unsplash.com/photo-1519681393784-d120267933ba?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80";
+					: "https://res.cloudinary.com/dw2qyhgar/image/upload/v1672584641/170043505_10158971498776278_8359436008848051948_n_nejhu1.jpg";
 			
 			ProductsViewCard card = new ProductsViewCard(product, categoryService.get(categoryId).orElseGet(null), imageUrl);
 			imageContainer.add(card);

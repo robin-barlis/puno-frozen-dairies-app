@@ -1,17 +1,28 @@
 package com.example.application.views.products;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
+import javax.imageio.ImageIO;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.Singleton;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.application.data.Categories;
 import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.Product;
@@ -31,13 +42,16 @@ import com.google.gwt.thirdparty.guava.common.collect.Sets;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
-import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
@@ -46,6 +60,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.upload.Upload;
+import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -54,6 +70,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteParameters;
+import com.vaadin.flow.server.StreamResource;
 
 @PageTitle("Products")
 @Route(value = "addProduct/:productId?", layout = MainLayout.class)
@@ -78,8 +95,12 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 	private Integer productId;
 	List<Category> categories;
 	Set<ProductPrice> productPrice= null;
+	File file = null;
 
 	private Product product;
+	
+	private final static int MAX_FILE_SIZE_BYTES = 2000 * 10 * 1024 * 1024; // 10MB
+	private final Cloudinary cloudinary = Singleton.getCloudinary();
 
 	@Autowired
 	public AddNewProductView(AuthenticatedUser authenticatedUser, ProductPriceService priceService, CategoryService categoryService, ProductService productService, SizesService sizesService, ItemStockService itemStockService) {
@@ -100,6 +121,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 	private void createMainContent(VerticalLayout content) {
 		HorizontalLayout categoryNameImageWrapper = new HorizontalLayout();
 		categoryNameImageWrapper.setWidth("100%");
+		categoryNameImageWrapper.setHeight("200px");
 		
 		FlexLayout headerNameWrapper = new FlexLayout();
 		headerNameWrapper.setFlexDirection(FlexDirection.ROW);
@@ -110,22 +132,79 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		headerNameWrapper.add(header);
 		headerNameWrapper.setWidth("50%");
 
-		Div div = new Div();
-		div.addClassNames("background-div");
-		div.setHeight("141px");
-		div.setWidth("247px");
+		VerticalLayout layout = new VerticalLayout();
+		layout.setHeight("141px");
+		layout.setWidth("250px");
+		
+		Image profilePicture = new Image();
+		profilePicture.addClassName("product-picture");
+		profilePicture.setSrc("https://res.cloudinary.com/dw2qyhgar/image/upload/v1672584641/170043505_10158971498776278_8359436008848051948_n_nejhu1.jpg");
+		profilePicture.setHeight("150px");
+		profilePicture.setWidth("200px");
+		
 
-		Image image = new Image();
-		image.setWidth("100%");
+		MemoryBuffer memoryBuffer = new MemoryBuffer();
 
-		div.add(image);
+		Upload uploadImage = new Upload();
+		uploadImage.setDropAllowed(false);
+		uploadImage.setHeightFull();
+		uploadImage.setWidthFull();
+		uploadImage.setAcceptedFileTypes("image/*");
+		uploadImage.setMaxFiles(1);
+		uploadImage.setMaxFileSize(MAX_FILE_SIZE_BYTES);
+		uploadImage.setReceiver(memoryBuffer);
+		uploadImage.addFileRejectedListener(event -> {
+			String errorMessage = event.getErrorMessage();
+
+			Notification notification = Notification.show(errorMessage, 5000, Notification.Position.MIDDLE);
+			notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+		});
+		uploadImage.addSucceededListener(event -> {
+			
+			InputStream fileData = memoryBuffer.getInputStream();
+			String fileName = event.getFileName();	
+
+			try {
+				BufferedImage bufferedImage = ImageIO.read(fileData);
+				file = new File(FileUtils.getTempDirectoryPath() + fileName);
+				file.createNewFile();
+				
+				
+				if (file.exists()) {
+					ImageIO.write(bufferedImage, FilenameUtils.getExtension(fileName), file);
+
+					StreamResource imageResource = new StreamResource("profilePicture",
+							() -> memoryBuffer.getInputStream());
+
+					profilePicture.setSrc(imageResource);
+					//cloudinary.uploader().destroy(fileName, uploadResult);
+
+				}
+				
+				
+
+			} catch (IOException e1) {
+				Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.MIDDLE);
+				notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			} 
+			//processFile(fileData, fileName, contentLength, mimeType);
+
+		});
+
+		Button uploadButton = new Button();
+		uploadButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS, ButtonVariant.LUMO_TERTIARY);
+		uploadButton.setIcon(profilePicture);
+		uploadButton.setSizeFull();
+		
+		
+		uploadImage.setUploadButton(uploadButton);
+		layout.add(uploadImage);
+		
+		
 
 		VerticalLayout newAddSizeContainer = new VerticalLayout();
 		VerticalLayout nameAndCategoryWrapper = new VerticalLayout();
 		nameAndCategoryWrapper.addClassName("add-product-name-wrapper");
-		
-		
-
 		
 		productName = new TextField("Product Name");
 		productName.setWidthFull();
@@ -224,7 +303,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		iceCreamDescriptionContainer.setAlignItems(Alignment.START);
 		iceCreamDescriptionContainer.add(nameAndCategoryWrapper);
 
-		categoryNameImageWrapper.add(div, nameAndCategoryWrapper);
+		categoryNameImageWrapper.add(layout, nameAndCategoryWrapper);
 
 		HorizontalLayout actionsButtonLayout = new HorizontalLayout();
 		actionsButtonLayout.setAlignItems(Alignment.END);
@@ -290,14 +369,26 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		if (product == null) {
 
 			product = new Product();
+
 			
+			if (file != null) {
+				try {
+					Map<?, ?>  uploadResult = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
+
+					String url = uploadResult.get("url").toString();
+					
+					product.setProductPictureUrl(url);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					Notification notification = Notification.show("Upload faileds. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.MIDDLE);
+					notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+				}
+				
+			}
 		} else {
-			// delete all prices in db for editting
 			product.getProductPrices().forEach(e -> {
 				priceService.delete(e.getId());
 			});
-//			
-//			priceService.deleteByProduct(product);
 		}
 		
 		

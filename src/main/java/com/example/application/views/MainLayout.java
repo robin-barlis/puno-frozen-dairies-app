@@ -1,9 +1,20 @@
 package com.example.application.views;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
 import java.util.Optional;
+
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Singleton;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.service.UserService;
 import com.example.application.security.AuthenticatedUser;
@@ -41,16 +52,20 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.PasswordField;
+import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 
 /**
@@ -61,8 +76,9 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 	private static final long serialVersionUID = 3493362210483888466L;
 	private AuthenticatedUser authenticatedUser;
 	private AccessAnnotationChecker accessChecker;
-	private final static int MAX_FILE_SIZE_BYTES = 2000 * 10 * 1024 * 1024; // 10MB
 	private UserService userService;
+
+	private final static int MAX_FILE_SIZE_BYTES = 2000 * 10 * 1024 * 1024; // 10MB
 	private final Cloudinary cloudinary = Singleton.getCloudinary();
 	private AppUser currentUser;
 	private Tabs tabs;
@@ -89,9 +105,6 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		H2 appName = new H2("PFDI Business Management Application");
 		appName.addClassNames("my-0", "me-auto");
 		layout.add(appName);
-
-		//layout.add(appName);
-
 		Optional<AppUser> maybeUser = authenticatedUser.get();
 		if (maybeUser.isPresent()) {
 			createAvatarDiv(layout, maybeUser);
@@ -110,7 +123,6 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		
 		addToDrawer(tabs);
 		addToNavbar(toggle, layout);
-//		nav.add(tabs);		header.add(layout, toggle);
 
 		return header;
 	}
@@ -145,54 +157,54 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
 		MemoryBuffer memoryBuffer = new MemoryBuffer();
 
-//		Upload uploadImage = new Upload();
-//		uploadImage.setDropAllowed(false);
-//		uploadImage.setAcceptedFileTypes("image/*");
-//		uploadImage.setMaxFiles(1);
-//		uploadImage.setMaxFileSize(MAX_FILE_SIZE_BYTES);
-//		uploadImage.setReceiver(memoryBuffer);
-//		uploadImage.addFileRejectedListener(event -> {
-//			String errorMessage = event.getErrorMessage();
-//
-//			Notification notification = Notification.show(errorMessage, 5000, Notification.Position.MIDDLE);
-//			notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-//		});
-//		uploadImage.addSucceededListener(event -> {
-//			
-//			InputStream fileData = memoryBuffer.getInputStream();
-//			String fileName = event.getFileName();	
-//
-//			try {
-//				BufferedImage bufferedImage = ImageIO.read(fileData);
-//				File file = new File(FileUtils.getTempDirectoryPath() + fileName);
-//				file.createNewFile();
-//				
-//				
-//				if (file.exists()) {
-//					ImageIO.write(bufferedImage, FilenameUtils.getExtension(fileName), file);
-//					
-//					Map<?, ?> uploadResult = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
-//					String url = uploadResult.get("url").toString();
-//					System.out.println(url);
-//					StreamResource imageResource = new StreamResource("profilePicture",
-//							() -> memoryBuffer.getInputStream());
-//
-//					profilePicture.setImageResource(imageResource);
-//					avatar.setImageResource(imageResource);
-//					user.setProfilePictureUrl(url);
-//					cloudinary.uploader().destroy(fileName, uploadResult);
-//					userService.update(user);
-//				}
-//				
-//				
-//
-//			} catch (IOException e1) {
-//				Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.MIDDLE);
-//				notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-//			} 
-//			//processFile(fileData, fileName, contentLength, mimeType);
-//
-//		});
+		Upload uploadImage = new Upload();
+		uploadImage.setDropAllowed(false);
+		uploadImage.setAcceptedFileTypes("image/*");
+		uploadImage.setMaxFiles(1);
+		uploadImage.setMaxFileSize(MAX_FILE_SIZE_BYTES);
+		uploadImage.setReceiver(memoryBuffer);
+		uploadImage.addFileRejectedListener(event -> {
+			String errorMessage = event.getErrorMessage();
+
+			Notification notification = Notification.show(errorMessage, 5000, Notification.Position.MIDDLE);
+			notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+		});
+		uploadImage.addSucceededListener(event -> {
+			
+			InputStream fileData = memoryBuffer.getInputStream();
+			String fileName = event.getFileName();	
+
+			try {
+				BufferedImage bufferedImage = ImageIO.read(fileData);
+				File file = new File(FileUtils.getTempDirectoryPath() + fileName);
+				file.createNewFile();
+				
+				
+				if (file.exists()) {
+					ImageIO.write(bufferedImage, FilenameUtils.getExtension(fileName), file);
+					
+					Map<?, ?> uploadResult = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
+					String url = uploadResult.get("url").toString();
+					System.out.println(url);
+					StreamResource imageResource = new StreamResource("profilePicture",
+							() -> memoryBuffer.getInputStream());
+
+					profilePicture.setImageResource(imageResource);
+					avatar.setImageResource(imageResource);
+					user.setProfilePictureUrl(url);
+					cloudinary.uploader().destroy(fileName, uploadResult);
+					userService.update(user);
+				}
+				
+				
+
+			} catch (IOException e1) {
+				Notification notification = Notification.show("Upload faileds. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.MIDDLE);
+				notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			} 
+			//processFile(fileData, fileName, contentLength, mimeType);
+
+		});
 
 		Button uploadButton = new Button();
 		uploadButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS, ButtonVariant.LUMO_TERTIARY);
@@ -200,15 +212,15 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		uploadButton.setWidth("10em");
 		uploadButton.setHeight("10em");
 
-		// uploadImage.setUploadButton(uploadButton);
+		uploadImage.setUploadButton(uploadButton);
 
 		VerticalLayout uploadButtonWrapper = new VerticalLayout();
 		uploadButtonWrapper.addClassName(CssClassNamesConstants.PROFILE_DETAILS_NAME_AVATAR_WRAPPER);
 		uploadButtonWrapper.setAlignItems(Alignment.CENTER);
-		uploadButtonWrapper.add(uploadButton);
+		uploadButtonWrapper.add(uploadImage);
 
 		VerticalLayout namePositionWrapper = new VerticalLayout();
-		Label fullName = new Label(user.getLastName() + ", " + user.getFirstName());
+		Label fullName = new Label(user.getLastName() + " " + user.getFirstName());
 		Label position = new Label(user.getPosition());
 		position.setClassName("bold-label");
 		namePositionWrapper.add(fullName, position);
@@ -418,21 +430,6 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			
 		}
 
-//		MenuBar customersTabMenu = new MenuBar();
-//		customersTabMenu.setOpenOnHover(true);
-//		customersTabMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
-//		MenuItem customersTabMenuItem = customersTabMenu.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
-//		customersTabMenuItem.getElement().setAttribute("aria-label", "More options");
-//		SubMenu customerTabSubMenu = customersTabMenuItem.getSubMenu();
-//		
-//		RouterLink manageAccountOwners = createNewRoute("Manage Account Owners", AccountOwnerView.class);
-//		RouterLink manageCustomers = createNewRoute("Manage Customers", CustomerView.class);
-//
-//		customerTabSubMenu.addItem(manageAccountOwners);
-//		customerTabSubMenu.addItem(manageCustomers);
-//
-//		customersTab.add(customersTabMenu);
-
 		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser) || PfdiUtil.isChecker(currentUser)) {
 
 			Icon cartIcon = new Icon(VaadinIcon.CART);
@@ -442,18 +439,6 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			ordersTabMenu.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
 			MenuItem ordersTabMenuItem = ordersTabMenu.addItem(new Icon(VaadinIcon.CHEVRON_DOWN_SMALL));
 			ordersTabMenuItem.getElement().setAttribute("aria-label", "More options");
-			SubMenu ordersTabSubMenu = ordersTabMenuItem.getSubMenu();
-
-			//ordersTab.add(ordersTabMenu);
-
-			// RouterLink manageStocks = createNewRoute("Manage Stock Inventory",
-			// StocksInvetoryView.class);
-			RouterLink manageSalesInvoices = createNewRoute("Sales Invoices", InvoicesView.class);
-			RouterLink stockOrderList = createNewRoute("Stock Order List", StockOrderView.class);
-
-			//ordersTabSubMenu.addItem(stockOrderList);
-			// ordersTabSubMenu.addItem(manageStocks);
-			//ordersTabSubMenu.addItem(manageSalesInvoices);
 
 			Tab stocksInventory = createTab("Inventory", StocksInvetoryView.class, "admin-view-tab", new Icon(VaadinIcon.STOCK));
 

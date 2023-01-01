@@ -71,6 +71,8 @@ public class ProductsViewCard extends ListItem {
         productLink.setRoute(AddNewProductView.class, routeParams);
         productLink.setQueryParameters(null);
         productLink.add(imageDiv);
+        productLink.setClassName("product-card-image-link");
+        
         
         
 
