@@ -56,6 +56,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteConfiguration;
+import com.vaadin.flow.router.RouteParam;
 import com.vaadin.flow.router.RouteParameters;
 
 @PageTitle("Stock Orders")
@@ -356,16 +357,20 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			
 			MenuItem editItemSubMenu = subMenu.addItem("Edit Order", e -> {
 				
-				
+				RouteParam param = new RouteParam("orderId", currentOrder.getId().toString());
+				RouteParameters params = new RouteParameters(param);
+				UI.getCurrent().navigate(CreateOrderFormView.class, params);
 			});
 			
-			MenuItem addPaymentSubMenu = subMenu.addItem("Add Payment", e -> {
-				
-
-			});
+//			MenuItem addPaymentSubMenu = subMenu.addItem("Add Payment", e -> {
+//				RouteParam param = new RouteParam("orderId", currentOrder.getId().toString());
+//				RouteParameters params = new RouteParameters(param);
+//				UI.getCurrent().navigate(CreateOrderFormView.class, params);
+//
+//			});
 			
 			if (currentOrder.getPayments() != null && BigDecimal.ZERO.equals(currentOrder.getBalance())) {
-				addPaymentSubMenu.setEnabled(false);
+			//	addPaymentSubMenu.setEnabled(false);
 				editItemSubMenu.setEnabled(false);
 			}
 			
@@ -373,7 +378,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			
 			if (currentOrder.getPayments() != null && !BigDecimal.ZERO.equals(currentOrder.getBalance())) {
 				
-				addPaymentSubMenu.setEnabled(true);
+			//	addPaymentSubMenu.setEnabled(true);
 			}
 			
 			if (currentOrder.getPayments() != null && !currentOrder.getPayments().isEmpty()) {
