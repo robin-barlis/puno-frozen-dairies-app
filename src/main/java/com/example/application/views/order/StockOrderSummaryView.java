@@ -231,24 +231,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
 		
-		print = new Button("Print");
-		print.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
-		print.setVisible(true);
-		print.addClassNames("order-view-button", "float-right");
-		
-		
-		FileDownloadWrapper buttonWrapper = new FileDownloadWrapper(
-				new StreamResource("order.pdf", () -> {
-
-					if (order != null) {
-
-						return new ByteArrayInputStream(orderSummaryReportData);
-					}
-
-					return new ByteArrayInputStream(new byte[0]);
-				}));
-		buttonWrapper.wrapComponent(print);
-		
+				
 		submit = new Button("Submit");
 		submit.setVisible(false);
 		submit.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
@@ -316,7 +299,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
 		
-		buttonContainer.add(submit, saveAsDraft, buttonWrapper, createSalesInvoice, createStockTransfer, back );
+		buttonContainer.add(submit, saveAsDraft, createSalesInvoice, createStockTransfer, back );
 		
 		add(buttonContainer);
 	}
@@ -449,10 +432,10 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		saveAsDraft.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.DRAFT))
 				&& (PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser)));
 		
-		createStockTransfer.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_DELIVERY)) &&
+		createStockTransfer.setVisible(order.getStockTransferId() == null && 
 				(PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
 				&& PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId()));
-		createSalesInvoice.setVisible((PfdiUtil.isOrderStatusEquals(order.getStatus(), OrderStatus.FOR_DELIVERY)) &&
+		createSalesInvoice.setVisible(order.getInvoiceId() == null &&
 				(PfdiUtil.isChecker(appUser) || PfdiUtil.isSuperUser(appUser))
 				&& !PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId()));
 
