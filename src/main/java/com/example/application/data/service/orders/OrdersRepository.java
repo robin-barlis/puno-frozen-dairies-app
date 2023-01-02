@@ -14,7 +14,7 @@ public interface OrdersRepository extends JpaRepository<Order, Integer> {
     @Query(value = "SELECT max(stockOrderNumber) FROM Order")
     Integer findMaxSONumber();
     
-    @Query(value = "SELECT order FROM Order order where order.customer.storeName = :storeName and order.invoiceId != null")
+    @Query(value = "SELECT order FROM Order order where order.customer.storeName = :storeName")
     List<Order> findReadyForPaymentOrdersByCustomerName(@Param("storeName") String storeName);
     
     @Query(value = "SELECT order FROM Order order where order.invoiceId != null")

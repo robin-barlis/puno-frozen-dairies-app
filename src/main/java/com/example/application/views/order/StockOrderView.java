@@ -24,6 +24,8 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.contextmenu.MenuItem;
+import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
@@ -35,6 +37,8 @@ import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
@@ -340,6 +344,46 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			
 
 		grid.addColumn("status").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		
+		grid.addComponentColumn(currentOrder -> {
+
+			MenuBar menuBar = new MenuBar();
+			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
+			menuItem.getElement().setAttribute("aria-label", "More options");
+			SubMenu subMenu = menuItem.getSubMenu();
+			
+			
+			MenuItem editItemSubMenu = subMenu.addItem("Edit Order", e -> {
+				
+				
+			});
+			
+			MenuItem addPaymentSubMenu = subMenu.addItem("Add Payment", e -> {
+				
+
+			});
+			
+			if (currentOrder.getPayments() != null && BigDecimal.ZERO.equals(currentOrder.getBalance())) {
+				addPaymentSubMenu.setEnabled(false);
+				editItemSubMenu.setEnabled(false);
+			}
+			
+			
+			
+			if (currentOrder.getPayments() != null && !BigDecimal.ZERO.equals(currentOrder.getBalance())) {
+				
+				addPaymentSubMenu.setEnabled(true);
+			}
+			
+			if (currentOrder.getPayments() != null && !currentOrder.getPayments().isEmpty()) {
+				editItemSubMenu.setEnabled(false);
+			}
+			
+			
+
+			return menuBar;
+		}).setWidth("70px").setFlexGrow(0);
 
 		ldp = DataProvider.ofCollection(ordersService.listAll(Sort.by("id")));
 

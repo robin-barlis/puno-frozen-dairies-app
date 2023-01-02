@@ -260,7 +260,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		ownerName.setWidth("50%");
 		
 	
-		List<Customer> availableCustomers = customerService.listAll(Sort.unsorted()).stream().filter(e -> !PfdiUtil.isRelativeOrCompanyOwned(e.getCustomerTagId())).collect(Collectors.toList());
+		List<Customer> availableCustomers = customerService.listAll(Sort.unsorted());
 		
 		orders.clear();
 		orders.addAll(orderService.findOrdersForPayment());

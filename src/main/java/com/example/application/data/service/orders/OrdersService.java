@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.application.data.entity.orders.Order;
+import com.example.application.data.entity.orders.OrderItemSummary;
+import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.entity.stock.ItemStock;
 
 @Service
@@ -43,10 +46,14 @@ public class OrdersService {
 	
 	public List<Order> findReadyForPaymentOrdersByCustomerName(String customerName) {
 		
-		List<Order> ordersWithInvoices =repository.findReadyForPaymentOrdersByCustomerName(customerName);
+		List<Order> ordersWithInvoices =repository.findReadyForPaymentOrdersByCustomerName(customerName).
+				stream().filter(order-> { 
+						return !BigDecimal.ZERO.equals(order.getBalance()) 
+								&& (order.getInvoiceId() != null || order.getStockTransferId() != null);
+		}).collect(Collectors.toList());
 			
-		
-		return ordersWithInvoices.stream().filter(e -> !BigDecimal.ZERO.equals(e.getBalance())).collect(Collectors.toList());	
+		// filter orders with zero balance
+		return ordersWithInvoices;
 	}
 	
 	public List<Order> findOrdersForPayment() {
@@ -71,6 +78,19 @@ public class OrdersService {
 	public Integer getLastId() {
 		Integer lastStockOrderNumnber = repository.findMaxSONumber();	
 		return lastStockOrderNumnber == null ? 0 : lastStockOrderNumnber;
+	}
+	
+	public Set<OrderItems> getOrderItemSummary(Integer orderId) {
+		Order order = repository.findById(orderId).orElse(null);
+		
+		if (order != null) {
+			
+			Set<OrderItems> orderItems = order.getOrderItems();
+			return orderItems;
+		}
+		
+		return null;
+		
 	}
 
 }

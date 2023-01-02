@@ -9,6 +9,7 @@
     "@polymer/iron-meta": "3.0.1",
     "@polymer/iron-resizable-behavior": "3.0.1",
     "@polymer/polymer": "3.5.1",
+    "@vaadin-component-factory/vcf-pdf-viewer": "1.2.0",
     "@vaadin/accordion": "23.3.0-alpha2",
     "@vaadin/app-layout": "23.3.0-alpha2",
     "@vaadin/avatar": "23.3.0-alpha2",
@@ -109,7 +110,8 @@
     "construct-style-sheets-polyfill": "3.1.0",
     "date-fns": "2.29.3",
     "line-awesome": "1.3.0",
-    "lit": "2.3.0"
+    "lit": "2.3.0",
+    "print-js": "1.6.0"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "3.1.0",
@@ -135,6 +137,7 @@
       "@polymer/iron-meta": "3.0.1",
       "@polymer/iron-resizable-behavior": "3.0.1",
       "@polymer/polymer": "3.5.1",
+      "@vaadin-component-factory/vcf-pdf-viewer": "1.2.0",
       "@vaadin/accordion": "23.3.0-alpha2",
       "@vaadin/app-layout": "23.3.0-alpha2",
       "@vaadin/avatar": "23.3.0-alpha2",
@@ -234,7 +237,8 @@
       "construct-style-sheets-polyfill": "3.1.0",
       "date-fns": "2.29.3",
       "line-awesome": "1.3.0",
-      "lit": "2.3.0"
+      "lit": "2.3.0",
+      "print-js": "1.6.0"
     },
     "devDependencies": {
       "@rollup/plugin-replace": "3.1.0",
@@ -251,7 +255,7 @@
       "workbox-core": "6.5.0",
       "workbox-precaching": "6.5.0"
     },
-    "hash": "575f17b6aa572ddc21d88fef89fa16710cfe71cc899da2667c6b83b787460900"
+    "hash": "dc611eeb7d72f068519b7436dfdd5946d2e6bad9fbbf7ec8e22f3e73d906adc8"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -359,6 +363,8 @@
     "date-fns": "$date-fns",
     "@vaadin/tabsheet": "$@vaadin/tabsheet",
     "@vaadin/tooltip": "$@vaadin/tooltip",
+    "@vaadin-component-factory/vcf-pdf-viewer": "$@vaadin-component-factory/vcf-pdf-viewer",
+    "print-js": "$print-js",
     "@fontsource/roboto": "$@fontsource/roboto",
     "line-awesome": "$line-awesome"
   }

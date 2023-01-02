@@ -1,5 +1,7 @@
 package com.example.application.views.order;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +16,7 @@ import javax.annotation.security.RolesAllowed;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.vaadin.olli.FileDownloadWrapper;
 import org.vaadin.stefan.table.Table;
 import org.vaadin.stefan.table.TableDataCell;
 import org.vaadin.stefan.table.TableHead;
@@ -31,9 +34,11 @@ import com.example.application.data.entity.products.Size;
 import com.example.application.data.service.orders.DocumentTrackingNumberService;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.products.SizesService;
+import com.example.application.reports.OrderSummaryReport;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
 import com.example.application.views.MainLayout;
+import com.vaadin.componentfactory.pdfviewer.PdfViewer;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -61,6 +66,13 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteParam;
 import com.vaadin.flow.router.RouteParameters;
+import com.vaadin.flow.server.InputStreamFactory;
+import com.vaadin.flow.server.StreamResource;
+import com.vaadin.server.FileDownloader;
+import com.vaadin.server.StreamResource.StreamSource;
+
+import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
+import net.sf.jasperreports.engine.JRException;
 
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrderSummary/:id", layout = MainLayout.class)
@@ -78,6 +90,8 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	private Button createStockTransfer;
 	
 	private Button submit;
+	
+	private Button print;
 	
 	private Button back;
 
@@ -109,15 +123,20 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	private MenuItem delivered;
 	private DocumentTrackingNumberService documentTrackingNumberService;
 	private SizesService sizesService;
+	private OrderSummaryReport orderSummaryReport;
+
+	private byte[] orderSummaryReportData;
+	private Div mainDiv = new Div();
 
 
 	@Autowired
-	public StockOrderSummaryView(SizesService sizesService, OrdersService ordersService, AuthenticatedUser user, DocumentTrackingNumberService documentTrackingNumberService) {
+	public StockOrderSummaryView(SizesService sizesService, OrdersService ordersService, AuthenticatedUser user, OrderSummaryReport orderSummaryReport, DocumentTrackingNumberService documentTrackingNumberService) {
 		this.ordersService = ordersService;
 		this.appUser = user.get().get();
 		
 		this.documentTrackingNumberService = documentTrackingNumberService;
 		this.sizesService = sizesService;
+		this.orderSummaryReport = orderSummaryReport;
 		addClassNames("administration-view");
 		
 		addChildrenToContentHeaderContainer(this);
@@ -163,25 +182,32 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
         actionButtonDiv.add(menuBar);
 		add(actionButtonDiv);
         
-		Div mainDiv = new Div();
-		mainDiv.addClassName("order-summary-div");
 
-		createSummaryHeader(mainDiv);
-		
-		createFlavorOrderDetailsDiv(mainDiv);
-		createConesOrderDetailsDiv(mainDiv);
-		createOtherOrderDetailsDiv(mainDiv);
+//		mainDiv.addClassName("order-summary-div");
+//
+//		createSummaryHeader(mainDiv);
+//		
+//		createFlavorOrderDetailsDiv(mainDiv);
+//		createConesOrderDetailsDiv(mainDiv);
+//		createOtherOrderDetailsDiv(mainDiv);
 		
 
-		mainDiv.add(new Hr());
 		
-		Div totalAmountWrapper = new Div();
-		totalAmountLabel = new Span();
-		totalAmountWrapper.add(totalAmountLabel);
-		totalAmountWrapper.addClassName("order-summary-total");
 		
-		mainDiv.add(totalAmountWrapper);
-		storeName.addClassName("bold-label");
+//		
+//		
+//		
+//		
+//
+//		//mainDiv.add(new Hr());
+//		
+//		Div totalAmountWrapper = new Div();
+//		totalAmountLabel = new Span();
+//		totalAmountWrapper.add(totalAmountLabel);
+//		totalAmountWrapper.addClassName("order-summary-total");
+//		
+//		mainDiv.add(totalAmountWrapper);
+//		storeName.addClassName("bold-label");
 
 		add(mainDiv);
 		
@@ -204,6 +230,24 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			Notification.show("Order saved as draft.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
+		
+		print = new Button("Print");
+		print.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+		print.setVisible(true);
+		print.addClassNames("order-view-button", "float-right");
+		
+		
+		FileDownloadWrapper buttonWrapper = new FileDownloadWrapper(
+				new StreamResource("order.pdf", () -> {
+
+					if (order != null) {
+
+						return new ByteArrayInputStream(orderSummaryReportData);
+					}
+
+					return new ByteArrayInputStream(new byte[0]);
+				}));
+		buttonWrapper.wrapComponent(print);
 		
 		submit = new Button("Submit");
 		submit.setVisible(false);
@@ -272,7 +316,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			UI.getCurrent().navigate(StockOrderView.class);
 		});
 		
-		buttonContainer.add(submit,saveAsDraft, createSalesInvoice, createStockTransfer, back );
+		buttonContainer.add(submit, saveAsDraft, buttonWrapper, createSalesInvoice, createStockTransfer, back );
 		
 		add(buttonContainer);
 	}
@@ -353,27 +397,47 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 	public void beforeEnter(BeforeEnterEvent event) {
 		orderId = event.getRouteParameters().get("id").get();
 		
-
 		order = ordersService.get(Integer.parseInt(orderId)).get();
+
+		try {
+			orderSummaryReportData = orderSummaryReport.buildReport(order, order.getOrderItems(), sizesService.listAll(Sort.unsorted()));
+		} catch (ColumnBuilderException | ClassNotFoundException | JRException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Integer stockOrderNumber = order.getStockOrderNumber();
 		if (stockOrderNumber == null) {
 			stockOrderNumber = generateStockOrderNumber();
 			order.setStockOrderNumber(stockOrderNumber);
 		}
+		
+		PdfViewer pdfViewer = new PdfViewer();
+		pdfViewer.setWidthFull();
+		pdfViewer.setHeightFull();
+		StreamResource resource = new StreamResource("order.pdf", () -> {
+			if (order != null) {
+				return new ByteArrayInputStream(orderSummaryReportData);
+			}
+			return new ByteArrayInputStream(new byte[0]);
+		});
+		pdfViewer.setSrc(resource);
+		mainDiv.add(pdfViewer);
+		mainDiv.setWidthFull();
+		mainDiv.setHeight("75%");
 
-		stockOrderNumberSpam.setText("Stock Order #" + stockOrderNumber);
-		orderDate.setText(PfdiUtil.formatDateWithHours(order.getCreationDate()));
-		storeName.setText(order.getCustomer().getStoreName());
-		address.setText(order.getCustomer().getAddress());
-		ownerName.setText(order.getCustomer().getOwnerName());
-		status.setText(order.getStatus());
-		
-		
-		//set table summary content
-		
-		setFlavorOrderDetails();
-		setConeOrderDetails();
-		setOtherOrderDetails();
+//		stockOrderNumberSpam.setText("Stock Order #" + stockOrderNumber);
+//		orderDate.setText(PfdiUtil.formatDateWithHours(order.getCreationDate()));
+//		storeName.setText(order.getCustomer().getStoreName());
+//		address.setText(order.getCustomer().getAddress());
+//		ownerName.setText(order.getCustomer().getOwnerName());
+//		status.setText(order.getStatus());
+//		
+//		
+//		//set table summary content
+//		
+//		setFlavorOrderDetails();
+//		setConeOrderDetails();
+//		setOtherOrderDetails();
 		
 		
 //		totalAmountLabel.setText("Total Amount : " + PfdiUtil.getFormatter().format(totalAmount));
