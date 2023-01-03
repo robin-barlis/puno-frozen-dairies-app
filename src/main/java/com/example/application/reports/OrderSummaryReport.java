@@ -19,6 +19,7 @@ import com.example.application.utils.PfdiUtil;
 import com.google.common.collect.Maps;
 import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
+import ar.com.fdvs.dj.core.DJConstants;
 import ar.com.fdvs.dj.core.DynamicJasperHelper;
 import ar.com.fdvs.dj.core.layout.ClassicLayoutManager;
 import ar.com.fdvs.dj.core.layout.HorizontalBandAlignment;
@@ -29,13 +30,18 @@ import ar.com.fdvs.dj.domain.builders.ColumnBuilder;
 import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
 import ar.com.fdvs.dj.domain.builders.DynamicReportBuilder;
 import ar.com.fdvs.dj.domain.builders.StyleBuilder;
+import ar.com.fdvs.dj.domain.builders.SubReportBuilder;
 import ar.com.fdvs.dj.domain.constants.Border;
 import ar.com.fdvs.dj.domain.constants.Font;
+import ar.com.fdvs.dj.domain.constants.GroupLayout;
 import ar.com.fdvs.dj.domain.constants.HorizontalAlign;
 import ar.com.fdvs.dj.domain.constants.Stretching;
 import ar.com.fdvs.dj.domain.constants.Transparency;
 import ar.com.fdvs.dj.domain.constants.VerticalAlign;
+import ar.com.fdvs.dj.domain.entities.Subreport;
 import ar.com.fdvs.dj.domain.entities.columns.AbstractColumn;
+import ar.com.fdvs.dj.domain.entities.columns.PropertyColumn;
+import net.sf.jasperreports.components.table.ColumnGroup;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperPrint;
@@ -119,7 +125,6 @@ public class OrderSummaryReport {
 		sb.setPaddingRight(1);
 		sb.setTransparency(Transparency.OPAQUE);
 		sb.setStretching(Stretching.RELATIVE_TO_BAND_HEIGHT);
-		sb.setFont(Font.ARIAL_MEDIUM_BOLD);
 		return sb.build();
 	}
 
@@ -214,10 +219,6 @@ public class OrderSummaryReport {
 		report.setSubtitleStyle(subTitleStyle.build());
 		report.setUseFullPageWidth(true);
 		
-		
-		
-		
 		return report.build();
 	}
-
 }
