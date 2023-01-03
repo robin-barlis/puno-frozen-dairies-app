@@ -35,7 +35,6 @@ public class EmailService {
 		apiKey.setApiKey("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");
 
 		try {
-			TestEmail obj = new TestEmail();
 			TransactionalEmailsApi api = new TransactionalEmailsApi();
 			SendSmtpEmailSender sender = new SendSmtpEmailSender();
 			sender.setEmail(TEST_EMAIL);
