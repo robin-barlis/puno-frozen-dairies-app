@@ -183,32 +183,6 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		add(actionButtonDiv);
         
 
-//		mainDiv.addClassName("order-summary-div");
-//
-//		createSummaryHeader(mainDiv);
-//		
-//		createFlavorOrderDetailsDiv(mainDiv);
-//		createConesOrderDetailsDiv(mainDiv);
-//		createOtherOrderDetailsDiv(mainDiv);
-		
-
-		
-		
-//		
-//		
-//		
-//		
-//
-//		//mainDiv.add(new Hr());
-//		
-//		Div totalAmountWrapper = new Div();
-//		totalAmountLabel = new Span();
-//		totalAmountWrapper.add(totalAmountLabel);
-//		totalAmountWrapper.addClassName("order-summary-total");
-//		
-//		mainDiv.add(totalAmountWrapper);
-//		storeName.addClassName("bold-label");
-
 		add(mainDiv);
 		
 		Div buttonContainer = new Div();
@@ -407,23 +381,6 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		mainDiv.add(pdfViewer);
 		mainDiv.setWidthFull();
 		mainDiv.setHeight("75%");
-
-//		stockOrderNumberSpam.setText("Stock Order #" + stockOrderNumber);
-//		orderDate.setText(PfdiUtil.formatDateWithHours(order.getCreationDate()));
-//		storeName.setText(order.getCustomer().getStoreName());
-//		address.setText(order.getCustomer().getAddress());
-//		ownerName.setText(order.getCustomer().getOwnerName());
-//		status.setText(order.getStatus());
-//		
-//		
-//		//set table summary content
-//		
-//		setFlavorOrderDetails();
-//		setConeOrderDetails();
-//		setOtherOrderDetails();
-		
-		
-//		totalAmountLabel.setText("Total Amount : " + PfdiUtil.getFormatter().format(totalAmount));
 		
 		
 		//ONLY VISIBLE WHEN DRAFT, FOR EDITING
