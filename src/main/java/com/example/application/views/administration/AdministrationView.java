@@ -1,6 +1,7 @@
 package com.example.application.views.administration;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -236,8 +237,10 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 						
 						String message = passwordResetService.composeResetPasswordMessage(updatedAppUser);
 						emailService.sendMail("No Reply: Set Password", message,
-								updatedAppUser.getEmailAddress());
-					} catch (MessagingException | IOException e1) {
+								updatedAppUser.getEmailAddress(), updatedAppUser.getFirstName() + " " + updatedAppUser.getLastName());
+					} catch (Exception e1) {
+						e1.printStackTrace();
+						System.out.println(e1.getMessage());
 						Notification.show("Could not send the email. Please check with the Administrator.")
 						.addThemeVariants(NotificationVariant.LUMO_ERROR);
 					}

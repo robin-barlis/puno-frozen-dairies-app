@@ -1,92 +1,69 @@
 package com.example.application.utils.service;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
-import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.googleapis.json.GoogleJsonError;
-import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
-import com.google.api.client.util.store.FileDataStoreFactory;
-import com.google.api.services.gmail.Gmail;
-import com.google.api.services.gmail.model.Message;
-
-import org.apache.commons.codec.binary.Base64;
 import org.springframework.stereotype.Service;
 
-import static com.google.api.services.gmail.GmailScopes.GMAIL_SEND;
+import com.google.api.services.gmail.Gmail;
 
-import static javax.mail.Message.RecipientType.TO;
+import sendinblue.ApiClient;
+import sendinblue.Configuration;
+import sendinblue.auth.ApiKeyAuth;
+import sibApi.TransactionalEmailsApi;
+import sibModel.CreateSmtpEmail;
+import sibModel.SendSmtpEmail;
+import sibModel.SendSmtpEmailSender;
+import sibModel.SendSmtpEmailTo;
 
 @Service
 public class EmailService {
 
-	private static final String TEST_EMAIL = "pfdi.mail@gmail.com";
-	private final Gmail service;
-	private static final String SECRET_PATH = "/client_secret_228817540027-di7r54rmmicfv6qd5nljsougdpg64oi0.apps.googleusercontent.com.json";
+	private static final String TEST_EMAIL = "robbarlis@gmail.com";
+	private static final String API_KEY = "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";
 
-	public EmailService() throws Exception {
-		NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
-		GsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-		service = new Gmail.Builder(httpTransport, jsonFactory, getCredentials(httpTransport, jsonFactory))
-				.setApplicationName("Test Mailer").build();
-	}
-
-	private static Credential getCredentials(final NetHttpTransport httpTransport, GsonFactory jsonFactory)
-			throws IOException {
-		GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(jsonFactory,
-				new InputStreamReader(EmailService.class.getResourceAsStream(SECRET_PATH)));
-
-		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(httpTransport, jsonFactory,
-				clientSecrets, Set.of(GMAIL_SEND))
-				.setDataStoreFactory(new FileDataStoreFactory(Paths.get("tokens").toFile())).setAccessType("offline")
-				.build();
-
-		LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
-		return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
-	}
-
-	public void sendMail(String subject, String message, String toAddress) throws AddressException, MessagingException, IOException  {
-		Properties props = new Properties();
-		Session session = Session.getDefaultInstance(props, null);
-		MimeMessage email = new MimeMessage(session);
-		email.setFrom(new InternetAddress(TEST_EMAIL));
-		email.addRecipient(TO, new InternetAddress(toAddress));
-		email.setSubject(subject);
-		email.setContent(message, "text/html; charset=utf-8");
-
-		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-		email.writeTo(buffer);
-		byte[] rawMessageBytes = buffer.toByteArray();
-		String encodedEmail = Base64.encodeBase64URLSafeString(rawMessageBytes);
-		Message msg = new Message();
-		msg.setRaw(encodedEmail);
+	
+	public void sendMail(String subject, String message, String toAddress, String toName) throws AddressException, MessagingException, IOException  {
+		ApiClient defaultClient = Configuration.getDefaultApiClient();
+		// Configure API key authorization: api-key
+		ApiKeyAuth apiKey = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
+		apiKey.setApiKey("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");
 
 		try {
-			msg = service.users().messages().send("me", msg).execute();
-		} catch (GoogleJsonResponseException e) {
-			GoogleJsonError error = e.getDetails();
-			if (error.getCode() == 403) {
-				System.err.println("Unable to send message: " + e.getDetails());
-			} else {
-				throw e;
-			}
+			TestEmail obj = new TestEmail();
+			TransactionalEmailsApi api = new TransactionalEmailsApi();
+			SendSmtpEmailSender sender = new SendSmtpEmailSender();
+			sender.setEmail(TEST_EMAIL);
+			sender.setName("No Reply");
+			
+			List<SendSmtpEmailTo> toList = new ArrayList<SendSmtpEmailTo>();
+			SendSmtpEmailTo to = new SendSmtpEmailTo();
+			to.setEmail(toAddress);
+			to.setName(toName);
+			toList.add(to);
+			
+			Properties headers = new Properties();
+			headers.setProperty("Some-Custom-Name", "unique-id-1234");
+			Properties params = new Properties();
+			params.setProperty("parameter", "My param value");
+			params.setProperty("subject", "New Subject");
+			SendSmtpEmail sendSmtpEmail = new SendSmtpEmail();
+			sendSmtpEmail.setSender(sender);
+			sendSmtpEmail.setTo(toList);
+			sendSmtpEmail.setHtmlContent(message);
+			sendSmtpEmail.setSubject("Set Password - No Reply");
+			sendSmtpEmail.setHeaders(headers);
+			sendSmtpEmail.setParams(params);
+			CreateSmtpEmail response = api.sendTransacEmail(sendSmtpEmail);
+			System.out.println(response.toString());
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Exception occurred:- " + e.getMessage());
 		}
 	}
 

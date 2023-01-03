@@ -1,6 +1,7 @@
 package com.example.application.views.administration;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 import javax.mail.MessagingException;
 
@@ -72,13 +73,16 @@ public class RequestPasswordView extends VerticalLayout {
 				if (user != null) {
 					String message = passwordResetService.composeResetPasswordMessage(user);
 					try {
-						emailService.sendMail("No Reply: Set Password", message, emailValue);
+						
+						emailService.sendMail("No Reply: Set Password", message, emailValue, user.getFirstName() + " " + user.getLastName());
+			
 
 						Notification.show("Please check email for password reset instructions.")
 						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 						
 						UI.getCurrent().navigate(LoginView.class);
 					} catch (MessagingException | IOException e1) {
+						System.out.println(e1.getMessage());
 						Notification.show("Could not send the email. Please check with the Administrator.")
 						.addThemeVariants(NotificationVariant.LUMO_ERROR);
 					}
@@ -88,7 +92,7 @@ public class RequestPasswordView extends VerticalLayout {
 				}
 		
 			}
-			
+			 
 			if (invalid) {
 				validEmailField.setInvalid(invalid);
 			} 

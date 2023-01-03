@@ -1,5 +1,6 @@
 package com.example.application.views.order;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +21,12 @@ import com.example.application.data.entity.orders.OrderItemSalesInvoiceWrapper;
 import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.service.orders.DocumentTrackingNumberService;
 import com.example.application.data.service.orders.OrdersService;
+import com.example.application.reports.SalesInvoiceReport;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
 import com.example.application.views.MainLayout;
 import com.google.gwt.thirdparty.guava.common.collect.Lists;
+import com.vaadin.componentfactory.pdfviewer.PdfViewer;
 import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -45,8 +48,12 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.server.StreamResource;
 
-@PageTitle("Stock Orders")
+import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
+import net.sf.jasperreports.engine.JRException;
+
+@PageTitle("Sales Invoice")
 @Route(value = "order/salesInvoice/:id", layout = MainLayout.class)
 @RouteAlias(value = "/order/salesInvoice/:id", layout = MainLayout.class)
 @RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" })
@@ -68,7 +75,11 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 	private Span storeName;
 	private Span address;
 	private Span ownerName;
-	private Table table;
+
+	private byte[] salesInvoiceData;
+
+	private SalesInvoiceReport salesInvoiceReport;
+	private Div mainDiv = new Div();
 
 //	private BigDecimal totalAmount = BigDecimal.valueOf(0);
 //
@@ -79,8 +90,9 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 
 	@Autowired
 	public SalesInvoiceView(OrdersService ordersService, AuthenticatedUser user,
-			DocumentTrackingNumberService documentTrackingNumberService) {
+			DocumentTrackingNumberService documentTrackingNumberService, SalesInvoiceReport salesInvoiceReport) {
 		this.ordersService = ordersService;
+		this.salesInvoiceReport = salesInvoiceReport;
 //		this.appUser = user.get().get();
 //		this.documentTrackingNumberService = documentTrackingNumberService;
 		addClassNames("administration-view");
@@ -96,15 +108,14 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 		actionButtonDiv.add(menuBar);
 		add(actionButtonDiv);
 
-		Div mainDiv = new Div();
 		mainDiv.addClassName("order-summary-div");
 
-		createSummaryHeader(mainDiv);
-
-		createOrderDetailsDiv(mainDiv);
-
-		createFooterDiv(mainDiv);
-
+//		createSummaryHeader(mainDiv);
+//
+//		createOrderDetailsDiv(mainDiv);
+//
+//		createFooterDiv(mainDiv);
+//
 		add(mainDiv);
 
 		Div buttonContainer = new Div();
@@ -128,24 +139,27 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 		orderId = event.getRouteParameters().get("id").get();
 
 		order = ordersService.get(Integer.parseInt(orderId)).get();
+
+		
 		Integer stockOrderNumber = order.getStockOrderNumber();
 		if (stockOrderNumber == null) {
 			stockOrderNumber = generateStockOrderNumber();
 			order.setStockOrderNumber(stockOrderNumber);
 		}
 
-		Integer salesInvoice = order.getInvoiceId();
+//		Integer salesInvoice = order.getInvoiceId();
 
-		salesInvoiceSpan.setText(salesInvoice.toString());
-		orderDate.setText(PfdiUtil.formatDateWithHours(order.getCreationDate()));
-		storeName.setText(order.getCustomer().getStoreName());
-		address.setText(order.getCustomer().getAddress());
-		ownerName.setText(order.getCustomer().getOwnerName());
+//		salesInvoiceSpan.setText(salesInvoice.toString());
+//		orderDate.setText(PfdiUtil.formatDateWithHours(order.getCreationDate()));
+//		storeName.setText(order.getCustomer().getStoreName());
+//		address.setText(order.getCustomer().getAddress());
+//		ownerName.setText(order.getCustomer().getOwnerName());
 
 		// set table summary content
 
 		Map<String, List<OrderItems>> flavorsItemMap = order.getOrderItems().stream()
-				.filter(e -> "Regular Ice Cream".equalsIgnoreCase(e.getItemInventory().getProduct().getCategory().getCategoryName()))
+				.filter(e -> "Regular Ice Cream"
+						.equalsIgnoreCase(e.getItemInventory().getProduct().getCategory().getCategoryName()))
 				.collect(Collectors.groupingBy(
 						orderItem -> orderItem.getItemInventory().getProduct().getCategory().getCategoryName()));
 
@@ -175,18 +189,17 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 			regularFlavorWrapper.setQuantity(quantity);
 			orderItemSalesInvoiceWrapperList.add(regularFlavorWrapper);
 		}
-		
-		List<OrderItems> otherFlavorsMapBySize = order.getOrderItems().stream()
-				.filter(e -> {
-					return !"Regular Ice Cream".equalsIgnoreCase(e.getItemInventory().getProduct().getCategory().getCategoryName());
-				})
-				.collect(Collectors.toList());
+
+		List<OrderItems> otherFlavorsMapBySize = order.getOrderItems().stream().filter(e -> {
+			return !"Regular Ice Cream"
+					.equalsIgnoreCase(e.getItemInventory().getProduct().getCategory().getCategoryName());
+		}).collect(Collectors.toList());
 
 		// Collect Regular Ice Cream Details
 		for (OrderItems orderItem : otherFlavorsMapBySize) {
 			OrderItemSalesInvoiceWrapper orderItemWrapper = new OrderItemSalesInvoiceWrapper();
 			orderItemWrapper.setUnit(orderItem.getItemInventory().getSize().getSizeName());
-			
+
 			BigDecimal unitPrice = orderItem.getProductPrice();
 			int quantity = orderItem.getQuantity();
 			orderItemWrapper.setAmount(unitPrice.multiply(new BigDecimal(quantity)));
@@ -196,34 +209,53 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 			orderItemSalesInvoiceWrapperList.add(orderItemWrapper);
 		}
 
-		orderItemSalesInvoiceWrapperList.forEach((orderItemWrapper) -> {
-				
-				TableRow itemDetailsRow = table.getBody().addRow();
-				
-				TableDataCell quantityDataCell = itemDetailsRow.addDataCell();
-				quantityDataCell.setText(Integer.toString(orderItemWrapper.getQuantity()));
-				quantityDataCell.addClassNames("text-align-left");
-				
-				TableDataCell unitDataCell = itemDetailsRow.addDataCell();
-				unitDataCell.setText(orderItemWrapper.getUnit());
-				unitDataCell.addClassNames("text-align-left");
-				
-				TableDataCell particularsDataCell = itemDetailsRow.addDataCell();
-				particularsDataCell.setText(orderItemWrapper.getParticular());
-				particularsDataCell.addClassNames("text-align-left");
-				
-				TableDataCell unitPriceDataCell = itemDetailsRow.addDataCell();
-				unitPriceDataCell.setText(PfdiUtil.getFormatter().format(orderItemWrapper.getUnitPrice()));
-				unitPriceDataCell.addClassNames("text-align-right");
-				
-				TableDataCell amountDataCell = itemDetailsRow.addDataCell();
-				amountDataCell.setText(PfdiUtil.getFormatter().format(orderItemWrapper.getAmount()));
-				amountDataCell.addClassNames("text-align-right");
-
-		});
+//		orderItemSalesInvoiceWrapperList.forEach((orderItemWrapper) -> {
+//				
+//				TableRow itemDetailsRow = table.getBody().addRow();
+//				
+//				TableDataCell quantityDataCell = itemDetailsRow.addDataCell();
+//				quantityDataCell.setText(Integer.toString(orderItemWrapper.getQuantity()));
+//				quantityDataCell.addClassNames("text-align-left");
+//				
+//				TableDataCell unitDataCell = itemDetailsRow.addDataCell();
+//				unitDataCell.setText(orderItemWrapper.getUnit());
+//				unitDataCell.addClassNames("text-align-left");
+//				
+//				TableDataCell particularsDataCell = itemDetailsRow.addDataCell();
+//				particularsDataCell.setText(orderItemWrapper.getParticular());
+//				particularsDataCell.addClassNames("text-align-left");
+//				
+//				TableDataCell unitPriceDataCell = itemDetailsRow.addDataCell();
+//				unitPriceDataCell.setText(PfdiUtil.getFormatter().format(orderItemWrapper.getUnitPrice()));
+//				unitPriceDataCell.addClassNames("text-align-right");
+//				
+//				TableDataCell amountDataCell = itemDetailsRow.addDataCell();
+//				amountDataCell.setText(PfdiUtil.getFormatter().format(orderItemWrapper.getAmount()));
+//				amountDataCell.addClassNames("text-align-right");
+//
+//		});
 
 		// totalAmountLabel.setText("Total Amount : " +
 		// PfdiUtil.getFormatter().format(totalAmount));
+		try {
+			salesInvoiceData = salesInvoiceReport.buildReport(order);
+		} catch (ColumnBuilderException | ClassNotFoundException | JRException e1) {
+
+			e1.printStackTrace();
+		}
+		PdfViewer pdfViewer = new PdfViewer();
+		pdfViewer.setWidthFull();
+		pdfViewer.setHeightFull();
+		StreamResource resource = new StreamResource("order.pdf", () -> {
+			if (order != null) {
+				return new ByteArrayInputStream(salesInvoiceData);
+			}
+			return new ByteArrayInputStream(new byte[0]);
+		});
+		pdfViewer.setSrc(resource);
+		mainDiv.add(pdfViewer);
+		mainDiv.setWidthFull();
+		mainDiv.setHeight("75%");
 	}
 
 	private void createSummaryHeader(Div mainDiv) {
@@ -241,7 +273,7 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 		headerName.add(punoName, salesInvoiceTitle);
 
 		Div headerSub = new Div();
-		Span punoSubHeader = new Span("Manufacturer & Distributor of Puno's Ice Cream & Sherbet Products");
+		Span punoSubHeader = new Span("Manufacturer and Distributor of Puno's Ice Cream & Sherbet Products");
 		punoSubHeader.setWidthFull();
 
 		Div invoiceNumDiv = new Div();
@@ -273,7 +305,6 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 		Span telNo = new Span("Tel. No.: (044) 463-0818/464-8694/330-3676");
 		line2.add(new Html("<br>"), salesOutlet, new Html("<br>"), vatRegNumber, new Html("<br>"), telNo);
 
-
 		Div ownerDetailsWrapper = new Div();
 		ownerDetailsWrapper.addClassName("owner-details-wrapper");
 
@@ -281,13 +312,12 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 		Span storeNameLabel = new Span("Store Name : ");
 		storeName = new Span();
 		storeName.addClassName("bold-label");
-		
 
 		Div termsDiv = new Div();
 		termsDiv.setWidth("25%");
 		termsDiv.addClassName("float-right");
 		Span terms = new Span("Terms: ");
-		//terms.addClassName("fillup-line");
+		// terms.addClassName("fillup-line");
 		termsDiv.add(terms);
 
 		header.addClassName("stock-order-number-date-container");
@@ -299,29 +329,28 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 		Span addressLabel = new Span("Store Address : ");
 		address = new Span();
 		address.addClassName("bold-label");
-		
+
 		Div oscaDiv = new Div();
 		oscaDiv.setWidth("25%");
 		oscaDiv.addClassName("float-right");
 		Span osca = new Span("OSCA/PWD ID No.: ");
-		//osca.addClassName("fillup-line");
+		// osca.addClassName("fillup-line");
 		oscaDiv.add(osca);
-		
-		
+
 		addressDiv.add(addressLabel, address, oscaDiv);
 
 		Div ownerNameDiv = new Div();
 		Span ownerNameLabel = new Span("Owner Name : ");
 		ownerName = new Span();
 		ownerName.addClassName("bold-label");
-		
+
 		Div cardholderDiv = new Div();
 		cardholderDiv.setWidth("25%");
 		cardholderDiv.addClassNames("float-right");
 		Span cardholder = new Span("Cardholder Signature.: ");
 		cardholderDiv.add(cardholder);
-		//cardholderDiv.addClassName("fillup-line");
-		ownerNameDiv.add(ownerNameLabel, ownerName,cardholderDiv);
+		// cardholderDiv.addClassName("fillup-line");
+		ownerNameDiv.add(ownerNameLabel, ownerName, cardholderDiv);
 
 		header.add(headerName, headerSub, headerSub2, line2);
 
@@ -343,46 +372,45 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 		Div signatureLine = new Div();
 		Span signatureText = new Span("Authorized Signature");
 		signatureText.addClassNames("float-right", "text-align-center");
-		signatureLine.addClassNames("report-header-text-subheading", "padding-bottom-large", "float-right", "signature-line");
+		signatureLine.addClassNames("report-header-text-subheading", "padding-bottom-large", "float-right",
+				"signature-line");
 		signatureLine.add(signatureText);
-
 
 		mainDiv.add(disclaimerDiv, signatureLine);
 	}
 
 	private void createOrderDetailsDiv(Div mainDiv) {
 
-		table = new Table();
-		table.addClassName("order-delivery-receipt-table");
-
-		TableHead head = table.getHead();
-
-		TableRow headerRow = head.addRow();
-
-		TableHeaderCell quantityHeader = headerRow.addHeaderCell();
-		quantityHeader.setText("Quantity");
-		quantityHeader.addClassName("text-align-left");
-
-		TableHeaderCell unitHeader = headerRow.addHeaderCell();
-		unitHeader.setText("Unit");
-		unitHeader.addClassName("text-align-left");
-
-		TableHeaderCell particularHeader = headerRow.addHeaderCell();
-		particularHeader.setText("Particulars");
-		particularHeader.addClassName("text-align-left");
-
-		TableHeaderCell unitPriceHeader = headerRow.addHeaderCell();
-		unitPriceHeader.setText("Unit Price");
-		unitPriceHeader.addClassName("text-align-right");
-
-		TableHeaderCell amountHeader = headerRow.addHeaderCell();
-		amountHeader.setText("Amount");
-		amountHeader.addClassName("text-align-right");
-
-		mainDiv.add(table);
-		mainDiv.add(new Hr());
-
-		storeName.addClassName("bold-label");
+//		table = new Table();
+//		table.addClassName("order-delivery-receipt-table");
+//
+//		TableHead head = table.getHead();
+//
+//		TableRow headerRow = head.addRow();
+//
+//		TableHeaderCell quantityHeader = headerRow.addHeaderCell();
+//		quantityHeader.setText("Quantity");
+//		quantityHeader.addClassName("text-align-left");
+//
+//		TableHeaderCell unitHeader = headerRow.addHeaderCell();
+//		unitHeader.setText("Unit");
+//		unitHeader.addClassName("text-align-left");
+//
+//		TableHeaderCell particularHeader = headerRow.addHeaderCell();
+//		particularHeader.setText("Particulars");
+//		particularHeader.addClassName("text-align-left");
+//
+//		TableHeaderCell unitPriceHeader = headerRow.addHeaderCell();
+//		unitPriceHeader.setText("Unit Price");
+//		unitPriceHeader.addClassName("text-align-right");
+//
+//		TableHeaderCell amountHeader = headerRow.addHeaderCell();
+//		amountHeader.setText("Amount");
+//		amountHeader.addClassName("text-align-right");
+//
+//		mainDiv.add(new Hr());
+//
+//		storeName.addClassName("bold-label");
 	}
 
 	private Integer generateStockOrderNumber() {
