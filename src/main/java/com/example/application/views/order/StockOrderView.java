@@ -30,6 +30,7 @@ import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.Grid.SelectionMode;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
@@ -68,7 +69,8 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 	private static final long serialVersionUID = 2754507440441771890L;
 
-	private Grid<Order> grid = new Grid<>(Order.class, false); Button addCustomerButton;
+	private Grid<Order> grid = new Grid<>(Order.class, false);
+	private Button addCustomerButton;
 	
 	private OrdersService ordersService;
 	private final CustomerService customerService;
@@ -146,6 +148,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
+		grid.setSelectionMode(SelectionMode.MULTI);
 		grid.addComponentColumn(order -> {			
 			
 			VerticalLayout customerLayout = new VerticalLayout();
@@ -342,7 +345,9 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		
 
 				
+		grid.addSelectionListener(e -> {
 			
+		});
 
 		grid.addColumn("status").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		

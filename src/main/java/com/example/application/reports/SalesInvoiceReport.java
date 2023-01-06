@@ -297,7 +297,7 @@ public class SalesInvoiceReport {
 		salesInvoiceHeader.setHeight(20);
 		salesInvoiceHeader.setWidth(200);
 		
-		AutoText subHeading1 = new AutoText("Manufacturer and Distributor of Puno’s Ice Cream & Sherbet Products",
+		AutoText subHeading1 = new AutoText("Manufacturer and Distributor of Puno’s Ice Cream and Sherbet Products",
 				AutoText.POSITION_HEADER,
 				HorizontalBandAlignment.LEFT);
 		subHeading1.setWidth(350);
