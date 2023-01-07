@@ -88,7 +88,8 @@ public class SizePricingSubView extends VerticalLayout {
 			priceTextFieldWrapper.add(srpField);
 			locationTagWrapper.add(priceTextFieldWrapper);	
 			
-			LocationTagPriceFieldMapping currentFieldMapping = new LocationTagPriceFieldMapping(locationTag.getId(), customerTag.getId(), size, tpField);
+			LocationTagPriceFieldMapping currentFieldMapping = new LocationTagPriceFieldMapping(locationTag.getId(), 
+					customerTag.getId(), size, tpField, srpField);
 			fieldMapping.add(currentFieldMapping);
 		}	
 
@@ -111,6 +112,11 @@ public class SizePricingSubView extends VerticalLayout {
 
 			BigDecimal tp = locationTagPriceFieldMapping.getTransferPrice().getValue();
 			productPrice.setTransferPrice(tp != null ? tp : new BigDecimal(0.0));
+			
+			
+			BigDecimal srp = locationTagPriceFieldMapping.getSuggestedRetailPrice().getValue();
+			productPrice.setSuggestedRetailPrice(tp != null ? srp : new BigDecimal(0.0));
+
 			productPriceSet.add(productPrice);
 		}
 		
@@ -124,6 +130,7 @@ public class SizePricingSubView extends VerticalLayout {
 		private Integer customerTagId;
 		private Size size;
 		private BigDecimalField transferPrice;
+		private BigDecimalField suggestedRetailPrice;
 		
 		private Integer getLocationTagId() {
 			return locationTagId;
@@ -141,14 +148,19 @@ public class SizePricingSubView extends VerticalLayout {
 			return transferPrice;
 		}
 
+
+		public BigDecimalField getSuggestedRetailPrice() {
+			return suggestedRetailPrice;
+		}
+
 		public LocationTagPriceFieldMapping(Integer locationTagId, Integer customerTagId, Size size,
-				BigDecimalField transferPrice) {
+				BigDecimalField transferPrice, BigDecimalField suggestedRetailPrice) {
 			super();
 			this.locationTagId = locationTagId;
 			this.customerTagId = customerTagId;
 			this.size = size;
 			this.transferPrice = transferPrice;
-
+			this.suggestedRetailPrice = suggestedRetailPrice;
 		}
 		
 	}
