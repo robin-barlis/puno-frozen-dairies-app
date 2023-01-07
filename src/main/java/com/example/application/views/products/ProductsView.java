@@ -8,6 +8,7 @@ import javax.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.Product;
 import com.example.application.data.service.products.CategoryService;
 import com.example.application.data.service.products.ProductService;
@@ -102,11 +103,19 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 		for (Product product : productList) {
 			List<Integer> categoryIdList = product.getProductPrices().stream().map(e -> e.getCategoryId())
 					.collect(Collectors.toList());
-			Integer categoryId = categoryIdList.get(0);
+			
+
+			Integer categoryId = !categoryIdList.isEmpty() ? categoryIdList.get(0) : null;
+			
+			Category category = null;
+			
+			if (categoryId != null) {
+				category = categoryService.get(categoryId).orElseGet(null) ;
+			}
 			String imageUrl = product.getProductPictureUrl() != null ? product.getProductPictureUrl()
 					: "https://res.cloudinary.com/dw2qyhgar/image/upload/v1672584641/170043505_10158971498776278_8359436008848051948_n_nejhu1.jpg";
 			
-			ProductsViewCard card = new ProductsViewCard(product, categoryService.get(categoryId).orElseGet(null), imageUrl);
+			ProductsViewCard card = new ProductsViewCard(product, category, imageUrl);
 			imageContainer.add(card);
 
 		}

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
@@ -273,20 +274,34 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 			Set<Size> deleted = Sets.difference(oldValue, newValue);
 			
 			for (Size size : added) {
-				ProductPrice sizeProductPrice = null;
+				Map<String, ProductPrice> sizeProductPrice = null;
 				
 				if (productPrice != null) {
-					sizeProductPrice = productPrice.stream().filter(ps -> ps.getSize().getId().equals(size.getId())).findFirst().orElse(null);
+					sizeProductPrice = productPrice.stream()
+							.filter(ps -> ps.getSize().getId()
+							.equals(size.getId()))
+							.collect(Collectors.toMap(keyObj -> {
+								
+								String key = keyObj.getCustomerTagId() + "-" + keyObj.getLocationTagId();
+								return key;
+							}, Function.identity()));
+							
 				}
+				
 				addNewSizeFormSection(newAddSizeContainer, size, sizeProductPrice);
 			}
 			
 			for (Size removedSize : deleted) {
+				
+				Set<SizePricingSubView> viewToDelete = Sets.newHashSet();
 				pricingSubViewSet.forEach(subView -> {
 					if (subView.getSize().getSizeName().equalsIgnoreCase(removedSize.getSizeName())) {
 						newAddSizeContainer.remove(subView);
+						viewToDelete.add(subView);
 					}
 				});
+				
+				pricingSubViewSet.removeAll(viewToDelete);
 			}
 		}); //TODO add a prompt that will ask the user if they want to change the selection
 		
@@ -419,8 +434,8 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 
 	}
 
-	private void addNewSizeFormSection(VerticalLayout addSizeButtonLayout, Size size, ProductPrice productPrice) {
-		SizePricingSubView pricingSubView = new SizePricingSubView(size, category.getValue(), productPrice);
+	private void addNewSizeFormSection(VerticalLayout addSizeButtonLayout, Size size, Map<String, ProductPrice> sizeProductPrice) {
+		SizePricingSubView pricingSubView = new SizePricingSubView(size, category.getValue(), sizeProductPrice);
 		pricingSubViewSet.add(pricingSubView);
 		addSizeButtonLayout.add(pricingSubView);
 

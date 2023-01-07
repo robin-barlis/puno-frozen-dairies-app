@@ -2,6 +2,8 @@ package com.example.application.views.products.components;
 
 import java.math.BigDecimal;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.CustomerTag;
@@ -20,15 +22,15 @@ public class SizePricingSubView extends VerticalLayout {
 	private Category category;
 	private TextField sizeField;
 	private Size size;	
-	private ProductPrice productPrice = null;
+	private Map<String, ProductPrice> productPriceMap = null;
 	
 
 	private HashSet<LocationTagPriceFieldMapping> fieldMapping = new HashSet<>();
 
-	public SizePricingSubView(Size size, Category category, ProductPrice productPrice) {
+	public SizePricingSubView(Size size, Category category, Map<String, ProductPrice> sizeProductPrice) {
 		this.category = category;
 		this.size = size;
-		this.productPrice = productPrice;
+		this.productPriceMap = sizeProductPrice;
 		createContent();
 
 	}
@@ -80,9 +82,15 @@ public class SizePricingSubView extends VerticalLayout {
 			srpField.setRequiredIndicatorVisible(true);
 			srpField.setPlaceholder("0.00");
 			
-			if (productPrice != null) {
-				tpField.setValue(productPrice.getTransferPrice());
-				srpField.setValue(productPrice.getSuggestedRetailPrice());
+			if (productPriceMap != null) {
+				String key = customerTag.getId() + "-" + locationTag.getId();
+				ProductPrice productPrice = productPriceMap.get(key);
+				
+				if (productPrice != null) {
+
+					tpField.setValue(productPrice.getTransferPrice());
+					srpField.setValue(productPrice.getSuggestedRetailPrice());
+				}
 			}
 			priceTextFieldWrapper.add(tpField);
 			priceTextFieldWrapper.add(srpField);
