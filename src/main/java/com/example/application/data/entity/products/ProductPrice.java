@@ -48,6 +48,8 @@ public class ProductPrice implements Serializable {
 	private Integer categoryId;
 		
 	private BigDecimal transferPrice;
+	
+	private BigDecimal suggestedRetailPrice;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_id", nullable = false)
@@ -134,6 +136,14 @@ public class ProductPrice implements Serializable {
 			return false;
 		}
 		return getId().equals(other.getId());
+	}
+
+	public BigDecimal getSuggestedRetailPrice() {
+		return suggestedRetailPrice;
+	}
+
+	public void setSuggestedRetailPrice(BigDecimal suggestedRetailPrice) {
+		this.suggestedRetailPrice = suggestedRetailPrice;
 	}
 
 }

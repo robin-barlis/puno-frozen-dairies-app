@@ -74,10 +74,18 @@ public class SizePricingSubView extends VerticalLayout {
 			tpField.setRequiredIndicatorVisible(true);
 			tpField.setPlaceholder("0.00");
 			
+			BigDecimalField srpField = new BigDecimalField();
+			srpField.setLabel(locationTag.getLocationTagName() + " - Suggested Retail Price");
+			srpField.setWidthFull();
+			srpField.setRequiredIndicatorVisible(true);
+			srpField.setPlaceholder("0.00");
+			
 			if (productPrice != null) {
 				tpField.setValue(productPrice.getTransferPrice());
+				srpField.setValue(productPrice.getSuggestedRetailPrice());
 			}
 			priceTextFieldWrapper.add(tpField);
+			priceTextFieldWrapper.add(srpField);
 			locationTagWrapper.add(priceTextFieldWrapper);	
 			
 			LocationTagPriceFieldMapping currentFieldMapping = new LocationTagPriceFieldMapping(locationTag.getId(), customerTag.getId(), size, tpField);

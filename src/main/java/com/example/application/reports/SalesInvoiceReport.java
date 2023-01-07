@@ -17,14 +17,18 @@ import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.utils.PfdiUtil;
 import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
+import ar.com.fdvs.dj.core.DJConstants;
 import ar.com.fdvs.dj.core.DynamicJasperHelper;
 import ar.com.fdvs.dj.core.layout.ClassicLayoutManager;
 import ar.com.fdvs.dj.core.layout.HorizontalBandAlignment;
 import ar.com.fdvs.dj.domain.AutoText;
+import ar.com.fdvs.dj.domain.DJCalculation;
+import ar.com.fdvs.dj.domain.DJCrosstab;
 import ar.com.fdvs.dj.domain.DynamicReport;
 import ar.com.fdvs.dj.domain.Style;
 import ar.com.fdvs.dj.domain.builders.ColumnBuilder;
 import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
+import ar.com.fdvs.dj.domain.builders.CrosstabBuilder;
 import ar.com.fdvs.dj.domain.builders.DynamicReportBuilder;
 import ar.com.fdvs.dj.domain.builders.StyleBuilder;
 import ar.com.fdvs.dj.domain.constants.Border;
@@ -195,21 +199,19 @@ public class SalesInvoiceReport {
 		report.addColumn(unitPrice);
 		report.addColumn(amount);
 		
-		
 		StyleBuilder titleStyle = new StyleBuilder(true);
 		titleStyle.setHorizontalAlign(HorizontalAlign.LEFT);
 
 		StyleBuilder subTitleStyle = new StyleBuilder(true);
 		subTitleStyle.setHorizontalAlign(HorizontalAlign.LEFT);
 		
-
+		setReportFooter(report);
 		report.setTitleStyle(titleStyle.build());
 		report.setSubtitleStyle(subTitleStyle.build());
 		report.setUseFullPageWidth(true);
 		
 		return report.build();
 	}
-
 
 	private void setReportOwnerDetails(DynamicReportBuilder report) {
 		
@@ -370,12 +372,58 @@ public class SalesInvoiceReport {
 		report.addAutoText(vatRegistrationNumber);
 		report.addAutoText(telNumber);
 		report.addAutoText(breakLine);
+	
 	}
-
-
-	private DynamicReport createConesReport() {
-		// TODO Auto-generated method stub
-		return null;
+	
+	private void setReportFooter(DynamicReportBuilder report) {
+		StyleBuilder subheaderStyle = new StyleBuilder(true);
+		subheaderStyle.setHorizontalAlign(HorizontalAlign.LEFT);
+		subheaderStyle.setVerticalAlign(VerticalAlign.TOP);
+		subheaderStyle.setFont(Font.ARIAL_SMALL);
+		
+		Customer customer = order.getCustomer();
+		
+		AutoText labelOwnerAddress = new AutoText("Address: " + customer.getAddress(),
+				AutoText.POSITION_FOOTER,
+				HorizontalBandAlignment.LEFT);
+		labelOwnerAddress.setWidth(250);
+		labelOwnerAddress.setStyle(subheaderStyle.build());
+		
+		AutoText ownerNameLabel = new AutoText("Owner Name: " + customer.getOwnerName(),
+				AutoText.POSITION_FOOTER,
+				HorizontalBandAlignment.LEFT);
+		ownerNameLabel.setWidth(250);
+		ownerNameLabel.setStyle(subheaderStyle.build());
+		
+		AutoText tinNumberLabel = new AutoText("TIN Number: " + customer.getTinNumber(),
+				AutoText.POSITION_FOOTER,
+				HorizontalBandAlignment.LEFT);
+		tinNumberLabel.setWidth(250);
+		tinNumberLabel.setStyle(subheaderStyle.build());
+		
+		
+		AutoText signatureLine = new AutoText("Signed By: _______________________________", 
+				AutoText.POSITION_FOOTER, 
+				HorizontalBandAlignment.RIGHT);
+		signatureLine.setWidth(800);
+		signatureLine.setHeight(30);
+		signatureLine.setStyle(subheaderStyle.build());
+		
+//		AutoText singatureLabel = new AutoText("Authorized Signature            ", 
+//				AutoText.POSITION_FOOTER, 
+//				HorizontalBandAlignment.RIGHT);
+//		singatureLabel.setWidth(800);
+//		singatureLabel.setStyle(subheaderStyle.build());
+		
+		AutoText breakLine = new AutoText("",
+				AutoText.POSITION_FOOTER,
+				HorizontalBandAlignment.RIGHT);
+		breakLine.setWidth(800);
+		breakLine.setHeight(50);
+		
+		report.addAutoText(breakLine);
+		report.addAutoText(signatureLine);
+//		report.addAutoText(singatureLabel);
 	}
 
 }
