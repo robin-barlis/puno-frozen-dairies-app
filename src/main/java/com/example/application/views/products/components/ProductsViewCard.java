@@ -62,10 +62,7 @@ public class ProductsViewCard extends ListItem {
             iceCreamDescriptionContainer.add(iceCreamName, sizesContainer, categorySpan );
         }
         
-        
-        
-
-        RouterLink productLink = new RouterLink();
+       RouterLink productLink = new RouterLink();
         
 
     	RouteParam param = new RouteParam("productId", product.getId().toString());

@@ -226,6 +226,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			
 			DocumentTrackingNumber invoiceNumber = documentTrackingNumberService.findByType(DocumentTrackingNumberEnum.INVOICE_NUMBER.name());
 			DocumentTrackingNumber deliveryReceiptNumber = documentTrackingNumberService.findByType(DocumentTrackingNumberEnum.DELIVERY_RECEIPT_NUMBER.name());
+			DocumentTrackingNumber stockTransferNumber = documentTrackingNumberService.findByType(DocumentTrackingNumberEnum.STOCK_TRANSFER_NUMBER.name());
 			
 			Integer currentInvoiceNumber = invoiceNumber.getNumber()+1;
 			invoiceNumber.setNumber(currentInvoiceNumber);
@@ -233,15 +234,20 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			Integer currentDeliveryReceiptNumber = deliveryReceiptNumber.getNumber()+1;
 			deliveryReceiptNumber.setNumber(currentDeliveryReceiptNumber);
 			
+			Integer currentStockTransferNumber = stockTransferNumber.getNumber()+1;
+			stockTransferNumber.setNumber(currentStockTransferNumber);
+			
+			stockTransferNumber = documentTrackingNumberService.update(stockTransferNumber);
 			invoiceNumber = documentTrackingNumberService.update(invoiceNumber);
 			deliveryReceiptNumber = documentTrackingNumberService.update(deliveryReceiptNumber);
 			
 			order.setStatus(OrderStatus.FOR_DELIVERY.getOrderStatusName());
 			order.setDeliveryReceiptId(deliveryReceiptNumber.getNumber());
 			order.setInvoiceId(invoiceNumber.getNumber());
+			order.setStockTransferId(stockTransferNumber.getNumber());
 			
 			order = ordersService.update(order);
-			Notification.show("Delivery Receipt & Invoice numbers for" + order.getStockOrderNumber() + " successfully created.");
+			Notification.show("Delivery Receipt, Stock Trasnfer, and Invoice numbers for" + order.getStockOrderNumber() + " successfully created.");
 			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
 			UI.getCurrent().navigate(DeliveryReceiptView.class, parameters);
 		});

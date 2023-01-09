@@ -177,9 +177,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			Span storeAddressValue = new Span(customer.getAddress());
 			storeAddressLayout.add(storeAddressValue);
 			storeAddressLayout.setClassName("owner-row-secondary-text");
-			
-			
-			
+				
 			customerLayout.add(storeNameLayout, ownerNameLayout, storeAddressLayout);
 
 			return customerLayout;
@@ -209,24 +207,41 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			deliveryReceiptLabel.setClassName("order-row-label");
 			Span deliveryReceiptValue = new Span(getDeliveryReceiptLink(order));
 			deliveryReceiptValue.setClassName("order-row-value");
+		
 			
 			deliveryReceiptLayout.add(deliveryReceiptLabel, deliveryReceiptValue);
 			
 			
 			boolean isCompanyOwned = PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId());
 			
+			HorizontalLayout stockTransferLayout = new HorizontalLayout();
+
+			stockTransferLayout.setWidthFull();
+			Span stockTransferLabel = new Span("Stock Transfer:");
+			stockTransferLabel.setClassName("order-row-label");
+			Span stockTransferValue = new Span(getStockTransferLink(order, isCompanyOwned));
+			stockTransferValue.setClassName("order-row-value");
 			
-			HorizontalLayout invoiceLayout = new HorizontalLayout();
-			String label = isCompanyOwned ?"Stock Transfer:" : "Invoice:";
-			invoiceLayout.setWidthFull();
-			Span invoiceLayoutLabel = new Span(label);
-			invoiceLayoutLabel.setClassName("order-row-label");
-			Span invoiceLayoutValue = new Span(getInvoiceLink(order, isCompanyOwned));
-			invoiceLayoutValue.setClassName("order-row-value");
-					
-			invoiceLayout.add(invoiceLayoutLabel, invoiceLayoutValue);
+
+			stockTransferLayout.add(stockTransferLabel, stockTransferValue);
 			
-			orderLayout.add(orderIdLayout,deliveryReceiptLayout, invoiceLayout);
+
+			orderLayout.add(orderIdLayout,deliveryReceiptLayout,stockTransferLayout);
+			if (!isCompanyOwned) {
+				HorizontalLayout invoiceLayout = new HorizontalLayout();
+				String label = "Invoice:";
+				invoiceLayout.setWidthFull();
+				Span invoiceLayoutLabel = new Span(label);
+				invoiceLayoutLabel.setClassName("order-row-label");
+				Span invoiceLayoutValue = new Span(getInvoiceLink(order, isCompanyOwned));
+				invoiceLayoutValue.setClassName("order-row-value");
+						
+				invoiceLayout.add(invoiceLayoutLabel, invoiceLayoutValue);
+				
+				orderLayout.add(invoiceLayout);
+			}
+
+			
 			return orderLayout;
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Order").setSortable(true).setComparator(Order::getStockOrderNumber);
 
@@ -367,13 +382,6 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 				UI.getCurrent().navigate(CreateOrderFormView.class, params);
 			});
 			
-//			MenuItem addPaymentSubMenu = subMenu.addItem("Add Payment", e -> {
-//				RouteParam param = new RouteParam("orderId", currentOrder.getId().toString());
-//				RouteParameters params = new RouteParameters(param);
-//				UI.getCurrent().navigate(CreateOrderFormView.class, params);
-//
-//			});
-			
 			if (currentOrder.getPayments() != null && BigDecimal.ZERO.equals(currentOrder.getBalance())) {
 			//	addPaymentSubMenu.setEnabled(false);
 				editItemSubMenu.setEnabled(false);
@@ -426,20 +434,31 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		verticalLayout.addAndExpand(wrapper);
 	}
 
-	private Component getInvoiceLink(Order order, boolean isCompanyOwned) {
-		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
-		Class<? extends Component> routeClass = isCompanyOwned ? StockTransferView.class : SalesInvoiceView.class;
+	private Component getStockTransferLink(Order order, boolean isCompanyOwned) {
+	RouteParameters parameters = new RouteParameters("id", order.getId().toString());
 		
-		Integer docNumber = isCompanyOwned ? order.getStockTransferId() : order.getInvoiceId();
+		String path = "#" + order.getStockTransferId();
 		
-		String path = "#" + docNumber;
-		
-		String route = RouteConfiguration.forSessionScope().getUrl(routeClass, parameters);
+		String route = RouteConfiguration.forSessionScope().getUrl(StockTransferView.class, parameters);
 		Anchor anchor= new Anchor(route, path);
 		anchor.setClassName("order-row-value");
 		Span span = new Span("N/A");
 		span.setClassName("order-row-value");
-		Component component = docNumber != null ? anchor  : span;
+		Component component = order.getStockTransferId() != null ? anchor  : span;
+		return component;
+	}
+
+	private Component getInvoiceLink(Order order, boolean isCompanyOwned) {
+		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+		
+		String path = "#" + order.getInvoiceId();
+		
+		String route = RouteConfiguration.forSessionScope().getUrl(SalesInvoiceView.class, parameters);
+		Anchor anchor= new Anchor(route, path);
+		anchor.setClassName("order-row-value");
+		Span span = new Span("N/A");
+		span.setClassName("order-row-value");
+		Component component = order.getInvoiceId() != null ? anchor  : span;
 		return component;
 
 	}
