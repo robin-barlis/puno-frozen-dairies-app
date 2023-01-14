@@ -8,6 +8,8 @@
     "@polymer/iron-list": "3.1.0",
     "@polymer/iron-meta": "3.0.1",
     "@polymer/iron-resizable-behavior": "3.0.1",
+    "@polymer/paper-button": "^3.0.1",
+    "@polymer/paper-icon-button": "^3.0.2",
     "@polymer/polymer": "3.5.1",
     "@vaadin-component-factory/vcf-pdf-viewer": "1.2.0",
     "@vaadin/accordion": "23.3.0-alpha2",
@@ -111,6 +113,8 @@
     "date-fns": "2.29.3",
     "line-awesome": "1.3.0",
     "lit": "2.3.0",
+    "lit-element": "^3.2.2",
+    "lit-html": "2.4.0",
     "print-js": "1.6.0"
   },
   "devDependencies": {
@@ -132,10 +136,12 @@
     "dependencies": {
       "@fontsource/roboto": "4.5.0",
       "@polymer/iron-icon": "3.0.1",
-      "@polymer/iron-iconset-svg": "3.0.1",
+      "@polymer/iron-iconset-svg": "^3.0.1",
       "@polymer/iron-list": "3.1.0",
       "@polymer/iron-meta": "3.0.1",
       "@polymer/iron-resizable-behavior": "3.0.1",
+      "@polymer/paper-button": "^3.0.1",
+      "@polymer/paper-icon-button": "^3.0.2",
       "@polymer/polymer": "3.5.1",
       "@vaadin-component-factory/vcf-pdf-viewer": "1.2.0",
       "@vaadin/accordion": "23.3.0-alpha2",
@@ -238,6 +244,8 @@
       "date-fns": "2.29.3",
       "line-awesome": "1.3.0",
       "lit": "2.3.0",
+      "lit-element": "^3.2.2",
+      "lit-html": "2.4.0",
       "print-js": "1.6.0"
     },
     "devDependencies": {
@@ -255,7 +263,7 @@
       "workbox-core": "6.5.0",
       "workbox-precaching": "6.5.0"
     },
-    "hash": "dc611eeb7d72f068519b7436dfdd5946d2e6bad9fbbf7ec8e22f3e73d906adc8"
+    "hash": "9486ad462641d4dc23e28399e289bcf96c487e00f3e824f8133ea2925aa9e209"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -366,6 +374,10 @@
     "@vaadin-component-factory/vcf-pdf-viewer": "$@vaadin-component-factory/vcf-pdf-viewer",
     "print-js": "$print-js",
     "@fontsource/roboto": "$@fontsource/roboto",
-    "line-awesome": "$line-awesome"
+    "@polymer/paper-button": "$@polymer/paper-button",
+    "@polymer/paper-icon-button": "$@polymer/paper-icon-button",
+    "line-awesome": "$line-awesome",
+    "lit-element": "$lit-element",
+    "lit-html": "$lit-html"
   }
 }

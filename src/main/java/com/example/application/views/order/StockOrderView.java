@@ -1,12 +1,17 @@
 package com.example.application.views.order;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.vaadin.klaudeta.PaginatedGrid;
+import org.vaadin.klaudeta.PaginatedGrid.PaginationLocation;
 
 import com.example.application.data.PaymentStatus;
 import com.example.application.data.entity.AppUser;
@@ -15,6 +20,8 @@ import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
 import com.example.application.data.service.customers.CustomerService;
 import com.example.application.data.service.orders.OrdersService;
+import com.example.application.data.service.products.SizesService;
+import com.example.application.reports.OrderSummaryReport2;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
 import com.example.application.views.AbstractPfdiView;
@@ -24,23 +31,27 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
+import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.BoxSizing;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
@@ -59,6 +70,10 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouteParam;
 import com.vaadin.flow.router.RouteParameters;
+import com.vaadin.flow.server.StreamResource;
+
+import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
+import net.sf.jasperreports.engine.JRException;
 
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrders", layout = MainLayout.class)
@@ -69,7 +84,8 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 	private static final long serialVersionUID = 2754507440441771890L;
 
-	private Grid<Order> grid = new Grid<>(Order.class, false);
+//	private PaginatedGrid<Order> grid = new PaginatedGrid<Order>();
+	PaginatedGrid<Order, ?> grid = new PaginatedGrid<>();
 	private Button addCustomerButton;
 	
 	private OrdersService ordersService;
@@ -77,12 +93,18 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 	private ListDataProvider<Order> ldp = null;
 	private AppUser appUser;
+	private OrderSummaryReport2 orderSummaryReport;
+	private SizesService sizesService;
+	List<Customer> customers;
 
 	@Autowired
-	public StockOrderView(OrdersService ordersService, CustomerService customerService, AuthenticatedUser user) {
+	public StockOrderView(OrdersService ordersService, CustomerService customerService, 
+			AuthenticatedUser user, OrderSummaryReport2 orderSummaryReport, SizesService sizesService) {
 		super("Admin", "Admin");
 		this.customerService = customerService;
 		this.ordersService = ordersService;
+		this.orderSummaryReport = orderSummaryReport;
+		this.sizesService = sizesService;
 		this.appUser = user.get().get();
 		addClassNames("administration-view");
 
@@ -131,7 +153,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {
 
-		List<Customer> customers = customerService.listAll(Sort.by("id"));
+		customers = customerService.listAll(Sort.by("id"));
 
 		if (!customers.isEmpty()) {
 			//customers.forEach(customer -> populateForm(customer));
@@ -145,7 +167,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	}
 
 	private void createGridLayout(VerticalLayout verticalLayout) {
-
+		
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
 		grid.setSelectionMode(SelectionMode.MULTI);
@@ -358,13 +380,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			return paymentDetailsLayout;
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Payment Details").setSortable(true).setComparator(e -> {return e.getCustomer().getStoreName();});
 		
-
-				
-		grid.addSelectionListener(e -> {
-			
-		});
-
-		grid.addColumn("status").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Order::getStatus).setHeader("Status").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		
 		grid.addComponentColumn(currentOrder -> {
 
@@ -404,21 +420,95 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		}).setWidth("70px").setFlexGrow(0);
 
 		ldp = DataProvider.ofCollection(ordersService.listAll(Sort.by("id")));
+		
+		MenuBar printStockOrderDocs = new MenuBar();
+		printStockOrderDocs.setEnabled(false);
+        printStockOrderDocs.addThemeVariants(MenuBarVariant.LUMO_ICON, MenuBarVariant.LUMO_TERTIARY);
+
+        Button printAllButton = new Button(new Icon(VaadinIcon.PRINT) );
+        printAllButton.setTooltipText("Print All Documents");
+        MenuItem printAll = printStockOrderDocs.addItem(printAllButton);
+        
+        
+        
+        MenuBar options = new MenuBar();
+        options.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+        
+        MenuItem optionsMenu = options.addItem(new Icon(VaadinIcon.COG));
+        SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
+        MenuItem viewOrders = optionsMenuSubItems.addItem("View");
+        
+        SubMenu viewOrdersSubItem = viewOrders.getSubMenu();
+        
+        viewOrdersSubItem.addItem("Today's orders");
+        viewOrdersSubItem.addItem("This week's orders");
+        viewOrdersSubItem.addItem("This month's orders");
+        optionsMenuSubItems.add(new Hr());
+        MenuItem rowsPerPage = optionsMenuSubItems.addItem("Rows per page");
+        
+        SubMenu rowsPerPageSubItem = rowsPerPage.getSubMenu();
+        rowsPerPageSubItem.addItem("10", e -> grid.setPageSize(5));
+        rowsPerPageSubItem.addItem("10", e -> grid.setPageSize(10));
+        rowsPerPageSubItem.addItem("15", e -> grid.setPageSize(15));
+        rowsPerPageSubItem.addItem("20", e -> grid.setPageSize(20));
+        rowsPerPageSubItem.addItem("50", e -> grid.setPageSize(50));
+
+        optionsMenuSubItems.add(new Hr());
+//        MenuItem export = optionsMenuSubItems.addItem("Export");
+        
+        
+        
+//        stockOrderPrint.addClickListener(e -> {
+//        	Set<Order> selectedItems = grid.getSelectedItems();
+//        	
+//
+//        	
+//        	
+//        	try {
+//				byte[] combinedPdf = orderSummaryReport.buildReport(selectedItems, sizesService.listAll(Sort.unsorted()));
+//				
+//				StreamResource resource = new StreamResource("order.pdf", () -> {
+//					return new ByteArrayInputStream(combinedPdf);
+//				});
+//				//this.getElement().executeJs("printPdf.printPdf($0)", combinedPdf);
+//        	
+//        	} catch (ColumnBuilderException | ClassNotFoundException | JRException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			} 
+//        	
+//        
+//        	
+//        	
+//        	
+//        });
 
 		GridListDataView<Order> dataView = grid.setItems(ldp);
-		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
-		grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
-		grid.addThemeVariants(GridVariant.MATERIAL_COLUMN_DIVIDERS);
+		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES, GridVariant.MATERIAL_COLUMN_DIVIDERS);
+		grid.setVerticalScrollingEnabled(false);
+	    grid.addSelectionListener(e-> {
+        	Set<Order> selectedItems = grid.getSelectedItems();
+        	printStockOrderDocs.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+        });
+	    
+	    // Sets the max number of items to be rendered on the grid for each page
+	    grid.setPageSize(10);
+
+	    // Sets how many pages should be visible on the pagination before and/or after the current selected page
+	    grid.setPaginatorSize(5);
+	    
+	    grid.setHeight("90%");
 
 		TextField searchField = new TextField();
-		searchField.setPlaceholder("Search by owner name or store name");
+		searchField.setPlaceholder("Filter results by order #, owner, or store");
 
-		Icon searchIcon = new Icon(VaadinIcon.SEARCH);
+		Icon searchIcon = new Icon(VaadinIcon.FILTER);
 		searchIcon.setClassName(CssClassNamesConstants.PFDI_ICONS);
 		searchField.setSuffixComponent(searchIcon);
 		searchField.setValueChangeMode(ValueChangeMode.EAGER);
 		searchField.addValueChangeListener(e -> dataView.refreshAll());
-		searchField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);
+		searchField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);	       
+    
 
 		dataView.addFilter(customer -> {
 			String searchTerm = searchField.getValue().trim();
@@ -429,9 +519,76 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			}
 			return true;
 		});
+		
+		Button filterButton = new Button("Search", new Icon(VaadinIcon.SEARCH));
+		filterButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS);
+		filterButton.setIconAfterText(true);
+		
+		HorizontalLayout printButtonContainer = new HorizontalLayout();
+		printButtonContainer.setJustifyContentMode(JustifyContentMode.END);
+		printButtonContainer.setPadding(false);	
+		printButtonContainer.setWidth("50%");
+		printButtonContainer.add(printStockOrderDocs, options);
 
-		wrapper.add(searchField, grid);
+		HorizontalLayout searchFiltersLayout = new HorizontalLayout();
+		searchFiltersLayout.addClassName("padding-bottom-medium");
+		searchFiltersLayout.setWidth("50%");
+		searchFiltersLayout.add(searchField, filterButton);
+
+		HorizontalLayout secondaryActionsLayout = new HorizontalLayout();
+		secondaryActionsLayout.setWidthFull();
+		secondaryActionsLayout.add(searchFiltersLayout, printButtonContainer);
+		
+		VerticalLayout searchFields = createSearchLayout();
+		
+		wrapper.add(secondaryActionsLayout, new Hr(),  grid);
 		verticalLayout.addAndExpand(wrapper);
+	}
+
+	private VerticalLayout createSearchLayout() {
+		VerticalLayout fields = new VerticalLayout();
+		
+		HorizontalLayout orderFields = new HorizontalLayout();
+		
+		
+		TextField orderId = new TextField("Order ID");
+		
+		customers = customerService.listAll(Sort.by("id"));
+		MultiSelectComboBox<Customer> customersDropdown = new MultiSelectComboBox<>();
+		customersDropdown.setLabel("Customer");
+		customersDropdown.setItemLabelGenerator(e -> {
+			return e.getStoreName();
+		});
+		customersDropdown.setItems(customers);
+
+		DatePicker orderDateTo = new DatePicker("Order From To");
+		orderDateTo.setValue(LocalDate.now());
+		
+		DatePicker orderDateFrom = new DatePicker("Order From Date");
+		orderDateFrom.setValue(LocalDate.now());
+		orderDateFrom.addValueChangeListener(e-> {
+			
+			if (e.getValue() != null) {
+
+				orderDateTo.setMin(orderDateFrom.getValue());
+			}
+		});
+		
+		
+		HorizontalLayout orderDateFields = new HorizontalLayout();
+		orderDateFields.add(orderDateFrom, orderDateTo);
+		
+		
+		
+		
+		orderFields.add(orderId, customersDropdown, orderDateFields);
+		
+		
+		fields.add(orderFields);
+		
+		
+		
+		return fields;
 	}
 
 	private Component getStockTransferLink(Order order, boolean isCompanyOwned) {

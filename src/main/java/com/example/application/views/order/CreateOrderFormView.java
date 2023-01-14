@@ -122,7 +122,6 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		dueDate.setRequiredIndicatorVisible(true);
 		dueDate.setValue(LocalDate.now().plusDays(7));
 	
-		ownerName = new TextField();
 		ownerName = new TextField("Owner Name");
 		ownerName.setReadOnly(true);
 
