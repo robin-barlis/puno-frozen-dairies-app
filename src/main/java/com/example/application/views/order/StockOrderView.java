@@ -724,12 +724,12 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		HorizontalLayout printButtonContainer = new HorizontalLayout();
 		printButtonContainer.setJustifyContentMode(JustifyContentMode.END);
 		printButtonContainer.setPadding(false);	
-		printButtonContainer.setWidth("50%");
+		printButtonContainer.setWidth("30%");
 		printButtonContainer.add(printStockOrderDocs, options);
 
 		HorizontalLayout searchFiltersLayout = new HorizontalLayout();
 		searchFiltersLayout.addClassName("padding-bottom-medium");
-		searchFiltersLayout.setWidth("50%");
+		searchFiltersLayout.setWidth("70%");
 		searchFiltersLayout.add(filterField, searchButton);
 
 		HorizontalLayout secondaryActionsLayout = new HorizontalLayout();
