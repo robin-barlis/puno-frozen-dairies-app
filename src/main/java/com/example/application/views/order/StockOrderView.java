@@ -556,36 +556,22 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			paymentStatusBadge.getElement().getThemeList().add(paymentStatus.getBadge());
 			paymentStatusWrapper.add( paymentStatusBadge);
 			paymentDetailsLayout.add(paymentStatusWrapper);
-
-			if (paymentStatus.equals(PaymentStatus.UNPAID)) {
-					
-				HorizontalLayout dueDateWrapper = new HorizontalLayout();
-				dueDateWrapper.setWidthFull();
-				Span dueDateValue = new Span("Due Date: " + order.getDueDate().toString());
-				dueDateWrapper.add(dueDateValue);
-				dueDateWrapper.setClassName("owner-row-secondary-text");		
-				
-				paymentDetailsLayout.add(dueDateWrapper);
-			} else if (paymentStatus.equals(PaymentStatus.PARTIALLY_PAID)){
-				
-				HorizontalLayout balanceWrapper = new HorizontalLayout();
-				balanceWrapper.setWidthFull();
-				Span balanceValue = new Span("Balance: " + order.getBalance());
-				balanceWrapper.add(balanceValue);
-				balanceWrapper.setClassName("owner-row-secondary-text");	
-				
-				paymentDetailsLayout.add(balanceWrapper);
-				
-				HorizontalLayout dueDateWrapper = new HorizontalLayout();
-				dueDateWrapper.setWidthFull();
-				Span dueDateValue = new Span("Due Date: " + order.getDueDate().toString());
-				dueDateWrapper.add(dueDateValue);
-				dueDateWrapper.setClassName("owner-row-secondary-text");	
-				
-				paymentDetailsLayout.add(dueDateWrapper);
-				
-
-			}
+			
+			HorizontalLayout balanceWrapper = new HorizontalLayout();
+			balanceWrapper.setWidthFull();
+			Span balanceValue = new Span("Balance: " + order.getBalance());
+			balanceWrapper.add(balanceValue);
+			balanceWrapper.setClassName("owner-row-secondary-text");	
+			
+			paymentDetailsLayout.add(balanceWrapper);
+			
+			HorizontalLayout dueDateWrapper = new HorizontalLayout();
+			dueDateWrapper.setWidthFull();
+			Span dueDateValue = new Span("Due Date: " + order.getDueDate().toString());
+			dueDateWrapper.add(dueDateValue);
+			dueDateWrapper.setClassName("owner-row-secondary-text");	
+			
+			paymentDetailsLayout.add(dueDateWrapper);
 			
 			return paymentDetailsLayout;
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Payment Details").setSortable(true).setComparator(e -> {return e.getCustomer().getStoreName();});
