@@ -1,24 +1,28 @@
 package com.example.application.views.order;
 
-import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.vaadin.klaudeta.PaginatedGrid;
-import org.vaadin.klaudeta.PaginatedGrid.PaginationLocation;
 
+import com.example.application.data.OrderStatus;
 import com.example.application.data.PaymentStatus;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
 import com.example.application.data.service.customers.CustomerService;
+import com.example.application.data.service.orders.OrderRepositoryCustom;
+import com.example.application.data.service.orders.OrderRepositoryCustomImpl;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.products.SizesService;
 import com.example.application.reports.OrderSummaryReport2;
@@ -27,6 +31,7 @@ import com.example.application.utils.PfdiUtil;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
+import com.google.common.collect.Maps;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -36,8 +41,10 @@ import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dependency.Uses;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
@@ -45,19 +52,20 @@ import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Hr;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.BoxSizing;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
@@ -70,10 +78,6 @@ import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouteParam;
 import com.vaadin.flow.router.RouteParameters;
-import com.vaadin.flow.server.StreamResource;
-
-import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
-import net.sf.jasperreports.engine.JRException;
 
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrders", layout = MainLayout.class)
@@ -92,27 +96,233 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	private final CustomerService customerService;
 
 	private ListDataProvider<Order> ldp = null;
+	List<Order> orders;
 	private AppUser appUser;
 	private OrderSummaryReport2 orderSummaryReport;
 	private SizesService sizesService;
 	List<Customer> customers;
+	private Dialog searchOrdersDialog = new Dialog();
+	private final OrderRepositoryCustom orderRepositoryCustom;
 
 	@Autowired
 	public StockOrderView(OrdersService ordersService, CustomerService customerService, 
-			AuthenticatedUser user, OrderSummaryReport2 orderSummaryReport, SizesService sizesService) {
+			AuthenticatedUser user, OrderSummaryReport2 orderSummaryReport, SizesService sizesService, 
+			OrderRepositoryCustomImpl orderRepositoryCustom) {
 		super("Admin", "Admin");
 		this.customerService = customerService;
 		this.ordersService = ordersService;
 		this.orderSummaryReport = orderSummaryReport;
 		this.sizesService = sizesService;
 		this.appUser = user.get().get();
+		this.orderRepositoryCustom = orderRepositoryCustom;
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
 		createGridLayout(tableContent);
+		createSearchDialog("Search Orders");
 
 		add(tableContent);
 
+	}
+
+	private void createSearchDialog(String label) {
+		Label addProfileLabel = new Label(label);
+		addProfileLabel.getStyle().set("padding-bottom", "20px");
+
+
+		TextField orderId = new TextField("Stock Order Number");
+		
+		TextField deliveryReceiptField = new TextField("Delivery Receipt Number");
+		
+		TextField stockTransferField = new TextField("Stock Transfer Number");
+		
+		TextField invoiceNUmberField = new TextField("Invoice Number");
+
+
+		List<Customer> roles = customerService.listAll(Sort.unsorted());
+	
+		MultiSelectComboBox<Customer> storeName = new MultiSelectComboBox<>();
+		storeName.setLabel("Store Name");
+		storeName.setItems(roles);
+		storeName.setPlaceholder("Select Store Name");
+		storeName.setItemLabelGenerator(e-> e.getStoreName());
+		
+		MultiSelectComboBox<PaymentStatus> paymentStatus = new MultiSelectComboBox<>();
+		
+		List<PaymentStatus> paymentStatuses = Arrays.asList(PaymentStatus.values());
+		paymentStatus.setLabel("Payment Status");
+		paymentStatus.setItems(paymentStatuses);
+		paymentStatus.setPlaceholder("Select Payment Status");
+		paymentStatus.setItemLabelGenerator(e-> e.getPaymentStatusName());
+		
+		
+		MultiSelectComboBox<OrderStatus> orderStatusField = new MultiSelectComboBox<>();
+		
+		List<OrderStatus> orderStatus = Arrays.asList(OrderStatus.values());
+		orderStatusField.setLabel("Order Status");
+		orderStatusField.setItems(orderStatus);
+		orderStatusField.setPlaceholder("Select Order Status");
+		orderStatusField.setItemLabelGenerator(e-> e.getOrderStatusName());
+
+
+		DatePicker orderDateTo = new DatePicker("Order Date To");
+		orderDateTo.setEnabled(false);
+		
+		DatePicker orderDateFrom = new DatePicker("Order Date From");
+		orderDateFrom.addValueChangeListener( e-> {
+			orderDateTo.setValue(LocalDate.now());
+			orderDateTo.setEnabled(true);
+		});
+
+		
+
+		DatePicker dueDateTo = new DatePicker("Due Date To");
+		dueDateTo.getStyle().set("padding-bottom", "40px");
+		dueDateTo.setEnabled(false);
+		
+		DatePicker dueDateFrom = new DatePicker("Due Date From");
+		dueDateFrom.getStyle().set("padding-bottom", "40px");
+		dueDateFrom.addValueChangeListener( e-> {
+			dueDateTo.setValue(LocalDate.now());
+			dueDateTo.setEnabled(true);
+		});
+
+
+		Button searchButton = new Button("Search");
+		searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		searchButton.addClickListener(e -> {
+			
+			Map<String, Object> filters = Maps.newHashMap();
+			
+			if (!orderId.isEmpty()) {
+				filters.put("stockOrderNumber", orderId.getValue());
+			}
+			
+			if (!deliveryReceiptField.isEmpty()) {
+				filters.put("deliveryReceiptId", deliveryReceiptField.getValue());
+			}
+			
+			if (!stockTransferField.isEmpty()) {
+				filters.put("stockTransferId", stockTransferField.getValue());
+			}
+			
+			if (!invoiceNUmberField.isEmpty()) {
+				filters.put("invoiceId", invoiceNUmberField.getValue());
+			}
+			
+			if (!storeName.isEmpty()) {
+				filters.put("store", storeName.getValue());
+			}
+			
+//			if (!paymentStatus.isEmpty()) {
+//				filters.put("payments", paymentStatus.getValue());
+//			}
+			
+			if (!orderStatusField.isEmpty()) {
+				
+				List<String> orderStatusName = orderStatusField.getValue().stream().map(osf-> osf.getOrderStatusName()).collect(Collectors.toList());
+				filters.put("orderStatus", orderStatusName);
+			}
+			
+			if (!orderDateFrom.isEmpty()) {
+				
+				Map<String, LocalDate> orderDates = Maps.newHashMap();
+				orderDates.put("orderDateFrom", orderDateFrom.getValue());
+				orderDates.put("orderDateTo", !orderDateTo.isEmpty() ? orderDateTo.getValue() : LocalDate.now());
+				
+				filters.put("ordersDate", orderDates);
+			}
+			
+			if (!dueDateFrom.isEmpty()) {
+				
+				Map<String, LocalDate> dueDates = Maps.newHashMap();
+				dueDates.put("dueDateFrom", dueDateFrom.getValue());
+				dueDates.put("dueDateTo", !dueDateTo.isEmpty() ? dueDateTo.getValue() : LocalDate.now());
+				
+				filters.put("dueDates", dueDates);
+			}
+			
+			
+			List<Order> results = orderRepositoryCustom.filterBy(filters);
+//			try {
+//				boolean isNewUser = appUser.getId() == null;
+//
+//				if (appUser.getUsername() == null) {
+//					String firstName = appUser.getFirstName().strip().toLowerCase();
+//					String lastName = appUser.getLastName().strip().toLowerCase();
+//					String userName = firstName + "." + lastName;
+//					appUser.setUsername(userName.replace(' ', '.'));
+//				}
+//
+//				AppUser updatedAppUser = userService.update(appUser);
+//				addProfileDialog.close();
+//				if (isNewUser) {
+//
+//					try {
+//						
+//						String message = passwordResetService.composeResetPasswordMessage(updatedAppUser);
+//						emailService.sendMail("No Reply: Set Password", message,
+//								updatedAppUser.getEmailAddress(), updatedAppUser.getFirstName() + " " + updatedAppUser.getLastName());
+//					} catch (Exception e1) {
+//						e1.printStackTrace();
+//						System.out.println(e1.getMessage());
+//						Notification.show("Could not send the email. Please check with the Administrator.")
+//						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+//					}
+//				}
+//				clearForm();
+//				refreshGrid(updatedAppUser);
+//
+//				Notification.show("Profile successfully created/updated")
+//						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+//				UI.getCurrent().navigate(AdministrationView.class);
+//			} catch (ValidationException validationException) {
+//				Notification.show("An exception happened while trying to store the samplePerson details.");
+//			}
+			ldp = DataProvider.ofCollection(results);
+			grid.setItems(ldp);
+			ldp.refreshAll();
+			
+			searchOrdersDialog.close();
+			
+		});
+
+		Button cancelButton = new Button("Cancel");
+		cancelButton.addClickListener(e -> {
+			searchOrdersDialog.close();
+			refreshGrid();
+		});
+
+		IntegerField id = new IntegerField("Account Id");
+		id.setVisible(false);
+
+		Hr divider1 = new Hr();
+
+		Hr divider2 = new Hr();
+		Hr divider3 = new Hr();
+		Hr divider4 = new Hr();
+		FormLayout formLayout = new FormLayout();
+		formLayout.setWidth("800px");
+		formLayout.add(addProfileLabel, divider1, 
+				orderId, deliveryReceiptField, 
+				stockTransferField, invoiceNUmberField, 
+				divider3,
+				storeName, orderStatusField,
+				divider4,
+				orderDateFrom, orderDateTo, 
+				dueDateFrom, dueDateTo, divider2,
+				cancelButton, searchButton, id);
+
+		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("500px", 2));
+
+		formLayout.setColspan(addProfileLabel, 2);
+		formLayout.setColspan(divider1, 2);
+		formLayout.setColspan(divider2, 2);
+		formLayout.setColspan(divider3, 2);
+		formLayout.setColspan(divider4, 2);
+
+		searchOrdersDialog.add(formLayout);
+		
 	}
 
 	@Override
@@ -418,8 +628,8 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 			return menuBar;
 		}).setWidth("70px").setFlexGrow(0);
-
-		ldp = DataProvider.ofCollection(ordersService.listAll(Sort.by("id")));
+		orders = ordersService.listAll(Sort.by("id"));
+		ldp = DataProvider.ofCollection(orders);
 		
 		MenuBar printStockOrderDocs = new MenuBar();
 		printStockOrderDocs.setEnabled(false);
@@ -499,19 +709,19 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	    
 	    grid.setHeight("90%");
 
-		TextField searchField = new TextField();
-		searchField.setPlaceholder("Filter results by order #, owner, or store");
+		TextField filterField = new TextField();
+		filterField.setPlaceholder("Filter results by order #, owner, or store");
 
-		Icon searchIcon = new Icon(VaadinIcon.FILTER);
-		searchIcon.setClassName(CssClassNamesConstants.PFDI_ICONS);
-		searchField.setSuffixComponent(searchIcon);
-		searchField.setValueChangeMode(ValueChangeMode.EAGER);
-		searchField.addValueChangeListener(e -> dataView.refreshAll());
-		searchField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);	       
+		Icon filterIcon = new Icon(VaadinIcon.FILTER);
+		filterIcon.setClassName(CssClassNamesConstants.PFDI_ICONS);
+		filterField.setSuffixComponent(filterIcon);
+		filterField.setValueChangeMode(ValueChangeMode.EAGER);
+		filterField.addValueChangeListener(e -> dataView.refreshAll());
+		filterField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);	       
     
 
 		dataView.addFilter(customer -> {
-			String searchTerm = searchField.getValue().trim();
+			String searchTerm = filterField.getValue().trim();
 
 			if (searchTerm.isEmpty()) {
 
@@ -520,9 +730,11 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			return true;
 		});
 		
-		Button filterButton = new Button("Search", new Icon(VaadinIcon.SEARCH));
-		filterButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS);
-		filterButton.setIconAfterText(true);
+		Button searchButton = new Button("Search", new Icon(VaadinIcon.SEARCH));
+		searchButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS);
+		searchButton.setIconAfterText(true);
+		searchButton.addClickListener(e -> searchOrdersDialog.open());
+		
 		
 		HorizontalLayout printButtonContainer = new HorizontalLayout();
 		printButtonContainer.setJustifyContentMode(JustifyContentMode.END);
@@ -533,7 +745,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		HorizontalLayout searchFiltersLayout = new HorizontalLayout();
 		searchFiltersLayout.addClassName("padding-bottom-medium");
 		searchFiltersLayout.setWidth("50%");
-		searchFiltersLayout.add(searchField, filterButton);
+		searchFiltersLayout.add(filterField, searchButton);
 
 		HorizontalLayout secondaryActionsLayout = new HorizontalLayout();
 		secondaryActionsLayout.setWidthFull();

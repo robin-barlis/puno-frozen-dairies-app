@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.example.application.data.entity.orders.Order;
 @Repository
-public interface OrdersRepository extends JpaRepository<Order, Integer> {
+public interface OrdersRepository extends JpaRepository<Order, Integer>, OrderRepositoryCustom {
 	
     @Query(value = "SELECT max(stockOrderNumber) FROM Order")
     Integer findMaxSONumber();
@@ -19,5 +19,6 @@ public interface OrdersRepository extends JpaRepository<Order, Integer> {
     
     @Query(value = "SELECT order FROM Order order where order.invoiceId != null")
     List<Order> findReadyForPaymentOrders();
+	
 
 }
