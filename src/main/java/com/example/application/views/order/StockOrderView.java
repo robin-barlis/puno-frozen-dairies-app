@@ -632,18 +632,17 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
         
         MenuItem optionsMenu = options.addItem(new Icon(VaadinIcon.COG));
         SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
-        MenuItem viewOrders = optionsMenuSubItems.addItem("View");
-        
-        SubMenu viewOrdersSubItem = viewOrders.getSubMenu();
-        
-        viewOrdersSubItem.addItem("Today's orders");
-        viewOrdersSubItem.addItem("This week's orders");
-        viewOrdersSubItem.addItem("This month's orders");
-        optionsMenuSubItems.add(new Hr());
+//        MenuItem viewOrders = optionsMenuSubItems.addItem("View");
+//        
+//        SubMenu viewOrdersSubItem = viewOrders.getSubMenu();
+//        
+//        viewOrdersSubItem.addItem("Today's orders");
+//        viewOrdersSubItem.addItem("This week's orders");
+//        viewOrdersSubItem.addItem("This month's orders");
+//        optionsMenuSubItems.add(new Hr());
         MenuItem rowsPerPage = optionsMenuSubItems.addItem("Rows per page");
         
         SubMenu rowsPerPageSubItem = rowsPerPage.getSubMenu();
-        rowsPerPageSubItem.addItem("10", e -> grid.setPageSize(5));
         rowsPerPageSubItem.addItem("10", e -> grid.setPageSize(10));
         rowsPerPageSubItem.addItem("15", e -> grid.setPageSize(15));
         rowsPerPageSubItem.addItem("20", e -> grid.setPageSize(20));
