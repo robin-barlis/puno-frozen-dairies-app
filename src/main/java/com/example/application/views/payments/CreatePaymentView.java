@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
 
@@ -74,11 +73,8 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 	private Button cancelButton;
 	private Button saveButton;
 	
-	private AuthenticatedUser authenticatedUser;
 	private CustomerService customerService;	
 	private OrdersService orderService;
-	private PaymentsService paymentsService;
-	private BankService bankService;
 	
 	
 	//Order Details
@@ -95,7 +91,6 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 	//Payment Details
 	private Select<PaymentMode> paymentMode;
 	private BigDecimalField paymentAmount;
-	private DatePicker paymentDate;
 	private BigDecimalField balance;
 	private TextArea notes;
 	
@@ -127,13 +122,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 	private BeanValidationBinder<Payment> paymentBinder = new BeanValidationBinder<>(Payment.class);
 	private BeanValidationBinder<ChequePaymentDetails> chequePaymentBinder = new BeanValidationBinder<>(ChequePaymentDetails.class);
 	private BeanValidationBinder<BankRemittancePaymentDetails> onlineRemittancePaymentBinder = new BeanValidationBinder<>(BankRemittancePaymentDetails.class);
-	private DocumentTrackingNumberService documentTrackingNumberService;
-//	
-//	private BeanValidationBinder<CashPaymentDetails> cashPaymentDetailsBinder;
-//	
-//	private BeanValidationBinder<ChequePaymentDetails> chequePaymentDetailsBinder;
-//	
-//	private BeanValidationBinder<BankRemittancePaymentDetails> bankRemittanceBinder;
+
 	
 	
 
@@ -142,12 +131,8 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		super("add-new-product", "Create Payment");
 		//addClassNames("products-view");
 		this.customerService = customerService;
-		this.authenticatedUser = authenticatedUser;
 		this.orderService = stockOrderService;
-		this.paymentsService = paymentService;
-		this.bankService = bankService;
 		this.banks = bankService.listAll(Sort.by("bankName"));
-		this.documentTrackingNumberService = documentTrackingNumberService;
 		FormLayout formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(
 		        // Use one column by default

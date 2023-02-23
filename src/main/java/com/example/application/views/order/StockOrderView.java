@@ -486,13 +486,13 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 				boolean hasForVerification = payments.stream().anyMatch(e -> PaymentStatus.FOR_VERIFICATION.name().equalsIgnoreCase(e.getStatus()));
 				if (hasForVerification) {
 					
-					if (BigDecimal.ZERO.equals(order.getBalance())) {
+					if (BigDecimal.ZERO.compareTo(order.getBalance()) == 0) {
 
 						paymentStatus = PaymentStatus.FOR_VERIFICATION;
 					} else {
 						paymentStatus = PaymentStatus.PARTIAL_FOR_VERIFICATION;
 					}
-				} else if (BigDecimal.ZERO.equals(order.getBalance())) {
+				} else if (BigDecimal.ZERO.compareTo(order.getBalance()) == 0) {
 					paymentStatus = PaymentStatus.PAID;
 				} else {
 					paymentStatus = PaymentStatus.PARTIALLY_PAID;

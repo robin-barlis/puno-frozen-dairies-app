@@ -88,17 +88,21 @@ public class DeliveryReceiptReport {
 		
 		
 		List<OrderItemData> regularFlavors = getRegularFlavors();
-		for (OrderItemData item : regularFlavors) {
+		if (Objects.nonNull(regularFlavors)) {
 			
-		
-			dataSource.add(item.getProductName(), item.getSize(), item.getPrice(), item.getQuantity());
-			
+			Collections.sort(regularFlavors, (o1, o2) -> (o1.getProductName().compareTo(o2.getProductName())));
+			for (OrderItemData item : regularFlavors) {
+				
+				dataSource.add(item.getProductName(), item.getSize(), item.getPrice(), item.getQuantity());
+				
+			}
 		}
 		
 		List<OrderItems> cones = orderItemPerCategoryMap.get(Categories.Cones.name());
 		
-		
 		if (Objects.nonNull(cones)) {
+			Collections.sort(cones, (o1, o2) -> (o1.getItemInventory().getProduct().getProductName().compareTo(o2.getItemInventory().getProduct().getProductName())));
+			
 			for (OrderItems item : orderItemPerCategoryMap.get(Categories.Cones.name())) {
 				System.out.println(item.getItemInventory().getProduct().getProductName());
 				dataSource.add(item.getItemInventory().getProduct().getProductName(),
@@ -112,7 +116,8 @@ public class DeliveryReceiptReport {
 		List<OrderItems> others = orderItemPerCategoryMap.get(Categories.Others.name());
 		
 		
-		if (Objects.nonNull(others)) {
+		if (Objects.nonNull(others)) {	Collections.sort(others, (o1, o2) -> (o2.getItemInventory().getProduct().getProductName().compareTo(o1.getItemInventory().getProduct().getProductName())));
+		
 			for (OrderItems item : others) {
 				System.out.println(item.getItemInventory().getProduct().getProductName());
 				String productName = item.getItemInventory().getProduct().getProductName();

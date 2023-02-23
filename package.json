@@ -2,6 +2,7 @@
   "name": "no-name",
   "license": "UNLICENSED",
   "dependencies": {
+    "@flowingcode/font-awesome-iron-iconset": "4.0.0",
     "@fontsource/roboto": "4.5.0",
     "@polymer/iron-icon": "3.0.1",
     "@polymer/iron-iconset-svg": "3.0.1",
@@ -134,6 +135,7 @@
   },
   "vaadin": {
     "dependencies": {
+      "@flowingcode/font-awesome-iron-iconset": "4.0.0",
       "@fontsource/roboto": "4.5.0",
       "@polymer/iron-icon": "3.0.1",
       "@polymer/iron-iconset-svg": "^3.0.1",
@@ -263,7 +265,7 @@
       "workbox-core": "6.5.0",
       "workbox-precaching": "6.5.0"
     },
-    "hash": "9486ad462641d4dc23e28399e289bcf96c487e00f3e824f8133ea2925aa9e209"
+    "hash": "8c07e02c6efcbc20a4b8fa1f8f89f6e401ea3761964020101f9c5daefeb79669"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -378,6 +380,7 @@
     "lit-element": "$lit-element",
     "lit-html": "$lit-html",
     "@fontsource/roboto": "$@fontsource/roboto",
-    "line-awesome": "$line-awesome"
+    "line-awesome": "$line-awesome",
+    "@flowingcode/font-awesome-iron-iconset": "$@flowingcode/font-awesome-iron-iconset"
   }
 }
