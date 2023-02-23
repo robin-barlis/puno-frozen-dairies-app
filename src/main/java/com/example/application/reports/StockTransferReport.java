@@ -85,7 +85,6 @@ public class StockTransferReport {
 		
 		List<OrderItemData> regularFlavors = getRegularFlavors();
 		
-		Collections.sort(regularFlavors, (o1, o2) -> (o1.getCategory().compareTo(o1.getCategory())));
 		for (OrderItemData item : regularFlavors) {
 			
 			System.out.println(item.getCategory());
@@ -96,8 +95,7 @@ public class StockTransferReport {
 		}
 		
 		List<OrderItems> cones = orderItemPerCategoryMap.get(Categories.Cones.name());
-		Collections.sort(cones, (o1, o2) -> (o1.getItemInventory().getProduct().getProductName().compareTo(o1.getItemInventory().getProduct().getProductName())));
-		
+			
 		if (Objects.nonNull(cones)) {
 			for (OrderItems item : orderItemPerCategoryMap.get(Categories.Cones.name())) {
 				System.out.println(item.getItemInventory().getProduct().getProductName());
@@ -110,7 +108,6 @@ public class StockTransferReport {
 		
 		List<OrderItems> others = orderItemPerCategoryMap.get(Categories.Others.name());
 		
-		Collections.sort(others, (o1, o2) -> (o1.getItemInventory().getProduct().getProductName().compareTo(o1.getItemInventory().getProduct().getProductName())));
 		
 		if (Objects.nonNull(others)) {
 			for (OrderItems item : others) {
