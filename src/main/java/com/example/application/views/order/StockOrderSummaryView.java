@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 
 import org.apache.logging.log4j.util.Strings;
@@ -362,12 +363,12 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		
 		order = ordersService.get(Integer.parseInt(orderId)).get();
 
-		try {
-			orderSummaryReportData = orderSummaryReport.buildReport(order, order.getOrderItems(), sizesService.listAll(Sort.unsorted()));
-		} catch (ColumnBuilderException | ClassNotFoundException | JRException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	//	try {
+			orderSummaryReportData = orderSummaryReport.buildReport(order, order.getOrderItems(), sizesService.listAll(Sort.unsorted()), appUser);
+//		} catch (ColumnBuilderException | ClassNotFoundException | JRException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		Integer stockOrderNumber = order.getStockOrderNumber();
 		if (stockOrderNumber == null) {
 			stockOrderNumber = generateStockOrderNumber();
@@ -383,6 +384,8 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			}
 			return new ByteArrayInputStream(new byte[0]);
 		});
+		pdfViewer.setAddDownloadButton(true);
+		pdfViewer.setAddPrintButton(true);
 		pdfViewer.setSrc(resource);
 		mainDiv.add(pdfViewer);
 		mainDiv.setWidthFull();

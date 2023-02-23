@@ -142,7 +142,6 @@ public class SalesInvoiceReport {
 		sb.setPaddingRight(1);
 		sb.setTransparency(Transparency.OPAQUE);
 		sb.setStretching(Stretching.RELATIVE_TO_BAND_HEIGHT);
-		sb.setFont(Font.ARIAL_MEDIUM_BOLD);
 		return sb.build();
 	}
 
@@ -217,7 +216,6 @@ public class SalesInvoiceReport {
 		
 		StyleBuilder subheaderStyle = new StyleBuilder(true);
 		subheaderStyle.setHorizontalAlign(HorizontalAlign.LEFT);
-		subheaderStyle.setFont(Font.ARIAL_SMALL);
 		
 		Customer customer = order.getCustomer();
 		
@@ -279,11 +277,9 @@ public class SalesInvoiceReport {
 		
 		StyleBuilder titleStyle = new StyleBuilder(true);
 		titleStyle.setHorizontalAlign(HorizontalAlign.LEFT);
-		titleStyle.setFont(Font.ARIAL_MEDIUM_BOLD);
 		
 		StyleBuilder subheaderStyle = new StyleBuilder(true);
 		subheaderStyle.setHorizontalAlign(HorizontalAlign.LEFT);
-		subheaderStyle.setFont(Font.ARIAL_SMALL);
 		
 		AutoText punoName = new AutoText("PUNO'S FROZEN DAIRIES INC.",
 				AutoText.POSITION_HEADER,
@@ -379,7 +375,6 @@ public class SalesInvoiceReport {
 		StyleBuilder subheaderStyle = new StyleBuilder(true);
 		subheaderStyle.setHorizontalAlign(HorizontalAlign.LEFT);
 		subheaderStyle.setVerticalAlign(VerticalAlign.TOP);
-		subheaderStyle.setFont(Font.ARIAL_SMALL);
 		
 		Customer customer = order.getCustomer();
 		

@@ -373,11 +373,11 @@
     "@vaadin/tooltip": "$@vaadin/tooltip",
     "@vaadin-component-factory/vcf-pdf-viewer": "$@vaadin-component-factory/vcf-pdf-viewer",
     "print-js": "$print-js",
-    "@fontsource/roboto": "$@fontsource/roboto",
     "@polymer/paper-button": "$@polymer/paper-button",
     "@polymer/paper-icon-button": "$@polymer/paper-icon-button",
-    "line-awesome": "$line-awesome",
     "lit-element": "$lit-element",
-    "lit-html": "$lit-html"
+    "lit-html": "$lit-html",
+    "@fontsource/roboto": "$@fontsource/roboto",
+    "line-awesome": "$line-awesome"
   }
 }

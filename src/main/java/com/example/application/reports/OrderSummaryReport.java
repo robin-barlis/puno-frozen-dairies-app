@@ -1,224 +1,293 @@
 package com.example.application.reports;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
+
+import java.io.ByteArrayOutputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.example.application.data.Categories;
+import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.Size;
 import com.example.application.utils.PfdiUtil;
-import com.google.common.collect.Maps;
-import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
-import ar.com.fdvs.dj.core.DynamicJasperHelper;
-import ar.com.fdvs.dj.core.layout.ClassicLayoutManager;
-import ar.com.fdvs.dj.core.layout.HorizontalBandAlignment;
-import ar.com.fdvs.dj.domain.AutoText;
-import ar.com.fdvs.dj.domain.DynamicReport;
-import ar.com.fdvs.dj.domain.Style;
-import ar.com.fdvs.dj.domain.builders.ColumnBuilder;
-import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
-import ar.com.fdvs.dj.domain.builders.DynamicReportBuilder;
-import ar.com.fdvs.dj.domain.builders.StyleBuilder;
-import ar.com.fdvs.dj.domain.constants.Border;
-import ar.com.fdvs.dj.domain.constants.HorizontalAlign;
-import ar.com.fdvs.dj.domain.constants.Stretching;
-import ar.com.fdvs.dj.domain.constants.Transparency;
-import ar.com.fdvs.dj.domain.constants.VerticalAlign;
-import ar.com.fdvs.dj.domain.entities.columns.AbstractColumn;
-import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.JasperExportManager;
-import net.sf.jasperreports.engine.JasperPrint;
-import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
-
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
+import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
+import net.sf.dynamicreports.report.builder.component.SubreportBuilder;
+import net.sf.dynamicreports.report.datasource.DRDataSource;
+import net.sf.dynamicreports.report.definition.ReportParameters;
+import net.sf.dynamicreports.report.exception.DRException;
+import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JREmptyDataSource;
 
 @Service
 public class OrderSummaryReport {
 
-	protected JasperPrint jp;
-	protected JasperReport jr;
-	protected DynamicReport dr;
-	private Order order;
-	private Set<OrderItems> orderItems;
-	private List<Size> sizes;
-	ArrayList<HashMap<String, String>> rowsDataList;
-	
 
-	public byte[] buildReport(Order order, Set<OrderItems> orderList, List<Size> sizes) throws ColumnBuilderException, ClassNotFoundException, JRException {
-		this.order = order;
-		this.orderItems= orderList;
+	private Map<Object, List<OrderItems>> orderItemPerCategoryMap;
+	private List<Size> flavorSize;
+	private TreeSet<String> treeSet;
+	private List<Size> coneSize;
+	private List<Size> othersSize;
+
+	public byte[] buildReport(Order order, Set<OrderItems> orderItems, List<Size> sizes, AppUser appUser) {
+
+
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		
-		this.sizes = sizes.stream().filter(e -> {
+		try {
+			getReportBuilder(order, orderItems, sizes, appUser).toPdf(baos);
+		} catch (DRException e) {
+			e.printStackTrace();
+		}
+
+		return baos.toByteArray();
+	}
+	
+	public JasperReportBuilder getReportBuilder(Order order, Set<OrderItems> orderItems, List<Size> sizes, AppUser appUser) {
+
+
+		this.flavorSize = sizes;
+		this.treeSet = new TreeSet<String>();
+		treeSet.add(Categories.Flavors.name());
+		treeSet.add(Categories.Cones.name());
+		treeSet.add(Categories.Others.name());
+
+		this.orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
+				.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getCategory().getCategoryType()));
+
+		this.flavorSize = sizes.stream().filter(e -> {
 			Set<Category> categories = e.getCategory();
-			
-			
-			return categories.stream().anyMatch(catergory-> Categories.Flavors.name().equals(catergory.getCategoryType()));
+
+			return categories.stream()
+					.anyMatch(catergory -> Categories.Flavors.name().equals(catergory.getCategoryType()));
+		}).collect(Collectors.toList());
+		Collections.sort(flavorSize, PfdiUtil.sizeComparator);
+		
+		this.coneSize = sizes.stream().filter(e -> {
+			Set<Category> categories = e.getCategory();
+
+			return categories.stream()
+					.anyMatch(catergory -> Categories.Cones.name().equals(catergory.getCategoryType()));
 		}).collect(Collectors.toList());
 		
+		this.othersSize = sizes.stream().filter(e -> {
+			Set<Category> categories = e.getCategory();
 
-		rowsDataList = Lists.newArrayList();
-		
-		Set<OrderItems> flavorOrders = order.getOrderItems().stream().filter(oi -> {
-			return Categories.Flavors.name().equals(oi.getItemInventory().getProduct().getCategory().getCategoryType());
-		}).collect(Collectors.toSet());
-		
-		
-		Map<String, List<OrderItems>> orderItemsMap = flavorOrders.stream()
-				//.filter(e-> e.getItemInventory().getSize().getCategory().stream().anyMatch(cat -> Categories.Flavors.name().equals(cat.getCategoryName())))
-				.collect(Collectors.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getProductName()));;
-		
-				
-		for (Entry<String, List<OrderItems>> entry : orderItemsMap.entrySet()) {
-			HashMap<String, String> data = Maps.newHashMap();
-			
-			data.put("keyFlavor",entry.getKey());
-			
-			for (OrderItems items : entry.getValue()) {
-				String key = "key" + items.getItemInventory().getSize().getId();
-				String value = items.getQuantity().toString();
-				data.put(key, value);
+			return categories.stream()
+					.anyMatch(catergory -> Categories.Others.name().equals(catergory.getCategoryType()));
+		}).collect(Collectors.toList());
+
+		SubreportBuilder subreport = cmp.subreport(new SubreportExpression())
+				.setDataSource(new SubreportDataSourceExpression());
+		return report().title(Templates.createStockOrderDetailsComponent(order))
+				.detail(subreport, cmp.verticalGap(20))
+				.addPageFooter(Templates.createStockOrderDetailsFooterComponent(order, appUser))
+				.setDataSource(createDataSource());
+	}
+
+
+	private JRDataSource createDataSource() {
+
+		return new JREmptyDataSource(3);
+	}
+
+	private class SubreportExpression extends AbstractSimpleExpression<JasperReportBuilder> {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public JasperReportBuilder evaluate(ReportParameters reportParameters) {
+			int masterRowNumber = reportParameters.getReportRowNumber();
+			JasperReportBuilder report = report();
+			report.setTemplate(Templates.reportTemplate);
+
+			if (1 == masterRowNumber) {
+
+				TextColumnBuilder<String> flavorColumn = col.column("Flavor", "keyFlavor", type.stringType());
+				flavorColumn.setWidth(80);
+				report.addColumn(flavorColumn);
+
+				for (Size size : flavorSize) {
+					System.out.println("Key: " + "key" + size.getId() + " Size name: " + size.getSizeName());
+
+					System.out.println();
+					TextColumnBuilder<String> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
+							type.stringType());
+					sizeColumn.setWidth(20);
+					report.addColumn(sizeColumn);
+				}
 			}
-			rowsDataList.add(data);
-		}
-		JasperPrint jp = getReport();
-		
-		byte[] pdfBytes = JasperExportManager.exportReportToPdf(jp);
-
-		return pdfBytes;
-	}
-
-
-	private JasperPrint getReport()
-			throws JRException, ColumnBuilderException, ClassNotFoundException {
-		Style headerStyle = createHeaderStyle();
-		Style detailTextStyle = createDetailTextStyle();
-		Style detailNumberStyle = createDetailNumberStyle();
-		DynamicReport dynaReport = getReport(headerStyle, detailTextStyle, detailNumberStyle);
-		JasperPrint jp = DynamicJasperHelper.generateJasperPrint(dynaReport, new ClassicLayoutManager(), new JRBeanCollectionDataSource(rowsDataList));
-		return jp;
-	}
-
-	private Style createHeaderStyle() {
-		StyleBuilder sb = new StyleBuilder(true);
-
-		sb.setBorderBottom(Border.PEN_2_POINT());
-		sb.setHorizontalAlign(HorizontalAlign.LEFT);
-		sb.setVerticalAlign(VerticalAlign.BOTTOM);
-		sb.setPaddingLeft(5);
-		sb.setPaddingRight(1);
-		sb.setTransparency(Transparency.OPAQUE);
-		sb.setStretching(Stretching.RELATIVE_TO_BAND_HEIGHT);
-		return sb.build();
-	}
-
-	private Style createDetailTextStyle() {
-		StyleBuilder sb = new StyleBuilder(true);
-		//sb.setFont(Font.VERDANA_MEDIUM);
-		sb.setBorderBottom(Border.THIN());
-		sb.setHorizontalAlign(HorizontalAlign.LEFT);
-		sb.setVerticalAlign(VerticalAlign.MIDDLE);
-		sb.setPaddingLeft(5);
-		sb.setStretching(Stretching.RELATIVE_TO_BAND_HEIGHT);
-		return sb.build();
-	}
-
-	private Style createDetailNumberStyle() {
-		StyleBuilder sb = new StyleBuilder(true);
-		sb.setBorderBottom(Border.THIN());
-		
-		sb.setHorizontalAlign(HorizontalAlign.LEFT);
-		sb.setVerticalAlign(VerticalAlign.MIDDLE);
-		sb.setPaddingRight(5);
-
-		sb.setStretching(Stretching.RELATIVE_TO_BAND_HEIGHT);
-		return sb.build();
-	}
-
-	private AbstractColumn createColumn(String property, Class type, String title, int width, Style headerStyle,
-			Style detailStyle) throws ColumnBuilderException {
-		AbstractColumn columnState = ColumnBuilder.getNew().setColumnProperty(property, type.getName()).setTitle(title)
-				.setWidth(Integer.valueOf(width))
-				.setStyle(detailStyle)
-				.setHeaderStyle(headerStyle)
-				.build();
-		return columnState;
-	}
-
-	private DynamicReport getReport(Style headerStyle, Style detailTextStyle, Style detailNumStyle)
-			throws ColumnBuilderException, ClassNotFoundException {
-
-		DynamicReportBuilder report = new DynamicReportBuilder();
-
-		AbstractColumn flavorColumn = createColumn("keyFlavor", String.class, "Flavor", 140, headerStyle,
-				detailTextStyle);
-		
-		report.addColumn(flavorColumn);
-		for (Size size : sizes) {
-			AbstractColumn column = createColumn("key" + size.getId(), String.class, size.getSizeName(), 55, headerStyle,
-					detailTextStyle);
 			
-			report.addColumn(column);
-		}
-		
-		StyleBuilder titleStyle = new StyleBuilder(true);
-		titleStyle.setHorizontalAlign(HorizontalAlign.LEFT);
+			if (2 == masterRowNumber) {
 
-		StyleBuilder subTitleStyle = new StyleBuilder(true);
-		subTitleStyle.setHorizontalAlign(HorizontalAlign.LEFT);
-		
-		AutoText title = new AutoText("Stock Order #" + order.getStockOrderNumber(),
-				AutoText.POSITION_HEADER,
-				HorizontalBandAlignment.LEFT);
-		title.setHeight(50);
-		
-		AutoText storeName = new AutoText("Store Name : " + order.getCustomer().getStoreName(),
-				AutoText.POSITION_HEADER,
-				HorizontalBandAlignment.LEFT);
-		storeName.setWidth(500);
-		
-		AutoText orderDate = new AutoText(PfdiUtil.formatDateWithHours(order.getCreationDate()),
-				AutoText.POSITION_HEADER,
-				HorizontalBandAlignment.RIGHT);
-		orderDate.setWidth(500);
-		
-		
-		AutoText owner = new AutoText("Store Address : " + order.getCustomer().getAddress(),
-				AutoText.POSITION_HEADER,
-				HorizontalBandAlignment.LEFT);
-		owner.setWidth(500);
-		
-		AutoText address = new AutoText("Owner Name : " + order.getCustomer().getOwnerName(),
-				AutoText.POSITION_HEADER,
-				HorizontalBandAlignment.LEFT);
-		address.setWidth(500);	
-		
-		
-		report.addAutoText(title);
-		report.addAutoText(orderDate);
-		report.addAutoText(storeName);
-		report.addAutoText(address);
-		report.addAutoText(owner);
-		report.setTitleStyle(titleStyle.build());
-		report.setSubtitleStyle(subTitleStyle.build());
-		report.setUseFullPageWidth(true);
-		
-		return report.build();
+				TextColumnBuilder<String> flavorColumn = col.column("Cone", "keyConeName", type.stringType());
+				flavorColumn.setWidth(80);
+				report.addColumn(flavorColumn);
+
+				for (Size size : coneSize) {
+					System.out.println("Key: " + "key" + size.getId());
+					TextColumnBuilder<String> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
+							type.stringType());
+				//	sizeColumn.setWidth(20);
+					report.addColumn(sizeColumn);
+				}
+			}
+			
+			if (3 == masterRowNumber) {
+
+				TextColumnBuilder<String> flavorColumn = col.column("Cone", "keyOthersName", type.stringType());
+				flavorColumn.setWidth(80);
+				report.addColumn(flavorColumn);
+
+				for (Size size : othersSize) {
+					System.out.println("Key: " + "key" + size.getId());
+					
+					TextColumnBuilder<String> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
+							type.stringType());
+					//sizeColumn.setWidth(20);
+					report.addColumn(sizeColumn);
+				}
+			}
+
+			return report;
+		}
 	}
 
+	private class SubreportDataSourceExpression extends AbstractSimpleExpression<JRDataSource> {
+		private static final long serialVersionUID = 1L;
 
-	private DynamicReport createConesReport() {
-		// TODO Auto-generated method stub
-		return null;
+		@Override
+		public JRDataSource evaluate(ReportParameters reportParameters) {
+			int masterRowNumber = reportParameters.getReportRowNumber();
+			
+			if (1 == masterRowNumber) {
+
+				List<OrderItems> flavors = orderItemPerCategoryMap.get(Categories.Flavors.name());
+				
+				Map<String, List<OrderItems>> flavorItemsMap = flavors.stream()
+						.collect(Collectors.groupingBy(orderItem 
+								-> orderItem.getItemInventory().getProduct().getProductName()));;
+	
+				
+
+				String[] columns = new String[flavorSize.size()+1];
+				DRDataSource dataSource = new DRDataSource(columns);
+				for (Entry<String, List<OrderItems>> entry : flavorItemsMap.entrySet()) {
+	
+					Object[] values = new Object[flavorSize.size()+1];			
+					columns[0] = "keyFlavor";
+					values[0] = entry.getKey();
+					
+					int index = 0;
+	
+
+					for (OrderItems items : entry.getValue()) {
+						index++;
+						String key = "key" + items.getItemInventory().getSize().getId();
+						System.out.println("key id: " + key);
+						System.out.println("key id size name: " + items.getItemInventory().getSize().getSizeName() + " quantity : " + items.getQuantity().toString());
+						String value = items.getQuantity().toString();
+				
+						columns[index] = key;
+						values[index] = value;
+	
+					}
+	
+					dataSource.add(values);
+				}
+	
+	
+				return dataSource;
+			}
+			
+			
+			if (2 == masterRowNumber) {
+
+				List<OrderItems> cones = orderItemPerCategoryMap.get(Categories.Cones.name());
+				
+				Map<String, List<OrderItems>> conesItemMap = cones.stream()
+						.collect(Collectors.groupingBy(orderItem 
+								-> orderItem.getItemInventory().getProduct().getProductName()));;
+	
+				String[] columns = new String[coneSize.size()+1];
+	
+	
+				DRDataSource dataSource = new DRDataSource(columns);
+				for (Entry<String, List<OrderItems>> entry : conesItemMap.entrySet()) {
+	
+					Object[] values = new Object[coneSize.size()+1];			
+					columns[0] = "keyConeName";
+					int index = 0;
+	
+					values[0] = entry.getKey();
+					for (OrderItems items : entry.getValue()) {
+	
+						index++;
+						String key = "key" + items.getItemInventory().getSize().getId();
+						String value = items.getQuantity().toString();
+						columns[index] = key;
+						values[index] = value;
+					}
+					dataSource.add(values);
+				}
+				return dataSource;
+			}
+			
+			if (3 == masterRowNumber) {
+
+				List<OrderItems> others = orderItemPerCategoryMap.get(Categories.Others.name());
+				
+
+				Map<String, List<OrderItems>> othersItemMap = others.stream()
+						.collect(Collectors.groupingBy(orderItem 
+								-> orderItem.getItemInventory().getProduct().getProductName()));;
+	
+				String[] columns = new String[othersSize.size()+1];
+	
+	
+				DRDataSource dataSource = new DRDataSource(columns);
+				for (Entry<String, List<OrderItems>> entry : othersItemMap.entrySet()) {
+	
+					Object[] values = new Object[othersSize.size()+1];			
+					columns[0] = "keyOthersName";
+					int index = 0;
+	
+					values[0] = entry.getKey();
+					for (OrderItems items : entry.getValue()) {
+	
+						index++;
+						String key = "key" + items.getItemInventory().getSize().getId();
+						String value = items.getQuantity().toString();
+						columns[index] = key;
+						values[index] = value;
+					}
+	
+					dataSource.add(values);
+				}
+	
+	
+				return dataSource;
+			}
+			
+			return new DRDataSource("test");
+			
+
+		}
 	}
 
 }

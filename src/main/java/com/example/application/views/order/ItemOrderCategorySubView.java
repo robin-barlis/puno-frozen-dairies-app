@@ -3,6 +3,7 @@ package com.example.application.views.order;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -19,6 +20,7 @@ import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.Product;
 import com.example.application.data.entity.products.ProductPrice;
+import com.example.application.data.entity.products.Size;
 import com.example.application.data.entity.stock.ItemStock;
 import com.example.application.utils.PfdiUtil;
 import com.vaadin.flow.component.html.H1;
@@ -34,22 +36,21 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 	private static final long serialVersionUID = -5585110820503078437L;
 
-
 	private Customer customer;
 
 	private List<Items> itemsList = new ArrayList<>();
-	
+
 	private Set<OrderItems> orderItems;
 
 	private BigDecimal currentTotalPrice = BigDecimal.valueOf(0);
-	
-	private H1 totalAmount = new H1(); 
+
+	private H1 totalAmount = new H1();
 	private Map<String, OrderItems> orderItemMap = null;
 
-	public ItemOrderCategorySubView(List<Category> categories,  Customer customer, Map<String, List<Product>> productCategoryMap) {
+	public ItemOrderCategorySubView(List<Category> categories, Customer customer,
+			Map<String, List<Product>> productCategoryMap) {
 		this.customer = customer;
-		
-		
+
 		totalAmount.setText("Total Amount: " + currentTotalPrice);
 		totalAmount.addClassNames("mb-1", "mt-s", "text-l", "span-order-flavor-column-header");
 		totalAmount.setWidthFull();
@@ -62,7 +63,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			}
 
 		});
-		
+
 	}
 
 	private void createContent(Category category, List<Product> products) {
@@ -79,20 +80,21 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 		headerWrapper.setPadding(false);
 
 		category.getSizeSet();
-		
-	
 
 		boolean headerAlreadyRendered = false;
 		for (Product product : products) {
 
 			CustomerTag customerTag = customer.getCustomerTagId();
 
-			Map<String, ItemStock> itemStock = product.getItemStock().stream().collect(Collectors.toMap(e -> e.getSize().getSizeName(), Function.identity()));
+			Map<String, ItemStock> itemStock = product.getItemStock().stream()
+					.collect(Collectors.toMap(e -> e.getSize().getSizeName(), Function.identity()));
 			Map<Integer, List<ProductPrice>> productPricePerCustomer = product.getProductPrices().stream()
 					.filter(productPrice -> {
 						return productPrice.getCustomerTagId() == customerTag.getId();
 					}).collect(Collectors.groupingBy(productPrice -> productPrice.getSize().getId()));
+			List<Size> sizes = category.getSizeSet().stream().collect(Collectors.toList());
 
+			PfdiUtil.sort(category, sizes);
 			if (!headerAlreadyRendered) {
 				VerticalLayout flavorColumnHeaderWrapper = new VerticalLayout();
 				flavorColumnHeaderWrapper.addClassName("span-order-flavor-column-header");
@@ -103,24 +105,17 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 				flavorColumnHeaderWrapper.add(flavorColumnHeader);
 				headerWrapper.add(flavorColumnHeaderWrapper);
 
-				category.getSizeSet().forEach(size -> {
+				sizes.forEach(size -> {
 					VerticalLayout sizeColumnHeaderWrapper = new VerticalLayout();
 					sizeColumnHeaderWrapper.addClassName("span-order-size-column-header");
 
-//					Set<String> customerTagNameSet = size.getCustomerTagSet().stream()
-//							.map(CustomerTag::getCustomerTagName).collect(Collectors.toSet());
-//					if (customerTagNameSet.contains(customerTag.getCustomerTagName())
-//							&& productPricePerCustomer.containsKey(size.getId())) {
-
-						Span sizeColumnHeader = new Span();
-						sizeColumnHeader.setText(size.getSizeName());
-						sizeColumnHeader.addClassNames("mb-1", "mt-s", "text-s", "order-column");
-						sizeColumnHeaderWrapper.add(sizeColumnHeader);
-						headerWrapper.add(sizeColumnHeaderWrapper);
-				//	}
+					Span sizeColumnHeader = new Span();
+					sizeColumnHeader.setText(size.getSizeName());
+					sizeColumnHeader.addClassNames("mb-1", "mt-s", "text-s", "order-column");
+					sizeColumnHeaderWrapper.add(sizeColumnHeader);
+					headerWrapper.add(sizeColumnHeaderWrapper);
 
 				});
-
 
 				layout.add(headerWrapper);
 				layout.add(new Hr());
@@ -141,7 +136,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			flavorColumnWrapper.add(flavorColumnRow);
 			contentWrapper.add(flavorColumnWrapper);
 
-			category.getSizeSet().forEach(size -> {
+			sizes.forEach(size -> {
 
 				Set<String> customerTagNameSet = size.getCustomerTagSet().stream().map(CustomerTag::getCustomerTagName)
 						.collect(Collectors.toSet());
@@ -153,7 +148,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 						return e.getCustomerTagId() == customerTag.getId()
 								&& customer.getLocationTagId().getId() == e.getLocationTagId();
 					}).findFirst();
-					
+
 					if (!productPriceOpt.isEmpty()) {
 						ProductPrice productPrice = productPriceOpt.get();
 						if (productPrice != null) {
@@ -175,7 +170,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 							quantityField.setMin(0);
 							System.out.println("id-" + product.getProductShortCode() + "-" + size.getSizeName());
 							quantityField.addValueChangeListener(e -> {
-								
+
 								BigDecimal oldAmount = productPrice.getTransferPrice()
 										.multiply(BigDecimal.valueOf(e.getOldValue() != null ? e.getOldValue() : 0));
 								BigDecimal newAmount = productPrice.getTransferPrice()
@@ -186,19 +181,19 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 								System.out.println("Old Amount : " + oldAmount);
 								System.out.println("New Amount : " + newAmount);
 								System.out.println("Current Total Amount : " + currentTotalPrice);
-								
 
-								totalAmount.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
+								totalAmount
+										.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
 								add(totalAmount);
 
 							});
 							contentWrapper.add(quantityField);
 
-							itemsList.add(new Items(quantityField, productPrice.getTransferPrice(), stock));	
+							itemsList.add(new Items(quantityField, productPrice.getTransferPrice(), stock));
 						}
-						
+
 					}
-					
+
 				} else {
 					IntegerField quantityField = new IntegerField();
 					quantityField.setMax(0);
@@ -215,10 +210,8 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			layout.add(contentWrapper);
 
 		}
-		
 
-		
-		add(layout);	
+		add(layout);
 
 	}
 
@@ -231,7 +224,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 				OrderItems orderItem = new OrderItems();
 
 				orderItem.setQuantity(quantity);
-				
+
 				ItemStock stock = items.getItemStock();
 				int availableStock = stock.getAvailableStock();
 				int adjustment = availableStock - quantity;
@@ -249,7 +242,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			return null;
 		}).filter(Objects::nonNull).collect(Collectors.toSet());
 	}
-	
+
 	public BigDecimal getTotalAmount() {
 		return currentTotalPrice;
 	}
@@ -277,10 +270,10 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 		public ItemStock getItemStock() {
 			return itemStock;
-		
+
 		}
 	}
-	
+
 	public void setOrderItems(Set<OrderItems> orderItems) {
 		this.orderItems = orderItems;
 
@@ -296,52 +289,47 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 				OrderItems orderItem = orderItemMap.get(itemFieldId);
 				if (orderItem != null) {
 					Integer oldValue = orderItem.getQuantity();
-					
+
 					if (!quantity.equals(oldValue)) {
 						orderItem.setQuantity(quantity);
 						ItemStock inventory = orderItem.getItemInventory();
-						
+
 						Integer availableStock = inventory.getAvailableStock();
-						
-						Integer currentStock = availableStock + oldValue - quantity; 
-						
+
+						Integer currentStock = availableStock + oldValue - quantity;
+
 						inventory.setAvailableStock(currentStock);
 						orderItem.setUpdatedDate(LocalDateTime.now());
 						orderItem.setUpdatedBy(user);
 					}
 				}
-				
+
 			}
 		});
 		return orderItemMap.values().stream().collect(Collectors.toSet());
 	}
 
 	private void setValues() {
-		 orderItemMap = orderItems.stream().collect(Collectors.toMap(e -> {
-			
+		orderItemMap = orderItems.stream().collect(Collectors.toMap(e -> {
+
 			String productShortCode = e.getItemInventory().getProduct().getProductShortCode();
 			String sizeName = e.getItemInventory().getSize().getSizeName();
 			return "id-" + productShortCode + "-" + sizeName;
 		}, Function.identity()));
-		
-		
+
 		itemsList.forEach(itemField -> {
-			
+
 			IntegerField field = itemField.getNumberField();
 			String fieldId = field.getId().orElse(null);
-			
+
 			if (fieldId != null) {
 				System.out.println("Field ID: " + fieldId);
 				OrderItems orderItem = orderItemMap.get(fieldId);
 				Integer value = orderItem != null ? orderItem.getQuantity() : 0;
 				field.setValue(value);
 			}
-			
-			
 		});
-		
-		// TODO Auto-generated method stub
-		
+
 	}
 
 }

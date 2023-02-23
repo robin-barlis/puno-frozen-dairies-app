@@ -4,41 +4,51 @@ import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.logging.Logger;
 
+import com.example.application.data.Categories;
 import com.example.application.data.OrderStatus;
 import com.example.application.data.Role;
 import com.example.application.data.entity.AppUser;
-import com.example.application.data.entity.payment.Banks;
+import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.Size;
 import com.example.application.data.entity.stock.ItemStock;
 import com.google.gwt.thirdparty.guava.common.collect.Ordering;
 import com.google.gwt.thirdparty.guava.common.collect.Sets;
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.textfield.TextField;
 
 public class PfdiUtil {
+	
+	
 
 	private final static Set<String> COMPANY_OWNED_TAGS = Sets.newHashSet("Relative Owned", "Company Owned", "Main Store");
 
+	
+	//T/C, 3.4L, 1.9L, 1.0L, PINT, CUP, I.C. CONE, 1.5L, 800ML, 475ML, 200ML
 	private final static List<String> SIZE_NAMES = Arrays.asList("T/C", "3.4L", "1.9L", "1.0L", "Pint", "CUP",
 			"I.C. Cone", "1.5L", "800mL", "475mL", "200mL");
+	
+	private final static List<String> FLAVORS_SORTING = Arrays.asList("Regular Ice Cream",
+			"Special/Premium Ice Cream",
+			"Sherbet");
 
 	private final static List<String> CONES_SIZE_NAMES = Arrays.asList("BOX", "PACK");
 
-	private final static List<String> OTHERS_SIZE_NAMES = Arrays.asList("PC", "PACK");
+	private final static List<String> OTHERS_SIZE_NAMES = Arrays.asList("PC","BOX", "PACK");
 
 	private final static Ordering<String> SIZE_NAME_ORDERING = Ordering.explicit(SIZE_NAMES);
 	
 	private final static Ordering<String> CONE_SIZE_NAME_ORDERING = Ordering.explicit(CONES_SIZE_NAMES);
 	
 	private final static Ordering<String> OTHER_SIZE_NAME_ORDERING = Ordering.explicit(OTHERS_SIZE_NAMES);
+	
+	private final static Ordering<String> CATEGORY_NAME_ORDERING = Ordering.explicit(FLAVORS_SORTING);
 
 	public static final NumberFormat getFormatter() {
 
@@ -143,10 +153,35 @@ public class PfdiUtil {
 			return OTHER_SIZE_NAME_ORDERING.compare(arg0.getSize().getSizeName(), arg1.getSize().getSizeName());
 		}
 	};
+	
+	public static Comparator<String> categoryNameComparator = new Comparator<String>() {
+
+		@Override
+		public int compare(String arg0, String arg1) {
+			return CATEGORY_NAME_ORDERING.compare(arg0, arg1);
+		}
+	};
 
 	public static void setVisibility(boolean show, Component...components ) {
 		for (Component component : components) {
 			component.setVisible(show);
+		}
+		
+	}
+	
+	
+	public static void sort(Category category, List<Size> size) {
+		
+		if (Categories.Flavors.name().equals(category.getCategoryType())){
+			Collections.sort(size, sizeComparator);
+		}
+		
+		if (Categories.Cones.name().equals(category.getCategoryType())){
+			Collections.sort(size, coneSizeComparator);	
+		}
+
+		if (Categories.Others.name().equals(category.getCategoryType())){
+			Collections.sort(size, otherSizeComparator);
 		}
 		
 	}

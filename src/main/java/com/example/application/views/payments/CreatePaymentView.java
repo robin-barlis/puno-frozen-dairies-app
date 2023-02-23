@@ -303,8 +303,14 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 				currentOrder = selectedOrder;
 				storeName.setValue(selectedOrder.getCustomer());
 				orderDate.setValue(selectedOrder.getCreationDate().toLocalDate());
-				invoiceNumber.setValue(selectedOrder.getInvoiceId().toString());
-				deliveryReceiptNumber.setValue(selectedOrder.getDeliveryReceiptId().toString());
+				
+				if (selectedOrder.getInvoiceId() != null) {
+					invoiceNumber.setValue(selectedOrder.getInvoiceId().toString());
+				}
+				
+				if (selectedOrder.getDeliveryReceiptId() != null) {
+					deliveryReceiptNumber.setValue(selectedOrder.getDeliveryReceiptId().toString());
+				}
 				amountDue.setValue(selectedOrder.getAmountDue());
 				dueDate.setValue(selectedOrder.getDueDate());	
 				paymentAmount.setValue(selectedOrder.getAmountDue());

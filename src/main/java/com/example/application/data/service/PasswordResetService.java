@@ -83,13 +83,13 @@ public class PasswordResetService {
 		sb.append("<br>");
 
 		sb.append("<br>");
-		sb.append("<span>You recently requested to reset your password for your PFDI Business Management Application account.<span>");
+		sb.append("<span>You recently requested to set your password for your PFDI Business Management Application account.<span>");
 		sb.append("<br>");
 
 		sb.append("<br>");
 		sb.append("<span><a href=\"");
 		sb.append(url);
-		sb.append("\">Click here</a> to reset your password for the username " + user.getUsername() +". This password reset is only valid for the next 48 hours.");
+		sb.append("\">Click here</a> to set your password for the username " + user.getUsername() +". This password reset is only valid for the next 48 hours.");
 		sb.append("<br>");
 
 		sb.append("<br>");

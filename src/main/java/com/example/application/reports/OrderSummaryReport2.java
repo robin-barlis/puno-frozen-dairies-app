@@ -120,7 +120,7 @@ public class OrderSummaryReport2 {
 	}
 
 
-	private JasperPrint getReport(Order order, ArrayList<HashMap<String, String>> rowsDataList)
+	public JasperPrint getReport(Order order, ArrayList<HashMap<String, String>> rowsDataList)
 			throws JRException, ColumnBuilderException, ClassNotFoundException {
 		Style headerStyle = createHeaderStyle();
 		Style detailTextStyle = createDetailTextStyle();

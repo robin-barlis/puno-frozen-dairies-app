@@ -1,4 +1,3 @@
-
 package com.example.application.views.order;
 
 import java.math.BigDecimal;
@@ -17,6 +16,7 @@ import org.vaadin.klaudeta.PaginatedGrid;
 
 import com.example.application.data.OrderStatus;
 import com.example.application.data.PaymentStatus;
+import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
@@ -25,10 +25,9 @@ import com.example.application.data.service.orders.OrderRepositoryCustom;
 import com.example.application.data.service.orders.OrderRepositoryCustomImpl;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.products.SizesService;
-import com.example.application.reports.OrderSummaryReport;
+import com.example.application.reports.OrderSummaryReport2;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
-import com.example.application.utils.service.ReportConsolidatorService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
@@ -81,34 +80,40 @@ import com.vaadin.flow.router.RouteParam;
 import com.vaadin.flow.router.RouteParameters;
 
 @PageTitle("Stock Orders")
-@Route(value = "order/stockOrders", layout = MainLayout.class)
-@RouteAlias(value = "/order/stockOrders", layout = MainLayout.class)
-@RolesAllowed({ "Admin", "Superuser", "ADMIN", "Checker", "CHECKER" })
+@Route(value = "order/stockTransfer2/:id", layout = MainLayout.class)
+@RouteAlias(value = "/order/stockTransfer2/:id", layout = MainLayout.class)
+@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" })
 @Uses(Icon.class)
-public class StockOrderView extends AbstractPfdiView implements BeforeEnterObserver {
+public class StockTransferSummaryView extends AbstractPfdiView implements BeforeEnterObserver {
 
 	private static final long serialVersionUID = 2754507440441771890L;
 
 //	private PaginatedGrid<Order> grid = new PaginatedGrid<Order>();
 	PaginatedGrid<Order, ?> grid = new PaginatedGrid<>();
 	private Button addCustomerButton;
-
+	
 	private OrdersService ordersService;
 	private final CustomerService customerService;
 
 	private ListDataProvider<Order> ldp = null;
 	List<Order> orders;
+	private AppUser appUser;
+	private OrderSummaryReport2 orderSummaryReport;
+	private SizesService sizesService;
 	List<Customer> customers;
 	private Dialog searchOrdersDialog = new Dialog();
 	private final OrderRepositoryCustom orderRepositoryCustom;
 
 	@Autowired
-	public StockOrderView(OrdersService ordersService, CustomerService customerService, AuthenticatedUser user,
-			OrderSummaryReport orderSummaryReport, SizesService sizesService,
-			OrderRepositoryCustomImpl orderRepositoryCustom, ReportConsolidatorService reportConsolidatorService) {
+	public StockTransferSummaryView(OrdersService ordersService, CustomerService customerService, 
+			AuthenticatedUser user, OrderSummaryReport2 orderSummaryReport, SizesService sizesService, 
+			OrderRepositoryCustomImpl orderRepositoryCustom) {
 		super("Admin", "Admin");
 		this.customerService = customerService;
 		this.ordersService = ordersService;
+		this.orderSummaryReport = orderSummaryReport;
+		this.sizesService = sizesService;
+		this.appUser = user.get().get();
 		this.orderRepositoryCustom = orderRepositoryCustom;
 		addClassNames("administration-view");
 
@@ -124,121 +129,162 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		Label addProfileLabel = new Label(label);
 		addProfileLabel.getStyle().set("padding-bottom", "20px");
 
+
 		TextField orderId = new TextField("Stock Order Number");
-
+		
 		TextField deliveryReceiptField = new TextField("Delivery Receipt Number");
-
+		
 		TextField stockTransferField = new TextField("Stock Transfer Number");
-
+		
 		TextField invoiceNUmberField = new TextField("Invoice Number");
 
-		List<Customer> roles = customerService.listAll(Sort.unsorted());
 
+		List<Customer> roles = customerService.listAll(Sort.unsorted());
+	
 		MultiSelectComboBox<Customer> storeName = new MultiSelectComboBox<>();
 		storeName.setLabel("Store Name");
 		storeName.setItems(roles);
 		storeName.setPlaceholder("Select Store Name");
-		storeName.setItemLabelGenerator(e -> e.getStoreName());
-
+		storeName.setItemLabelGenerator(e-> e.getStoreName());
+		
 		MultiSelectComboBox<PaymentStatus> paymentStatus = new MultiSelectComboBox<>();
-
+		
 		List<PaymentStatus> paymentStatuses = Arrays.asList(PaymentStatus.values());
 		paymentStatus.setLabel("Payment Status");
 		paymentStatus.setItems(paymentStatuses);
 		paymentStatus.setPlaceholder("Select Payment Status");
-		paymentStatus.setItemLabelGenerator(e -> e.getPaymentStatusName());
-
+		paymentStatus.setItemLabelGenerator(e-> e.getPaymentStatusName());
+		
+		
 		MultiSelectComboBox<OrderStatus> orderStatusField = new MultiSelectComboBox<>();
-
+		
 		List<OrderStatus> orderStatus = Arrays.asList(OrderStatus.values());
 		orderStatusField.setLabel("Order Status");
 		orderStatusField.setItems(orderStatus);
 		orderStatusField.setPlaceholder("Select Order Status");
-		orderStatusField.setItemLabelGenerator(e -> e.getOrderStatusName());
+		orderStatusField.setItemLabelGenerator(e-> e.getOrderStatusName());
+
 
 		DatePicker orderDateTo = new DatePicker("Order Date To");
 		orderDateTo.setEnabled(false);
-
+		
 		DatePicker orderDateFrom = new DatePicker("Order Date From");
-		orderDateFrom.addValueChangeListener(e -> {
+		orderDateFrom.addValueChangeListener( e-> {
 			orderDateTo.setValue(LocalDate.now());
 			orderDateTo.setEnabled(true);
 		});
 
+		
+
 		DatePicker dueDateTo = new DatePicker("Due Date To");
 		dueDateTo.getStyle().set("padding-bottom", "40px");
 		dueDateTo.setEnabled(false);
-
+		
 		DatePicker dueDateFrom = new DatePicker("Due Date From");
 		dueDateFrom.getStyle().set("padding-bottom", "40px");
-		dueDateFrom.addValueChangeListener(e -> {
+		dueDateFrom.addValueChangeListener( e-> {
 			dueDateTo.setValue(LocalDate.now());
 			dueDateTo.setEnabled(true);
 		});
 
+
 		Button searchButton = new Button("Search");
 		searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		searchButton.addClickListener(e -> {
-
+			
 			Map<String, Object> filters = Maps.newHashMap();
-
+			
 			if (!orderId.isEmpty()) {
 				filters.put("stockOrderNumber", orderId.getValue());
 			}
-
+			
 			if (!deliveryReceiptField.isEmpty()) {
 				filters.put("deliveryReceiptId", deliveryReceiptField.getValue());
 			}
-
+			
 			if (!stockTransferField.isEmpty()) {
 				filters.put("stockTransferId", stockTransferField.getValue());
 			}
-
+			
 			if (!invoiceNUmberField.isEmpty()) {
 				filters.put("invoiceId", invoiceNUmberField.getValue());
 			}
-
+			
 			if (!storeName.isEmpty()) {
 				filters.put("store", storeName.getValue());
 			}
-
+			
 //			if (!paymentStatus.isEmpty()) {
 //				filters.put("payments", paymentStatus.getValue());
 //			}
-
+			
 			if (!orderStatusField.isEmpty()) {
-
-				List<String> orderStatusName = orderStatusField.getValue().stream().map(osf -> osf.getOrderStatusName())
-						.collect(Collectors.toList());
+				
+				List<String> orderStatusName = orderStatusField.getValue().stream().map(osf-> osf.getOrderStatusName()).collect(Collectors.toList());
 				filters.put("orderStatus", orderStatusName);
 			}
-
+			
 			if (!orderDateFrom.isEmpty()) {
-
+				
 				Map<String, LocalDate> orderDates = Maps.newHashMap();
 				orderDates.put("orderDateFrom", orderDateFrom.getValue());
 				orderDates.put("orderDateTo", !orderDateTo.isEmpty() ? orderDateTo.getValue() : LocalDate.now());
-
+				
 				filters.put("ordersDate", orderDates);
 			}
-
+			
 			if (!dueDateFrom.isEmpty()) {
-
+				
 				Map<String, LocalDate> dueDates = Maps.newHashMap();
 				dueDates.put("dueDateFrom", dueDateFrom.getValue());
 				dueDates.put("dueDateTo", !dueDateTo.isEmpty() ? dueDateTo.getValue() : LocalDate.now());
-
+				
 				filters.put("dueDates", dueDates);
 			}
-
+			
+			
 			List<Order> results = orderRepositoryCustom.filterBy(filters);
-
+//			try {
+//				boolean isNewUser = appUser.getId() == null;
+//
+//				if (appUser.getUsername() == null) {
+//					String firstName = appUser.getFirstName().strip().toLowerCase();
+//					String lastName = appUser.getLastName().strip().toLowerCase();
+//					String userName = firstName + "." + lastName;
+//					appUser.setUsername(userName.replace(' ', '.'));
+//				}
+//
+//				AppUser updatedAppUser = userService.update(appUser);
+//				addProfileDialog.close();
+//				if (isNewUser) {
+//
+//					try {
+//						
+//						String message = passwordResetService.composeResetPasswordMessage(updatedAppUser);
+//						emailService.sendMail("No Reply: Set Password", message,
+//								updatedAppUser.getEmailAddress(), updatedAppUser.getFirstName() + " " + updatedAppUser.getLastName());
+//					} catch (Exception e1) {
+//						e1.printStackTrace();
+//						System.out.println(e1.getMessage());
+//						Notification.show("Could not send the email. Please check with the Administrator.")
+//						.addThemeVariants(NotificationVariant.LUMO_ERROR);
+//					}
+//				}
+//				clearForm();
+//				refreshGrid(updatedAppUser);
+//
+//				Notification.show("Profile successfully created/updated")
+//						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+//				UI.getCurrent().navigate(AdministrationView.class);
+//			} catch (ValidationException validationException) {
+//				Notification.show("An exception happened while trying to store the samplePerson details.");
+//			}
 			ldp = DataProvider.ofCollection(results);
 			grid.setItems(ldp);
 			ldp.refreshAll();
-
+			
 			searchOrdersDialog.close();
-
+			
 		});
 
 		Button cancelButton = new Button("Cancel");
@@ -257,9 +303,15 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		Hr divider4 = new Hr();
 		FormLayout formLayout = new FormLayout();
 		formLayout.setWidth("800px");
-		formLayout.add(addProfileLabel, divider1, orderId, deliveryReceiptField, stockTransferField, invoiceNUmberField,
-				divider3, storeName, orderStatusField, divider4, orderDateFrom, orderDateTo, dueDateFrom, dueDateTo,
-				divider2, cancelButton, searchButton, id);
+		formLayout.add(addProfileLabel, divider1, 
+				orderId, deliveryReceiptField, 
+				stockTransferField, invoiceNUmberField, 
+				divider3,
+				storeName, orderStatusField,
+				divider4,
+				orderDateFrom, orderDateTo, 
+				dueDateFrom, dueDateTo, divider2,
+				cancelButton, searchButton, id);
 
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("500px", 2));
 
@@ -270,7 +322,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		formLayout.setColspan(divider4, 2);
 
 		searchOrdersDialog.add(formLayout);
-
+		
 	}
 
 	@Override
@@ -295,8 +347,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		addCustomerButton = new Button("Create Stock Order");
 		addCustomerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addCustomerButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
-		// addCustomerButton.setVisible(PfdiUtil.isSales(appUser) ||
-		// PfdiUtil.isSuperUser(appUser));
+		//addCustomerButton.setVisible(PfdiUtil.isSales(appUser) || PfdiUtil.isSuperUser(appUser));
 		addCustomerButton.addClickListener(e -> {
 
 			UI.getCurrent().navigate(CreateOrderFormView.class);
@@ -315,13 +366,13 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		customers = customerService.listAll(Sort.by("id"));
 
 		if (!customers.isEmpty()) {
-			// customers.forEach(customer -> populateForm(customer));
+			//customers.forEach(customer -> populateForm(customer));
 
 		} else {
 			Notification.show(String.format("No customers available. Please contact your administrator."), 3000,
 					Notification.Position.BOTTOM_START);
-			// refreshGrid();
-			event.forwardTo(StockOrderView.class);
+			//refreshGrid();
+			event.forwardTo(StockTransferSummaryView.class);
 		}
 	}
 
@@ -406,6 +457,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 			stockTransferLayout.add(stockTransferLabel, stockTransferValue);
 			
+
 			orderLayout.add(orderIdLayout,deliveryReceiptLayout,stockTransferLayout);
 			if (!isCompanyOwned) {
 				HorizontalLayout invoiceLayout = new HorizontalLayout();
@@ -470,6 +522,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			paymentDetailsLayout.setWidthFull();
 			paymentDetailsLayout.setSpacing(false);
 			
+			Customer customer = order.getCustomer();
 			
 			List<Payment> payments = order.getPayments();
 			
@@ -567,25 +620,11 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		MenuBar printStockOrderDocs = new MenuBar();
 		printStockOrderDocs.setEnabled(false);
         printStockOrderDocs.addThemeVariants(MenuBarVariant.LUMO_ICON, MenuBarVariant.LUMO_TERTIARY);
-        
-     
-        
+
         Button printAllButton = new Button(new Icon(VaadinIcon.PRINT) );
         printAllButton.setTooltipText("Print All Documents");
+        MenuItem printAll = printStockOrderDocs.addItem(printAllButton);
         
-        printAllButton.addClickListener(e-> {
- 
-    		
-    		List<String> orderIds = grid.getSelectedItems().stream()
-    				.map(order -> order.getId().toString()).collect(Collectors.toList());
-    		
-    		
-    		
-    		RouteParameters parameters = new RouteParameters("id", String.join(",", orderIds));
-        	UI.getCurrent().navigate(PrinterView.class, parameters);
-        	
-        });
-        printStockOrderDocs.addItem(printAllButton);
         
         
         MenuBar options = new MenuBar();
@@ -593,7 +632,14 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
         
         MenuItem optionsMenu = options.addItem(new Icon(VaadinIcon.COG));
         SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
-
+//        MenuItem viewOrders = optionsMenuSubItems.addItem("View");
+//        
+//        SubMenu viewOrdersSubItem = viewOrders.getSubMenu();
+//        
+//        viewOrdersSubItem.addItem("Today's orders");
+//        viewOrdersSubItem.addItem("This week's orders");
+//        viewOrdersSubItem.addItem("This month's orders");
+//        optionsMenuSubItems.add(new Hr());
         MenuItem rowsPerPage = optionsMenuSubItems.addItem("Rows per page");
         
         SubMenu rowsPerPageSubItem = rowsPerPage.getSubMenu();
@@ -603,7 +649,34 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
         rowsPerPageSubItem.addItem("50", e -> grid.setPageSize(50));
 
         optionsMenuSubItems.add(new Hr());
-
+//        MenuItem export = optionsMenuSubItems.addItem("Export");
+        
+        
+        
+//        stockOrderPrint.addClickListener(e -> {
+//        	Set<Order> selectedItems = grid.getSelectedItems();
+//        	
+//
+//        	
+//        	
+//        	try {
+//				byte[] combinedPdf = orderSummaryReport.buildReport(selectedItems, sizesService.listAll(Sort.unsorted()));
+//				
+//				StreamResource resource = new StreamResource("order.pdf", () -> {
+//					return new ByteArrayInputStream(combinedPdf);
+//				});
+//				//this.getElement().executeJs("printPdf.printPdf($0)", combinedPdf);
+//        	
+//        	} catch (ColumnBuilderException | ClassNotFoundException | JRException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			} 
+//        	
+//        
+//        	
+//        	
+//        	
+//        });
 
 		GridListDataView<Order> dataView = grid.setItems(ldp);
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES, GridVariant.MATERIAL_COLUMN_DIVIDERS);
@@ -663,35 +736,83 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		secondaryActionsLayout.setWidthFull();
 		secondaryActionsLayout.add(searchFiltersLayout, printButtonContainer);
 		
+		VerticalLayout searchFields = createSearchLayout();
+		
 		wrapper.add(secondaryActionsLayout, new Hr(),  grid);
 		verticalLayout.addAndExpand(wrapper);
 	}
-	
+
+	private VerticalLayout createSearchLayout() {
+		VerticalLayout fields = new VerticalLayout();
+		
+		HorizontalLayout orderFields = new HorizontalLayout();
+		
+		
+		TextField orderId = new TextField("Order ID");
+		
+		customers = customerService.listAll(Sort.by("id"));
+		MultiSelectComboBox<Customer> customersDropdown = new MultiSelectComboBox<>();
+		customersDropdown.setLabel("Customer");
+		customersDropdown.setItemLabelGenerator(e -> {
+			return e.getStoreName();
+		});
+		customersDropdown.setItems(customers);
+
+		DatePicker orderDateTo = new DatePicker("Order From To");
+		orderDateTo.setValue(LocalDate.now());
+		
+		DatePicker orderDateFrom = new DatePicker("Order From Date");
+		orderDateFrom.setValue(LocalDate.now());
+		orderDateFrom.addValueChangeListener(e-> {
+			
+			if (e.getValue() != null) {
+
+				orderDateTo.setMin(orderDateFrom.getValue());
+			}
+		});
+		
+		
+		HorizontalLayout orderDateFields = new HorizontalLayout();
+		orderDateFields.add(orderDateFrom, orderDateTo);
+		
+		
+		
+		
+		orderFields.add(orderId, customersDropdown, orderDateFields);
+		
+		
+		fields.add(orderFields);
+		
+		
+		
+		return fields;
+	}
+
 	private Component getStockTransferLink(Order order, boolean isCompanyOwned) {
-		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
-
+	RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+		
 		String path = "#" + order.getStockTransferId();
-
+		
 		String route = RouteConfiguration.forSessionScope().getUrl(StockTransferView.class, parameters);
-		Anchor anchor = new Anchor(route, path);
+		Anchor anchor= new Anchor(route, path);
 		anchor.setClassName("order-row-value");
 		Span span = new Span("N/A");
 		span.setClassName("order-row-value");
-		Component component = order.getStockTransferId() != null ? anchor : span;
+		Component component = order.getStockTransferId() != null ? anchor  : span;
 		return component;
 	}
 
 	private Component getInvoiceLink(Order order, boolean isCompanyOwned) {
 		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
-
+		
 		String path = "#" + order.getInvoiceId();
-
+		
 		String route = RouteConfiguration.forSessionScope().getUrl(SalesInvoiceView.class, parameters);
-		Anchor anchor = new Anchor(route, path);
+		Anchor anchor= new Anchor(route, path);
 		anchor.setClassName("order-row-value");
 		Span span = new Span("N/A");
 		span.setClassName("order-row-value");
-		Component component = order.getInvoiceId() != null ? anchor : span;
+		Component component = order.getInvoiceId() != null ? anchor  : span;
 		return component;
 
 	}
@@ -699,24 +820,24 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	private Component getDeliveryReceiptLink(Order order) {
 		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
 		String deliveryReceipt = order.getDeliveryReceiptId() != null ? "#" + order.getDeliveryReceiptId() : "N/A";
-		String route = RouteConfiguration.forSessionScope().getUrl(DeliveryReceiptReportView.class, parameters);
-
-		Anchor anchor = new Anchor(route, deliveryReceipt);
+		String route = RouteConfiguration.forSessionScope().getUrl(DeliveryReceiptView.class, parameters);
+		
+		Anchor anchor= new Anchor(route, deliveryReceipt);
 		anchor.setClassName("order-row-value");
 		Span span = new Span("N/A");
 		span.setClassName("order-row-value");
-		Component component = order.getDeliveryReceiptId() != null ? anchor : span;
+		Component component = order.getDeliveryReceiptId()  != null ? anchor : span;
 		return component;
 	}
 
 	private Component getStockOrderLink(Order order) {
 		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
 		String route = RouteConfiguration.forSessionScope().getUrl(StockOrderSummaryView.class, parameters);
+       
 
 		Integer stockOrderNumber = order.getStockOrderNumber();
 		String pathString = stockOrderNumber != null ? stockOrderNumber.toString() : "N/A";
-		String path = stockOrderNumber != null ? "#" + pathString : "N/A";
-		;
+		String path =  stockOrderNumber != null ? "#" + pathString : "N/A"; ;	
 		Anchor component = new Anchor(route, path);
 		component.setClassName("order-row-value");
 		return component;
@@ -728,6 +849,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			grid.getListDataView().refreshAll();
 		}
 	}
+
 
 	@Override
 	protected void createMainContentLayout(VerticalLayout mainContentContainer) {

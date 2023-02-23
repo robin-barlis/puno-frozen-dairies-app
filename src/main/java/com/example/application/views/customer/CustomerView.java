@@ -8,8 +8,10 @@ import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.vaadin.klaudeta.PaginatedGrid;
 
 import com.example.application.data.entity.customers.Customer;
+import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.LocationTag;
 import com.example.application.data.service.customers.CustomerService;
@@ -49,7 +51,9 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
+import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.IntegerField;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -71,14 +75,14 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 
 	private static final long serialVersionUID = 2754507440441771890L;
 
-	private Grid<Customer> grid = new Grid<>(Customer.class, false);
+	private PaginatedGrid<Customer, ?> grid = new PaginatedGrid<>();
 
 	private IntegerField id;
 	private TextField storeName;
 	private TextField tinNumber;
 	private TextField address;
 	private TextField ownerName;
-	private IntegerField contactNumber;
+	private BigDecimalField contactNumber;
 	private Select<CustomerTag> customerTag;
 	private Select<LocationTag> locationTag;
 	private DatePicker contractStartDate;
@@ -174,7 +178,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		address.setRequired(true);
 		address.setRequiredIndicatorVisible(true);
 
-		contactNumber = new IntegerField("Customer Contact Number");
+		contactNumber = new BigDecimalField("Customer Contact Number");
 		contactNumber.setRequiredIndicatorVisible(true);
 
 		tinNumber = new TextField("Tin Number");
@@ -299,21 +303,11 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
 
-//		//grid.addColumn("id").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-//		grid.addColumn("username").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-//
-//		grid.addColumn(currentAppUser -> {
-//			String firstName = currentAppUser.getFirstName();
-//			String lastName = currentAppUser.getLastName();
-//			String fullName = lastName + ", " + firstName;
-//			return fullName;
-//		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Name").setSortable(true);
+		grid.addColumn(Customer::getStoreName).setHeader("Store Name").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn("storeName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-
-		grid.addColumn("ownerName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getOwnerName).setHeader("Owner").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		
-		grid.addColumn("tinNumber").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getTinNumber).setHeader("Tin Number").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addColumn(customer -> {
 			return customer.getCustomerTagId().getCustomerTagName();
@@ -323,13 +317,13 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 			return customer.getLocationTagId().getLocationTagName();
 		}).setHeader("Location Tag").setAutoWidth(true);
 
-		grid.addColumn("address").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getAddress).setHeader("Address").setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn("contactNumber").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getContactNumber).setHeader("Contact Number").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn("contractStartDate").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getContractStartDate).setHeader("Contract Start Date").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn("contractEndDate").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getContractEndDate).setHeader("Contract End Date").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addComponentColumn(currentCustomer -> {
 

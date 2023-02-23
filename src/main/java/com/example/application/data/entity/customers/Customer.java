@@ -1,6 +1,7 @@
 package com.example.application.data.entity.customers;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import javax.persistence.CascadeType;
@@ -42,7 +43,7 @@ public class Customer implements Serializable {
 	
 	private String ownerName;
 	private String tinNumber;
-	private Integer contactNumber;
+	private BigDecimal contactNumber;
 	private String address;
 	private LocalDate contractStartDate;
 	private LocalDate contractEndDate;
@@ -72,11 +73,11 @@ public class Customer implements Serializable {
 		this.ownerName = ownerName;
 	}
 
-	public Integer getContactNumber() {
+	public BigDecimal getContactNumber() {
 		return contactNumber;
 	}
 
-	public void setContactNumber(Integer contactNumber) {
+	public void setContactNumber(BigDecimal contactNumber) {
 		this.contactNumber = contactNumber;
 	}
 

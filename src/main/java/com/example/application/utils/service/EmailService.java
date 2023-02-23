@@ -10,8 +10,6 @@ import javax.mail.internet.AddressException;
 
 import org.springframework.stereotype.Service;
 
-import com.google.api.services.gmail.Gmail;
-
 import sendinblue.ApiClient;
 import sendinblue.Configuration;
 import sendinblue.auth.ApiKeyAuth;
@@ -25,14 +23,14 @@ import sibModel.SendSmtpEmailTo;
 public class EmailService {
 
 	private static final String TEST_EMAIL = "robbarlis@gmail.com";
-	private static final String API_KEY = "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";
+	private static final String API_KEY = "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";
 
 	
 	public void sendMail(String subject, String message, String toAddress, String toName) throws AddressException, MessagingException, IOException  {
 		ApiClient defaultClient = Configuration.getDefaultApiClient();
 		// Configure API key authorization: api-key
 		ApiKeyAuth apiKey = (ApiKeyAuth) defaultClient.getAuthentication("api-key");
-		apiKey.setApiKey("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");
+		apiKey.setApiKey(API_KEY);
 
 		try {
 			TransactionalEmailsApi api = new TransactionalEmailsApi();

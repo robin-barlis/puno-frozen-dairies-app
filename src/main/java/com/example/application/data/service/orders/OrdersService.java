@@ -1,6 +1,6 @@
 package com.example.application.data.service.orders;
 
-import java.awt.print.Book;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
@@ -8,13 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.Root;
-
-import org.hibernate.criterion.CriteriaQuery;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,11 +17,11 @@ import org.springframework.stereotype.Service;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.entity.stock.ItemStock;
-import com.google.common.collect.Maps;
 
 @Service
-public class OrdersService {
+public class OrdersService implements Serializable{
 
+	private static final long serialVersionUID = 1L;
 	private final OrdersRepository repository;
 	private final OrderRepositoryCustom orderRepositoryCustom;
 
