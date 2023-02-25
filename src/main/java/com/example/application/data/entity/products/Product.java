@@ -42,6 +42,10 @@ public class Product implements Serializable {
 	
 	private String productPictureUrl;
 	
+	private Boolean activeStatus;
+	
+	private Integer sortingIndex;
+	
 	
 	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
 	@JoinColumn(name = "product_id")
@@ -125,6 +129,22 @@ public class Product implements Serializable {
 
 	public void setItemStock(Set<ItemStock> itemStock) {
 		this.itemStock = itemStock;
+	}	
+
+	public Boolean getActiveStatus() {
+		return activeStatus;
+	}
+
+	public void setActiveStatus(Boolean activeStatus) {
+		this.activeStatus = activeStatus;
+	}
+
+	public Integer getSortingIndex() {
+		return sortingIndex;
+	}
+
+	public void setSortingIndex(Integer sortingIndex) {
+		this.sortingIndex = sortingIndex;
 	}
 	
 	@Override

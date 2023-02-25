@@ -32,6 +32,7 @@ import com.example.application.utils.service.ReportConsolidatorService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
+import com.example.application.views.products.components.FlavorSortingDialog;
 import com.google.common.collect.Maps;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -601,9 +602,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
         rowsPerPageSubItem.addItem("15", e -> grid.setPageSize(15));
         rowsPerPageSubItem.addItem("20", e -> grid.setPageSize(20));
         rowsPerPageSubItem.addItem("50", e -> grid.setPageSize(50));
-
-        optionsMenuSubItems.add(new Hr());
-
+       
 
 		GridListDataView<Order> dataView = grid.setItems(ldp);
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES, GridVariant.MATERIAL_COLUMN_DIVIDERS);
@@ -620,29 +619,8 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	    grid.setPaginatorSize(5);
 	    
 	    grid.setHeight("90%");
-
-		TextField filterField = new TextField();
-		filterField.setPlaceholder("Filter results by order #, owner, or store");
-
-		Icon filterIcon = new Icon(VaadinIcon.FILTER);
-		filterIcon.setClassName(CssClassNamesConstants.PFDI_ICONS);
-		filterField.setSuffixComponent(filterIcon);
-		filterField.setValueChangeMode(ValueChangeMode.EAGER);
-		filterField.addValueChangeListener(e -> dataView.refreshAll());
-		filterField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);	       
-    
-
-		dataView.addFilter(customer -> {
-			String searchTerm = filterField.getValue().trim();
-
-			if (searchTerm.isEmpty()) {
-
-				return true;
-			}
-			return true;
-		});
 		
-		Button searchButton = new Button("Search", new Icon(VaadinIcon.SEARCH));
+		Button searchButton = new Button("Search Orders", new Icon(VaadinIcon.SEARCH));
 		searchButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS);
 		searchButton.setIconAfterText(true);
 		searchButton.addClickListener(e -> searchOrdersDialog.open());
@@ -657,7 +635,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		HorizontalLayout searchFiltersLayout = new HorizontalLayout();
 		searchFiltersLayout.addClassName("padding-bottom-medium");
 		searchFiltersLayout.setWidth("70%");
-		searchFiltersLayout.add(filterField, searchButton);
+		searchFiltersLayout.add(searchButton);
 
 		HorizontalLayout secondaryActionsLayout = new HorizontalLayout();
 		secondaryActionsLayout.setWidthFull();

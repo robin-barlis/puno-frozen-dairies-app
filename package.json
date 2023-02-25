@@ -2,7 +2,6 @@
   "name": "no-name",
   "license": "UNLICENSED",
   "dependencies": {
-    "@flowingcode/font-awesome-iron-iconset": "4.0.0",
     "@fontsource/roboto": "4.5.0",
     "@polymer/iron-icon": "3.0.1",
     "@polymer/iron-iconset-svg": "3.0.1",
@@ -116,7 +115,8 @@
     "lit": "2.3.0",
     "lit-element": "^3.2.2",
     "lit-html": "2.4.0",
-    "print-js": "1.6.0"
+    "print-js": "1.6.0",
+    "sortablejs": "1.14.0"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "3.1.0",
@@ -135,7 +135,6 @@
   },
   "vaadin": {
     "dependencies": {
-      "@flowingcode/font-awesome-iron-iconset": "4.0.0",
       "@fontsource/roboto": "4.5.0",
       "@polymer/iron-icon": "3.0.1",
       "@polymer/iron-iconset-svg": "^3.0.1",
@@ -248,7 +247,8 @@
       "lit": "2.3.0",
       "lit-element": "^3.2.2",
       "lit-html": "2.4.0",
-      "print-js": "1.6.0"
+      "print-js": "1.6.0",
+      "sortablejs": "1.14.0"
     },
     "devDependencies": {
       "@rollup/plugin-replace": "3.1.0",
@@ -265,7 +265,7 @@
       "workbox-core": "6.5.0",
       "workbox-precaching": "6.5.0"
     },
-    "hash": "8c07e02c6efcbc20a4b8fa1f8f89f6e401ea3761964020101f9c5daefeb79669"
+    "hash": "122899909e8ba01ef203402b4b0223dfdfbb1e1be02b986e0c8c335c8691407c"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -381,6 +381,6 @@
     "lit-html": "$lit-html",
     "@fontsource/roboto": "$@fontsource/roboto",
     "line-awesome": "$line-awesome",
-    "@flowingcode/font-awesome-iron-iconset": "$@flowingcode/font-awesome-iron-iconset"
+    "sortablejs": "$sortablejs"
   }
 }

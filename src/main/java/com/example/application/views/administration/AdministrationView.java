@@ -107,7 +107,6 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 	ListDataProvider<AppUser> ldp = null;
 	private AppUser appUser;
 	private EmailService emailService;
-	private String domain;
 
 	@Autowired
 	public AdministrationView(UserService userService, RolesService rolesService, LocationsService locationsService,
