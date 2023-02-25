@@ -137,6 +137,14 @@ public class StockTransferReport {
 		for (String key : sortedKeys) {
 
 			List<OrderItems> flavorsValuePerCategory = flavorPerCategory.get(key);
+			
+
+			
+			Collections.sort(flavorsValuePerCategory, (o1, o2) -> {
+				Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+				Integer sortingIndex2 = o1.getItemInventory().getProduct().getSortingIndex();
+				return sortingIndex1.compareTo(sortingIndex2);
+			});
 			if ("Regular Ice Cream".equalsIgnoreCase(key)) {
 				
 				Map<String, List<OrderItems>> regularFlavorsBySize = flavorsValuePerCategory.stream()
@@ -166,6 +174,7 @@ public class StockTransferReport {
 		for (Entry<String, List<OrderItems>> regularFlavorSizeEntry : regularFlavorsBySize.entrySet()) {
 
 			Integer quantity = 0;
+	
 			for (OrderItems item : regularFlavorSizeEntry.getValue()) {
 				int currentQuantity = item.getQuantity();
 				quantity = quantity + currentQuantity;

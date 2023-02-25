@@ -46,8 +46,6 @@ public class OrderSummaryReport {
 
 	public byte[] buildReport(Order order, Set<OrderItems> orderItems, List<Size> sizes, AppUser appUser) {
 
-
-
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		
 		try {
@@ -183,7 +181,6 @@ public class OrderSummaryReport {
 						.collect(Collectors.groupingBy(orderItem 
 								-> orderItem.getItemInventory().getProduct().getProductName()));;
 	
-				
 
 				String[] columns = new String[flavorSize.size()+1];
 				DRDataSource dataSource = new DRDataSource(columns);
@@ -195,8 +192,14 @@ public class OrderSummaryReport {
 					
 					int index = 0;
 	
-
-					for (OrderItems items : entry.getValue()) {
+					List<OrderItems> orderItems = entry.getValue();
+					
+					Collections.sort(orderItems, (o1, o2) -> {
+						Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+						Integer sortingIndex2 = o1.getItemInventory().getProduct().getSortingIndex();
+						return sortingIndex1.compareTo(sortingIndex2);
+					});
+					for (OrderItems items : orderItems) {
 						index++;
 						String key = "key" + items.getItemInventory().getSize().getId();
 						System.out.println("key id: " + key);
@@ -234,8 +237,15 @@ public class OrderSummaryReport {
 					columns[0] = "keyConeName";
 					int index = 0;
 	
-					values[0] = entry.getKey();
-					for (OrderItems items : entry.getValue()) {
+					values[0] = entry.getKey();					
+					List<OrderItems> orderItems = entry.getValue();
+					
+					Collections.sort(orderItems, (o1, o2) -> {
+						Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+						Integer sortingIndex2 = o1.getItemInventory().getProduct().getSortingIndex();
+						return sortingIndex1.compareTo(sortingIndex2);
+					});
+					for (OrderItems items : orderItems) {
 	
 						index++;
 						String key = "key" + items.getItemInventory().getSize().getId();
@@ -268,7 +278,15 @@ public class OrderSummaryReport {
 					int index = 0;
 	
 					values[0] = entry.getKey();
-					for (OrderItems items : entry.getValue()) {
+					
+					List<OrderItems> orderItems = entry.getValue();
+					
+					Collections.sort(orderItems, (o1, o2) -> {
+						Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+						Integer sortingIndex2 = o1.getItemInventory().getProduct().getSortingIndex();
+						return sortingIndex1.compareTo(sortingIndex2);
+					});
+					for (OrderItems items : orderItems) {
 	
 						index++;
 						String key = "key" + items.getItemInventory().getSize().getId();
