@@ -54,6 +54,18 @@ public class ProductService {
 
 	}
 	
+	public Map<String, List<Product>> listAllByCategoryName() {
+		List<Product> products = repository.findAll(Sort.by(Sort.Direction.ASC, "sortingIndex"));
+		
+		Map<String, List<Product>> productCategoryMap = products.stream().collect(Collectors.groupingBy(e -> {
+			return e.getCategory().getCategoryName();	
+		}));
+		
+		
+		return productCategoryMap;
+
+	}
+	
 	
 	public Product update(Object entity) {
 		return repository.save((Product)entity);

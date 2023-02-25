@@ -8,8 +8,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.example.application.data.Categories;
 import com.example.application.data.OrderStatus;
@@ -17,6 +19,8 @@ import com.example.application.data.Role;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.CustomerTag;
+import com.example.application.data.entity.products.Product;
+import com.example.application.data.entity.products.ProductPrice;
 import com.example.application.data.entity.products.Size;
 import com.example.application.data.entity.stock.ItemStock;
 import com.google.gwt.thirdparty.guava.common.collect.Ordering;
@@ -184,6 +188,17 @@ public class PfdiUtil {
 			Collections.sort(size, otherSizeComparator);
 		}
 		
+	}
+	
+	public static Map<Integer, List<ProductPrice>> createProductPricePerSizeId(Product product, CustomerTag customerTag) {
+		return product.getProductPrices().stream()
+				.filter(productPrice -> {
+					return productPrice.getCustomerTagId() == customerTag.getId();
+				}).collect(Collectors.groupingBy(productPrice -> productPrice.getSize().getId()));
+	}
+
+	public static Map<String, ItemStock> createSizeMap(Product product) {
+		return product.getItemStock().stream().collect(Collectors.toMap(e -> e.getSize().getSizeName(), Function.identity()));
 	}
 
 }

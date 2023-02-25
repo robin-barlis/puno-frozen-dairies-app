@@ -3,7 +3,6 @@ package com.example.application.views.order;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -58,7 +57,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 			List<Product> productsPerCategory = productCategoryMap.get(category.getCategoryName());
 			if (productsPerCategory != null && !productsPerCategory.isEmpty()) {
-
+				System.out.println("Category Name: " + category.getCategoryName());
 				createContent(category, productsPerCategory);
 			}
 
@@ -69,7 +68,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 	private void createContent(Category category, List<Product> products) {
 
 		VerticalLayout layout = new VerticalLayout();
-
+		layout.setClassName("item-order-category-subview");
 		H3 categoryHeader = new H3(category.getCategoryName());
 		categoryHeader.addClassNames("mb-0", "mt-s", "text-m");
 		layout.add(categoryHeader);
@@ -86,12 +85,8 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 			CustomerTag customerTag = customer.getCustomerTagId();
 
-			Map<String, ItemStock> itemStock = product.getItemStock().stream()
-					.collect(Collectors.toMap(e -> e.getSize().getSizeName(), Function.identity()));
-			Map<Integer, List<ProductPrice>> productPricePerCustomer = product.getProductPrices().stream()
-					.filter(productPrice -> {
-						return productPrice.getCustomerTagId() == customerTag.getId();
-					}).collect(Collectors.groupingBy(productPrice -> productPrice.getSize().getId()));
+			Map<String, ItemStock> itemStock = PfdiUtil.createSizeMap(product);
+			Map<Integer, List<ProductPrice>> productPricePerCustomer = PfdiUtil.createProductPricePerSizeId(product, customerTag);
 			List<Size> sizes = category.getSizeSet().stream().collect(Collectors.toList());
 
 			PfdiUtil.sort(category, sizes);
@@ -165,7 +160,6 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 							quantityField.setId("id-" + product.getProductShortCode() + "-" + size.getSizeName());
 							quantityField.addClassName("span-order-size-column");
 							quantityField.setHelperText("Stock: " + quantity);
-							quantityField.setHasControls(true);
 							quantityField.setValue(0);
 							quantityField.setMin(0);
 							System.out.println("id-" + product.getProductShortCode() + "-" + size.getSizeName());
@@ -199,7 +193,6 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 					quantityField.setMax(0);
 					quantityField.addClassName("span-order-size-column");
 					quantityField.setHelperText("Stock: N/A");
-					quantityField.setHasControls(true);
 					quantityField.setValue(0);
 					quantityField.setMin(0);
 					quantityField.setEnabled(false);

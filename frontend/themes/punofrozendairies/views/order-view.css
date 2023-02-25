@@ -1,19 +1,19 @@
 .span-order-flavor-column-header {
 	font-weight: 600;
-	width: 200px !important;
+	width: 150px !important;
+}
+
+.span-order-flavor-column {
+	width: 150px !important;
 }
 
 .span-order-size-column-header {
 	font-weight: 600;
-	width: 100px !important;
-}
-
-.span-order-flavor-column {
-	width: 200px !important;
+	width: 75px !important;
 }
 
 .span-order-size-column {
-	width: 100px !important;
+	width: 75px !important;
 }
 
 .order-summary-div {
@@ -164,6 +164,10 @@ a.order-row-value,  .order-row-value, .order-row-value-amount{
 
 .order-row-value-amount {
 	color: var(--lumo-primary-color);
+}
+
+.item-order-category-subview {
+/* --	width: unset !important;  */
 }
 
 

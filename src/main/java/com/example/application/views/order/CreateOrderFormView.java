@@ -103,9 +103,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 
 	}
 
-	private void createMainContent(VerticalLayout content) {
-		System.out.println("creating main Content");
-		
+	private void createMainContent(VerticalLayout content) {	
 		FormLayout formLayout = new FormLayout();
 		formLayout.setResponsiveSteps(
 		        new ResponsiveStep("0", 1),
@@ -210,11 +208,6 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 
 	}
 
-	private void updateOrder() {
-		
-		
-	}
-
 	private Order createNewOrder() {
 		Order order = new Order();
 		
@@ -241,16 +234,10 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		return order;
 	}
 
-	private void createOrderContent(VerticalLayout content, Customer customer) {
-		
-		
-		List<Product> products = productService.listAll(Sort.by(Sort.Direction.DESC, "category_id"));
-		
+	private void createOrderContent(VerticalLayout content, Customer customer) {		
 		
 		List<Category> categories = categoryService.listAll(Sort.by(Sort.Direction.ASC, "id"));
-		Map<String, List<Product>> productCategoryMap = products.stream().collect(Collectors.groupingBy(e -> {
-			return e.getCategory().getCategoryName();	
-		}));
+		Map<String, List<Product>> productCategoryMap = productService.listAllByCategoryName();
 		
 		itemOrderCategorySubView = new ItemOrderCategorySubView(categories, customer, productCategoryMap);
 		
