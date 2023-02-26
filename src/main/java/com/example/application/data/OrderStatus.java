@@ -3,7 +3,9 @@ package com.example.application.data;
 public enum OrderStatus {
     DRAFT("Draft"),  
     FOR_DELIVERY("For Delivery"),
-    DELIVERED("Delivered");
+    DELIVERED("Delivered"),
+    REOPENED("Reopened"),
+	CANCELLED("Cancelled");
 	
 	private String orderStatusName;
 

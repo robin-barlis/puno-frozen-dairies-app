@@ -25,7 +25,6 @@ import com.example.application.data.service.orders.OrderRepositoryCustom;
 import com.example.application.data.service.orders.OrderRepositoryCustomImpl;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.products.SizesService;
-import com.example.application.reports.OrderSummaryReport2;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
 import com.example.application.views.AbstractPfdiView;
@@ -98,7 +97,7 @@ public class StockTransferSummaryView extends AbstractPfdiView implements Before
 	private ListDataProvider<Order> ldp = null;
 	List<Order> orders;
 	private AppUser appUser;
-	private OrderSummaryReport2 orderSummaryReport;
+	//private OrderSummaryReport2 orderSummaryReport;
 	private SizesService sizesService;
 	List<Customer> customers;
 	private Dialog searchOrdersDialog = new Dialog();
@@ -106,12 +105,11 @@ public class StockTransferSummaryView extends AbstractPfdiView implements Before
 
 	@Autowired
 	public StockTransferSummaryView(OrdersService ordersService, CustomerService customerService, 
-			AuthenticatedUser user, OrderSummaryReport2 orderSummaryReport, SizesService sizesService, 
+			AuthenticatedUser user, SizesService sizesService, 
 			OrderRepositoryCustomImpl orderRepositoryCustom) {
 		super("Admin", "Admin");
 		this.customerService = customerService;
 		this.ordersService = ordersService;
-		this.orderSummaryReport = orderSummaryReport;
 		this.sizesService = sizesService;
 		this.appUser = user.get().get();
 		this.orderRepositoryCustom = orderRepositoryCustom;

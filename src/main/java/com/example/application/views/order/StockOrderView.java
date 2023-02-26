@@ -61,6 +61,7 @@ import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
@@ -565,16 +566,20 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		orders = ordersService.listAll(Sort.by("id"));
 		ldp = DataProvider.ofCollection(orders);
 		
-		MenuBar printStockOrderDocs = new MenuBar();
-		printStockOrderDocs.setEnabled(false);
-        printStockOrderDocs.addThemeVariants(MenuBarVariant.LUMO_ICON, MenuBarVariant.LUMO_TERTIARY);
         
      
         
         Button printAllButton = new Button(new Icon(VaadinIcon.PRINT) );
         printAllButton.setTooltipText("Print All Documents");
+        printAllButton.setEnabled(false);
         
-        printAllButton.addClickListener(e-> {
+        
+        
+        MenuBar options = new MenuBar();
+        
+        options.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+        
+        MenuItem printOptions = options.addItem(printAllButton, e-> {
  
     		
     		List<String> orderIds = grid.getSelectedItems().stream()
@@ -585,17 +590,93 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
     		RouteParameters parameters = new RouteParameters("id", String.join(",", orderIds));
         	UI.getCurrent().navigate(PrinterView.class, parameters);
         	
-        });
-        printStockOrderDocs.addItem(printAllButton);
+        }); 
         
-        
-        MenuBar options = new MenuBar();
-        options.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
-        
+        printOptions.setEnabled(false);
         MenuItem optionsMenu = options.addItem(new Icon(VaadinIcon.COG));
-        SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
 
+        SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
+ 
+        MenuItem statusMenuItem = optionsMenuSubItems.addItem("Set Order Status");
+        optionsMenuSubItems.addItem(new Hr());
+        
         MenuItem rowsPerPage = optionsMenuSubItems.addItem("Rows per page");
+        
+        SubMenu statusSubMenu = statusMenuItem.getSubMenu();
+        
+        MenuItem forDeliveryMenuItem = statusSubMenu.addItem("For Delivery", e -> {
+    		
+    		
+    		Set<Order> orders = grid.getSelectedItems();
+    		
+    		orders.forEach(order -> {
+
+    			if (!order.getStatus().equals(OrderStatus.DELIVERED.getOrderStatusName())) {
+    				Notification.show("Order " + order.getStockOrderNumber() + " already delivered. Status could not be set to For Delivery.").addThemeVariants(NotificationVariant.LUMO_ERROR);
+    				order.setStatus(OrderStatus.FOR_DELIVERY.getOrderStatusName());
+    			}
+    		});
+    		
+    		if (!orders.isEmpty()) {
+    			ordersService.updateAll(orders);
+    		}
+    		
+    		Notification.show("Selected Orders successfully set to delivered.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+    		
+        	grid.refreshPaginator();
+        	grid.getDataProvider().refreshAll();
+        });
+        forDeliveryMenuItem.setEnabled(false);
+        
+        MenuItem cancelOrdersMenuItem = statusSubMenu.addItem("Cancelled", e -> {
+    		
+    		
+    		Set<Order> orders = grid.getSelectedItems();
+    		// TODO change the 
+    		boolean othersAlreadyDelivered = false;
+    		for (Order order : orders) {
+    			
+    			if (!order.getStatus().equals(OrderStatus.DELIVERED.getOrderStatusName())) {
+    				othersAlreadyDelivered = true;
+        			order.setStatus(OrderStatus.CANCELLED.getOrderStatusName());
+    			}
+    			
+    		}
+    		
+    		if (!orders.isEmpty()) {
+    			ordersService.updateAll(orders);
+    		}
+    		
+    		if (othersAlreadyDelivered) {
+    			Notification.show("Selected Orders successfully set to cancelled.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+    		} else {
+    			Notification.show("Orders successfully set to cancelled. Some orders could not be set to cancelled since those have already been delivered.").addThemeVariants(NotificationVariant.LUMO_CONTRAST);
+    	    	
+    		}
+    			
+        	grid.refreshPaginator();
+        	grid.getDataProvider().refreshAll();
+        });
+        cancelOrdersMenuItem.setEnabled(false);
+       
+        MenuItem setToDeliveryItem = statusSubMenu.addItem("Delivered", e -> {
+    		
+    		
+    		Set<Order> orders = grid.getSelectedItems();
+    		
+    		orders.forEach(order -> order.setStatus(OrderStatus.DELIVERED.getOrderStatusName()));
+    		
+    		if (!orders.isEmpty()) {
+    			ordersService.updateAll(orders);
+    		}
+    		
+    		Notification.show("Selected Orders successfully set to delivered.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+    		
+        	grid.refreshPaginator();
+        	grid.getDataProvider().refreshAll();
+        });
+        setToDeliveryItem.setEnabled(false);
+
         
         SubMenu rowsPerPageSubItem = rowsPerPage.getSubMenu();
         rowsPerPageSubItem.addItem("10", e -> grid.setPageSize(10));
@@ -609,7 +690,11 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		grid.setVerticalScrollingEnabled(false);
 	    grid.addSelectionListener(e-> {
         	Set<Order> selectedItems = grid.getSelectedItems();
-        	printStockOrderDocs.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+        	printOptions.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+        	printAllButton.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+        	setToDeliveryItem.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+        	cancelOrdersMenuItem.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+        	forDeliveryMenuItem.setEnabled(selectedItems != null && !selectedItems.isEmpty());
         });
 	    
 	    // Sets the max number of items to be rendered on the grid for each page
@@ -630,7 +715,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		printButtonContainer.setJustifyContentMode(JustifyContentMode.END);
 		printButtonContainer.setPadding(false);	
 		printButtonContainer.setWidth("30%");
-		printButtonContainer.add(printStockOrderDocs, options);
+		printButtonContainer.add(options);
 
 		HorizontalLayout searchFiltersLayout = new HorizontalLayout();
 		searchFiltersLayout.addClassName("padding-bottom-medium");

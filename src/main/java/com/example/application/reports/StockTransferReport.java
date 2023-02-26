@@ -142,7 +142,7 @@ public class StockTransferReport {
 			
 			Collections.sort(flavorsValuePerCategory, (o1, o2) -> {
 				Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
-				Integer sortingIndex2 = o1.getItemInventory().getProduct().getSortingIndex();
+				Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
 				return sortingIndex1.compareTo(sortingIndex2);
 			});
 			if ("Regular Ice Cream".equalsIgnoreCase(key)) {

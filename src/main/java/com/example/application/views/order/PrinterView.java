@@ -135,7 +135,6 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
     	for (Order order : orders) {
     		JasperReportBuilder orderReport = orderSummaryReport
     				.getReportBuilder(order, 
-    						order.getOrderItems(),
     						sizesService.listAll(Sort.unsorted()), 
     						appUser);
     		orderSummaryReportBuilder.add(orderReport);

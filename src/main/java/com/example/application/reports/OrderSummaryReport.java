@@ -7,6 +7,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,18 +39,12 @@ import net.sf.jasperreports.engine.JREmptyDataSource;
 public class OrderSummaryReport {
 
 
-	private Map<Object, List<OrderItems>> orderItemPerCategoryMap;
-	private List<Size> flavorSize;
-	private TreeSet<String> treeSet;
-	private List<Size> coneSize;
-	private List<Size> othersSize;
-
 	public byte[] buildReport(Order order, Set<OrderItems> orderItems, List<Size> sizes, AppUser appUser) {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		
 		try {
-			getReportBuilder(order, orderItems, sizes, appUser).toPdf(baos);
+			getReportBuilder(order, sizes, appUser).toPdf(baos);
 		} catch (DRException e) {
 			e.printStackTrace();
 		}
@@ -57,19 +52,17 @@ public class OrderSummaryReport {
 		return baos.toByteArray();
 	}
 	
-	public JasperReportBuilder getReportBuilder(Order order, Set<OrderItems> orderItems, List<Size> sizes, AppUser appUser) {
+	public JasperReportBuilder getReportBuilder(Order order,List<Size> sizes, AppUser appUser) {
 
-
-		this.flavorSize = sizes;
-		this.treeSet = new TreeSet<String>();
+		TreeSet<String> treeSet = new TreeSet<String>();
 		treeSet.add(Categories.Flavors.name());
 		treeSet.add(Categories.Cones.name());
 		treeSet.add(Categories.Others.name());
 
-		this.orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
+		Map<Object, List<OrderItems>> orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
 				.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getCategory().getCategoryType()));
 
-		this.flavorSize = sizes.stream().filter(e -> {
+		List<Size> flavorSize  = sizes.stream().filter(e -> {
 			Set<Category> categories = e.getCategory();
 
 			return categories.stream()
@@ -77,22 +70,22 @@ public class OrderSummaryReport {
 		}).collect(Collectors.toList());
 		Collections.sort(flavorSize, PfdiUtil.sizeComparator);
 		
-		this.coneSize = sizes.stream().filter(e -> {
+		List<Size> coneSize = sizes.stream().filter(e -> {
 			Set<Category> categories = e.getCategory();
 
 			return categories.stream()
 					.anyMatch(catergory -> Categories.Cones.name().equals(catergory.getCategoryType()));
 		}).collect(Collectors.toList());
 		
-		this.othersSize = sizes.stream().filter(e -> {
+		List<Size> othersSize = sizes.stream().filter(e -> {
 			Set<Category> categories = e.getCategory();
 
 			return categories.stream()
 					.anyMatch(catergory -> Categories.Others.name().equals(catergory.getCategoryType()));
 		}).collect(Collectors.toList());
 
-		SubreportBuilder subreport = cmp.subreport(new SubreportExpression())
-				.setDataSource(new SubreportDataSourceExpression());
+		SubreportBuilder subreport = cmp.subreport(new SubreportExpression(flavorSize, coneSize, othersSize))
+				.setDataSource(new SubreportDataSourceExpression(orderItemPerCategoryMap, flavorSize, coneSize, othersSize));
 		return report().title(Templates.createStockOrderDetailsComponent(order))
 				.detail(subreport, cmp.verticalGap(20))
 				.addPageFooter(Templates.createStockOrderDetailsFooterComponent(order, appUser))
@@ -107,6 +100,17 @@ public class OrderSummaryReport {
 
 	private class SubreportExpression extends AbstractSimpleExpression<JasperReportBuilder> {
 		private static final long serialVersionUID = 1L;
+		
+		private List<Size> flavorSize;
+		private List<Size> coneSize;
+		private List<Size> othersSize;
+		
+		public SubreportExpression(List<Size> flavorSize, List<Size> coneSize, List<Size> othersSize) {
+			this.flavorSize = flavorSize;
+			this.coneSize = coneSize;
+			this.othersSize = othersSize;
+		}
+
 
 		@Override
 		public JasperReportBuilder evaluate(ReportParameters reportParameters) {
@@ -121,9 +125,6 @@ public class OrderSummaryReport {
 				report.addColumn(flavorColumn);
 
 				for (Size size : flavorSize) {
-					System.out.println("Key: " + "key" + size.getId() + " Size name: " + size.getSizeName());
-
-					System.out.println();
 					TextColumnBuilder<String> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
 							type.stringType());
 					sizeColumn.setWidth(20);
@@ -138,7 +139,6 @@ public class OrderSummaryReport {
 				report.addColumn(flavorColumn);
 
 				for (Size size : coneSize) {
-					System.out.println("Key: " + "key" + size.getId());
 					TextColumnBuilder<String> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
 							type.stringType());
 				//	sizeColumn.setWidth(20);
@@ -148,12 +148,11 @@ public class OrderSummaryReport {
 			
 			if (3 == masterRowNumber) {
 
-				TextColumnBuilder<String> flavorColumn = col.column("Cone", "keyOthersName", type.stringType());
+				TextColumnBuilder<String> flavorColumn = col.column("Others", "keyOthersName", type.stringType());
 				flavorColumn.setWidth(80);
 				report.addColumn(flavorColumn);
 
 				for (Size size : othersSize) {
-					System.out.println("Key: " + "key" + size.getId());
 					
 					TextColumnBuilder<String> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
 							type.stringType());
@@ -168,6 +167,18 @@ public class OrderSummaryReport {
 
 	private class SubreportDataSourceExpression extends AbstractSimpleExpression<JRDataSource> {
 		private static final long serialVersionUID = 1L;
+		
+		private Map<Object, List<OrderItems>> orderItemPerCategoryMap;
+		private List<Size> flavorSize;
+		private List<Size> coneSize;
+		private List<Size> othersSize;
+		
+		public SubreportDataSourceExpression(Map<Object, List<OrderItems>> orderItemPerCategoryMap, List<Size> flavorSize, List<Size> coneSize, List<Size> othersSize) {
+			this.orderItemPerCategoryMap = orderItemPerCategoryMap;
+			this.flavorSize = flavorSize;
+			this.coneSize = coneSize;
+			this.othersSize = othersSize;
+		}
 
 		@Override
 		public JRDataSource evaluate(ReportParameters reportParameters) {
@@ -177,9 +188,17 @@ public class OrderSummaryReport {
 
 				List<OrderItems> flavors = orderItemPerCategoryMap.get(Categories.Flavors.name());
 				
+				Collections.sort(flavors, (o1, o2) -> {
+					Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+					Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
+					return sortingIndex1.compareTo(sortingIndex2);
+				});
+				
 				Map<String, List<OrderItems>> flavorItemsMap = flavors.stream()
-						.collect(Collectors.groupingBy(orderItem 
-								-> orderItem.getItemInventory().getProduct().getProductName()));;
+						.collect(Collectors.groupingBy(orderItem -> {
+							return orderItem.getItemInventory().getProduct().getProductName();
+						}, LinkedHashMap::new,
+						        Collectors.toList()));
 	
 
 				String[] columns = new String[flavorSize.size()+1];
@@ -194,16 +213,10 @@ public class OrderSummaryReport {
 	
 					List<OrderItems> orderItems = entry.getValue();
 					
-					Collections.sort(orderItems, (o1, o2) -> {
-						Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
-						Integer sortingIndex2 = o1.getItemInventory().getProduct().getSortingIndex();
-						return sortingIndex1.compareTo(sortingIndex2);
-					});
+	
 					for (OrderItems items : orderItems) {
 						index++;
 						String key = "key" + items.getItemInventory().getSize().getId();
-						System.out.println("key id: " + key);
-						System.out.println("key id size name: " + items.getItemInventory().getSize().getSizeName() + " quantity : " + items.getQuantity().toString());
 						String value = items.getQuantity().toString();
 				
 						columns[index] = key;
@@ -223,6 +236,12 @@ public class OrderSummaryReport {
 
 				List<OrderItems> cones = orderItemPerCategoryMap.get(Categories.Cones.name());
 				
+				Collections.sort(cones, (o1, o2) -> {
+					Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+					Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
+					return sortingIndex1.compareTo(sortingIndex2);
+				});
+				
 				Map<String, List<OrderItems>> conesItemMap = cones.stream()
 						.collect(Collectors.groupingBy(orderItem 
 								-> orderItem.getItemInventory().getProduct().getProductName()));;
@@ -240,11 +259,7 @@ public class OrderSummaryReport {
 					values[0] = entry.getKey();					
 					List<OrderItems> orderItems = entry.getValue();
 					
-					Collections.sort(orderItems, (o1, o2) -> {
-						Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
-						Integer sortingIndex2 = o1.getItemInventory().getProduct().getSortingIndex();
-						return sortingIndex1.compareTo(sortingIndex2);
-					});
+
 					for (OrderItems items : orderItems) {
 	
 						index++;
@@ -262,7 +277,11 @@ public class OrderSummaryReport {
 
 				List<OrderItems> others = orderItemPerCategoryMap.get(Categories.Others.name());
 				
-
+				Collections.sort(others, (o1, o2) -> {
+					Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+					Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
+					return sortingIndex1.compareTo(sortingIndex2);
+				});
 				Map<String, List<OrderItems>> othersItemMap = others.stream()
 						.collect(Collectors.groupingBy(orderItem 
 								-> orderItem.getItemInventory().getProduct().getProductName()));;
@@ -281,11 +300,7 @@ public class OrderSummaryReport {
 					
 					List<OrderItems> orderItems = entry.getValue();
 					
-					Collections.sort(orderItems, (o1, o2) -> {
-						Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
-						Integer sortingIndex2 = o1.getItemInventory().getProduct().getSortingIndex();
-						return sortingIndex1.compareTo(sortingIndex2);
-					});
+		
 					for (OrderItems items : orderItems) {
 	
 						index++;

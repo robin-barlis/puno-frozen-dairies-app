@@ -1,6 +1,7 @@
 package com.example.application.data.service.orders;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -59,7 +60,7 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 				Map<String, LocalDate> orderDates = (Map<String, LocalDate>) entry.getValue();
 	
 				
-				Predicate predicate = cb.between(order.get("creationDate"), orderDates.get("orderDateFrom"), orderDates.get("orderDateTo"));
+				Predicate predicate = cb.between(order.get("creationDate"), orderDates.get("orderDateFrom").atStartOfDay(), orderDates.get("orderDateTo").atTime(LocalTime.MAX));
 				predicates.add(predicate);
 			} else if ("dueDates".equals(entry.getKey())) {
 				
@@ -67,7 +68,7 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 				Map<String, LocalDate> orderDates = (Map<String, LocalDate>) entry.getValue();
 	
 				
-				Predicate predicate = cb.between(order.get("dueDate"), orderDates.get("dueDateFrom"), orderDates.get("dueDateTo"));
+				Predicate predicate = cb.between(order.get("dueDate"), orderDates.get("dueDateFrom").atStartOfDay(), orderDates.get("dueDateTo").atTime(LocalTime.MAX));
 				predicates.add(predicate);
 			}  else {
 

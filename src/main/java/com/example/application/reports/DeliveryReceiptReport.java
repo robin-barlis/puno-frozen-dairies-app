@@ -135,12 +135,7 @@ public class DeliveryReceiptReport {
 
 	private List<OrderItemData> getRegularFlavors() {
 		List<OrderItems> flavors = orderItemPerCategoryMap.get(Categories.Flavors.name());
-		
-		Collections.sort(flavors, (o1, o2) -> {
-			Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
-			Integer sortingIndex2 = o1.getItemInventory().getProduct().getSortingIndex();
-			return sortingIndex1.compareTo(sortingIndex2);
-		});
+
 		
 		List<OrderItemData> orders = Lists.newArrayList();
 		
@@ -155,7 +150,12 @@ public class DeliveryReceiptReport {
 
 			List<OrderItems> flavorsValuePerCategory = flavorPerCategory.get(key);
 			
-				
+			
+				Collections.sort(flavorsValuePerCategory, (o1, o2) -> {
+					Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+					Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
+					return sortingIndex1.compareTo(sortingIndex2);
+				});
 				flavorsValuePerCategory.forEach(item-> {
 					String flavor = 
 							item.getItemInventory().getProduct().getProductName();
