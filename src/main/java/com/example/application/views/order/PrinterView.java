@@ -18,7 +18,6 @@ import com.example.application.data.service.products.SizesService;
 import com.example.application.reports.DeliveryReceiptReport;
 import com.example.application.reports.OrderSummaryReport;
 import com.example.application.reports.SalesInvoiceReport;
-import com.example.application.reports.SalesInvoiceReportOld;
 import com.example.application.reports.StockTransferReport;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
