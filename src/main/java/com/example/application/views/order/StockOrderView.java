@@ -17,6 +17,7 @@ import org.vaadin.klaudeta.PaginatedGrid;
 
 import com.example.application.data.OrderStatus;
 import com.example.application.data.PaymentStatus;
+import com.example.application.data.Reports;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
@@ -32,7 +33,6 @@ import com.example.application.utils.service.ReportConsolidatorService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
-import com.example.application.views.products.components.FlavorSortingDialog;
 import com.google.common.collect.Maps;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
@@ -49,7 +49,6 @@ import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid.SelectionMode;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
@@ -72,10 +71,10 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteConfiguration;
@@ -328,18 +327,18 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	}
 
 	private void createGridLayout(VerticalLayout verticalLayout) {
-		
+
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
 		grid.setSelectionMode(SelectionMode.MULTI);
-		grid.addComponentColumn(order -> {			
-			
+		grid.addComponentColumn(order -> {
+
 			VerticalLayout customerLayout = new VerticalLayout();
 			customerLayout.setWidthFull();
 			customerLayout.setSpacing(false);
-			
+
 			Customer customer = order.getCustomer();
-			
+
 			HorizontalLayout storeNameLayout = new HorizontalLayout();
 			storeNameLayout.setWidthFull();
 			Icon icon = new Icon(VaadinIcon.SHOP);
@@ -348,55 +347,53 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			Span storeNameValue = new Span(customer.getStoreName());
 			storeNameValue.setClassName("order-row-value-customer");
 			storeNameLayout.add(storeIcon, storeNameValue);
-			
+
 			HorizontalLayout ownerNameLayout = new HorizontalLayout();
 			ownerNameLayout.setWidthFull();
 			Span ownerNameValue = new Span(customer.getOwnerName());
 			ownerNameLayout.add(ownerNameValue);
 			ownerNameLayout.setClassName("owner-row-secondary-text");
-			
+
 			HorizontalLayout storeAddressLayout = new HorizontalLayout();
 			storeAddressLayout.setWidthFull();
 			Span storeAddressValue = new Span(customer.getAddress());
 			storeAddressLayout.add(storeAddressValue);
 			storeAddressLayout.setClassName("owner-row-secondary-text");
-				
+
 			customerLayout.add(storeNameLayout, ownerNameLayout, storeAddressLayout);
 
 			return customerLayout;
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Customer").setSortable(true).setComparator(e -> {return e.getCustomer().getStoreName();});
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Customer").setSortable(true)
+				.setComparator(e -> {
+					return e.getCustomer().getStoreName();
+				});
 
-		
-		grid.addComponentColumn(order -> {	
-			
+		grid.addComponentColumn(order -> {
+
 			VerticalLayout orderLayout = new VerticalLayout();
 			orderLayout.setWidthFull();
 			orderLayout.setSpacing(false);
-			
-			
+
 			HorizontalLayout orderIdLayout = new HorizontalLayout();
 			orderIdLayout.setWidthFull();
 			Span orderIdSpan = new Span("Stock Order:");
 			orderIdSpan.setClassName("order-row-label");
 			Span orderIdValue = new Span(getStockOrderLink(order));
 			orderIdValue.setClassName("order-row-value");
-			
+
 			orderIdLayout.add(orderIdSpan, orderIdValue);
-			
-			
+
 			HorizontalLayout deliveryReceiptLayout = new HorizontalLayout();
 			deliveryReceiptLayout.setWidthFull();
 			Span deliveryReceiptLabel = new Span("Delivery Receipt:");
 			deliveryReceiptLabel.setClassName("order-row-label");
 			Span deliveryReceiptValue = new Span(getDeliveryReceiptLink(order));
 			deliveryReceiptValue.setClassName("order-row-value");
-		
-			
+
 			deliveryReceiptLayout.add(deliveryReceiptLabel, deliveryReceiptValue);
-			
-			
+
 			boolean isCompanyOwned = PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId());
-			
+
 			HorizontalLayout stockTransferLayout = new HorizontalLayout();
 
 			stockTransferLayout.setWidthFull();
@@ -404,11 +401,10 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			stockTransferLabel.setClassName("order-row-label");
 			Span stockTransferValue = new Span(getStockTransferLink(order, isCompanyOwned));
 			stockTransferValue.setClassName("order-row-value");
-			
 
 			stockTransferLayout.add(stockTransferLabel, stockTransferValue);
-			
-			orderLayout.add(orderIdLayout,deliveryReceiptLayout,stockTransferLayout);
+
+			orderLayout.add(orderIdLayout, deliveryReceiptLayout, stockTransferLayout);
 			if (!isCompanyOwned) {
 				HorizontalLayout invoiceLayout = new HorizontalLayout();
 				String label = "Invoice:";
@@ -417,77 +413,78 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 				invoiceLayoutLabel.setClassName("order-row-label");
 				Span invoiceLayoutValue = new Span(getInvoiceLink(order, isCompanyOwned));
 				invoiceLayoutValue.setClassName("order-row-value");
-						
+
 				invoiceLayout.add(invoiceLayoutLabel, invoiceLayoutValue);
-				
+
 				orderLayout.add(invoiceLayout);
 			}
 
-			
 			return orderLayout;
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Order").setSortable(true).setComparator(Order::getStockOrderNumber);
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Order").setSortable(true)
+				.setComparator(Order::getStockOrderNumber);
 
-		grid.addComponentColumn(order -> {			
-			
+		grid.addComponentColumn(order -> {
+
 			VerticalLayout orderDetailsLayout = new VerticalLayout();
 			orderDetailsLayout.setWidthFull();
 			orderDetailsLayout.setHeightFull();
 			orderDetailsLayout.setSpacing(false);
-			
-			
+
 			HorizontalLayout amountDueLayout = new HorizontalLayout();
 			amountDueLayout.setWidthFull();
-			Span amountDueValue = new Span(PfdiUtil.getFormatter().format(order.getAmountDue()));
+			Span amountDueValue = new Span("TP : " + PfdiUtil.getFormatter().format(order.getAmountDue()));
 			amountDueValue.setClassName("order-row-value-amount");
 			amountDueLayout.add(amountDueValue);
-			
+
+			HorizontalLayout srpLayout = new HorizontalLayout();
+			srpLayout.setWidthFull();
+			Span srp = new Span("SRP : " + PfdiUtil.getFormatter()
+					.format(order.getAmountSrp() != null ? order.getAmountSrp() : BigDecimal.valueOf(0)));
+			srpLayout.setClassName("order-row-value-amount");
+			srpLayout.add(srp);
+			srpLayout.setVisible(PfdiUtil.isCompanyOwned(order.getCustomer().getCustomerTagId()));
+
 			HorizontalLayout orderedFrom = new HorizontalLayout();
 			orderedFrom.setWidthFull();
-			Span orderedFromValue = new Span("Sales Rep: " + order.getCreatedByUser().getFirstName() + " " + order.getCreatedByUser().getLastName());
+			Span orderedFromValue = new Span("Sales Rep: " + order.getCreatedByUser().getFirstName() + " "
+					+ order.getCreatedByUser().getLastName());
 			orderedFrom.add(orderedFromValue);
 			orderedFrom.setClassName("owner-row-secondary-text");
-			
+
 			HorizontalLayout orderDate = new HorizontalLayout();
 			orderDate.setWidthFull();
 			Span storeAddressValue = new Span("Order Date : " + order.getCreationDate().toLocalDate());
 			orderDate.add(storeAddressValue);
 			orderDate.setClassName("owner-row-secondary-text");
-			
-			
-			
-			orderDetailsLayout.add(amountDueLayout, orderedFrom, orderDate);
+
+			orderDetailsLayout.add(amountDueLayout, srpLayout, orderedFrom, orderDate);
 
 			return orderDetailsLayout;
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START)
-			.setHeader("Order Details").setSortable(true)
-			.setComparator(e -> {
-				return e.getAmountDue();
-			}
-		);
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Order Details").setSortable(true)
+				.setComparator(e -> {
+					return e.getAmountDue();
+				});
 
-			
-		grid.addComponentColumn(order -> {			
-			
+		grid.addComponentColumn(order -> {
+
 			VerticalLayout paymentDetailsLayout = new VerticalLayout();
 			paymentDetailsLayout.setWidthFull();
 			paymentDetailsLayout.setSpacing(false);
-			
-			
+
 			List<Payment> payments = order.getPayments();
-			
+
 			HorizontalLayout paymentStatusWrapper = new HorizontalLayout();
 			paymentStatusWrapper.setWidthFull();
-			
-			
+
 			PaymentStatus paymentStatus = PaymentStatus.UNPAID;
-			
-		
+
 			if (payments.isEmpty()) {
 				paymentStatus = PaymentStatus.UNPAID;
-			} else  {
-				boolean hasForVerification = payments.stream().anyMatch(e -> PaymentStatus.FOR_VERIFICATION.name().equalsIgnoreCase(e.getStatus()));
+			} else {
+				boolean hasForVerification = payments.stream()
+						.anyMatch(e -> PaymentStatus.FOR_VERIFICATION.name().equalsIgnoreCase(e.getStatus()));
 				if (hasForVerification) {
-					
+
 					if (BigDecimal.ZERO.compareTo(order.getBalance()) == 0) {
 
 						paymentStatus = PaymentStatus.FOR_VERIFICATION;
@@ -500,33 +497,36 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 					paymentStatus = PaymentStatus.PARTIALLY_PAID;
 				}
 			}
-			
+
 			Span paymentStatusBadge = new Span(paymentStatus.getPaymentStatusName());
 			paymentStatusBadge.getElement().getThemeList().add(paymentStatus.getBadge());
-			paymentStatusWrapper.add( paymentStatusBadge);
+			paymentStatusWrapper.add(paymentStatusBadge);
 			paymentDetailsLayout.add(paymentStatusWrapper);
-			
+
 			HorizontalLayout balanceWrapper = new HorizontalLayout();
 			balanceWrapper.setWidthFull();
 			Span balanceValue = new Span("Balance: " + order.getBalance());
 			balanceWrapper.add(balanceValue);
-			balanceWrapper.setClassName("owner-row-secondary-text");	
-			
+			balanceWrapper.setClassName("owner-row-secondary-text");
+
 			paymentDetailsLayout.add(balanceWrapper);
-			
+
 			HorizontalLayout dueDateWrapper = new HorizontalLayout();
 			dueDateWrapper.setWidthFull();
 			Span dueDateValue = new Span("Due Date: " + order.getDueDate().toString());
 			dueDateWrapper.add(dueDateValue);
-			dueDateWrapper.setClassName("owner-row-secondary-text");	
-			
+			dueDateWrapper.setClassName("owner-row-secondary-text");
+
 			paymentDetailsLayout.add(dueDateWrapper);
-			
+
 			return paymentDetailsLayout;
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Payment Details").setSortable(true).setComparator(e -> {return e.getCustomer().getStoreName();});
-		
+		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Payment Details").setSortable(true)
+				.setComparator(e -> {
+					return e.getCustomer().getStoreName();
+				});
+
 		grid.addColumn(Order::getStatus).setHeader("Status").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-		
+
 		grid.addComponentColumn(currentOrder -> {
 
 			MenuBar menuBar = new MenuBar();
@@ -534,186 +534,247 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ELLIPSIS_DOTS_V));
 			menuItem.getElement().setAttribute("aria-label", "More options");
 			SubMenu subMenu = menuItem.getSubMenu();
-			
-			
+
 			MenuItem editItemSubMenu = subMenu.addItem("Edit Order", e -> {
-				
+
 				RouteParam param = new RouteParam("orderId", currentOrder.getId().toString());
 				RouteParameters params = new RouteParameters(param);
 				UI.getCurrent().navigate(CreateOrderFormView.class, params);
 			});
-			
+
 			if (currentOrder.getPayments() != null && BigDecimal.ZERO.equals(currentOrder.getBalance())) {
-			//	addPaymentSubMenu.setEnabled(false);
+				// addPaymentSubMenu.setEnabled(false);
 				editItemSubMenu.setEnabled(false);
 			}
-			
-			
-			
+
 			if (currentOrder.getPayments() != null && !BigDecimal.ZERO.equals(currentOrder.getBalance())) {
-				
-			//	addPaymentSubMenu.setEnabled(true);
+
+				// addPaymentSubMenu.setEnabled(true);
 			}
-			
+
 			if (currentOrder.getPayments() != null && !currentOrder.getPayments().isEmpty()) {
 				editItemSubMenu.setEnabled(false);
 			}
-			
-			
 
 			return menuBar;
 		}).setWidth("70px").setFlexGrow(0);
 		orders = ordersService.listAll(Sort.by("id"));
 		ldp = DataProvider.ofCollection(orders);
+
+		Button printAllButton = new Button(new Icon(VaadinIcon.PRINT));
+		printAllButton.setTooltipText("Print All Documents");
+		printAllButton.setEnabled(false);
+
+		MenuBar options = new MenuBar();
+
+		options.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
+
+		MenuItem printMenu = options.addItem(new Icon(VaadinIcon.PRINT));
+
+		SubMenu printSubMenu = printMenu.getSubMenu();
 		
-        
-     
-        
-        Button printAllButton = new Button(new Icon(VaadinIcon.PRINT) );
-        printAllButton.setTooltipText("Print All Documents");
-        printAllButton.setEnabled(false);
-        
-        
-        
-        MenuBar options = new MenuBar();
-        
-        options.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
-        
-        MenuItem printOptions = options.addItem(printAllButton, e-> {
- 
-    		
-    		List<String> orderIds = grid.getSelectedItems().stream()
-    				.map(order -> order.getId().toString()).collect(Collectors.toList());
-    		
-    		
-    		
-    		RouteParameters parameters = new RouteParameters("id", String.join(",", orderIds));
-        	UI.getCurrent().navigate(PrinterView.class, parameters);
-        	
-        }); 
-        
-        printOptions.setEnabled(false);
-        MenuItem optionsMenu = options.addItem(new Icon(VaadinIcon.COG));
+		MenuItem printOptions = printSubMenu.addItem("Print All", e -> {
 
-        SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
- 
-        MenuItem statusMenuItem = optionsMenuSubItems.addItem("Set Order Status");
-        optionsMenuSubItems.addItem(new Hr());
-        
-        MenuItem rowsPerPage = optionsMenuSubItems.addItem("Rows per page");
-        
-        SubMenu statusSubMenu = statusMenuItem.getSubMenu();
-        
-        MenuItem forDeliveryMenuItem = statusSubMenu.addItem("For Delivery", e -> {
-    		
-    		
-    		Set<Order> orders = grid.getSelectedItems();
-    		
-    		orders.forEach(order -> {
+			List<String> orderIds = grid.getSelectedItems().stream().map(order -> order.getId().toString())
+					.collect(Collectors.toList());
+			
+			RouteParam idParam = new RouteParam("id", String.join(",", orderIds));
 
-    			if (!order.getStatus().equals(OrderStatus.DELIVERED.getOrderStatusName())) {
-    				Notification.show("Order " + order.getStockOrderNumber() + " already delivered. Status could not be set to For Delivery.").addThemeVariants(NotificationVariant.LUMO_ERROR);
-    				order.setStatus(OrderStatus.FOR_DELIVERY.getOrderStatusName());
-    			}
-    		});
-    		
-    		if (!orders.isEmpty()) {
-    			ordersService.updateAll(orders);
-    		}
-    		
-    		Notification.show("Selected Orders successfully set to delivered.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-    		
-        	grid.refreshPaginator();
-        	grid.getDataProvider().refreshAll();
-        });
-        forDeliveryMenuItem.setEnabled(false);
-        
-        MenuItem cancelOrdersMenuItem = statusSubMenu.addItem("Cancelled", e -> {
-    		
-    		
-    		Set<Order> orders = grid.getSelectedItems();
-    		// TODO change the 
-    		boolean othersAlreadyDelivered = false;
-    		for (Order order : orders) {
-    			
-    			if (!order.getStatus().equals(OrderStatus.DELIVERED.getOrderStatusName())) {
-    				othersAlreadyDelivered = true;
-        			order.setStatus(OrderStatus.CANCELLED.getOrderStatusName());
-    			}
-    			
-    		}
-    		
-    		if (!orders.isEmpty()) {
-    			ordersService.updateAll(orders);
-    		}
-    		
-    		if (othersAlreadyDelivered) {
-    			Notification.show("Selected Orders successfully set to cancelled.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-    		} else {
-    			Notification.show("Orders successfully set to cancelled. Some orders could not be set to cancelled since those have already been delivered.").addThemeVariants(NotificationVariant.LUMO_CONTRAST);
-    	    	
-    		}
-    			
-        	grid.refreshPaginator();
-        	grid.getDataProvider().refreshAll();
-        });
-        cancelOrdersMenuItem.setEnabled(false);
-       
-        MenuItem setToDeliveryItem = statusSubMenu.addItem("Delivered", e -> {
-    		
-    		
-    		Set<Order> orders = grid.getSelectedItems();
-    		
-    		orders.forEach(order -> order.setStatus(OrderStatus.DELIVERED.getOrderStatusName()));
-    		
-    		if (!orders.isEmpty()) {
-    			ordersService.updateAll(orders);
-    		}
-    		
-    		Notification.show("Selected Orders successfully set to delivered.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-    		
-        	grid.refreshPaginator();
-        	grid.getDataProvider().refreshAll();
-        });
-        setToDeliveryItem.setEnabled(false);
+			RouteParam report = new RouteParam("report", Reports.ALL.name());
+			RouteParameters parameters = new RouteParameters(idParam, report);
 
-        
-        SubMenu rowsPerPageSubItem = rowsPerPage.getSubMenu();
-        rowsPerPageSubItem.addItem("10", e -> grid.setPageSize(10));
-        rowsPerPageSubItem.addItem("15", e -> grid.setPageSize(15));
-        rowsPerPageSubItem.addItem("20", e -> grid.setPageSize(20));
-        rowsPerPageSubItem.addItem("50", e -> grid.setPageSize(50));
-       
+			UI.getCurrent().navigate(PrinterView.class, parameters);
 
-		GridListDataView<Order> dataView = grid.setItems(ldp);
-		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES, GridVariant.MATERIAL_COLUMN_DIVIDERS);
+		});
+
+		MenuItem printAllStockOrders = printSubMenu.addItem("Print Stock Orders", e -> {
+
+			List<String> orderIds = grid.getSelectedItems().stream().map(order -> order.getId().toString())
+					.collect(Collectors.toList());
+			RouteParam idParam = new RouteParam("id", String.join(",", orderIds));
+
+			RouteParam report = new RouteParam("report", Reports.SO.name());
+			RouteParameters parameters = new RouteParameters(idParam, report);
+
+			UI.getCurrent().navigate(PrinterView.class, parameters);
+
+		});
+
+		MenuItem printAllDeliveryReceipts = printSubMenu.addItem("Print Delivery Receipts", e -> {
+
+			List<String> orderIds = grid.getSelectedItems().stream().map(order -> order.getId().toString())
+					.collect(Collectors.toList());
+			RouteParam idParam = new RouteParam("id", String.join(",", orderIds));
+
+			RouteParam report = new RouteParam("report", Reports.DR.name());
+			RouteParameters parameters = new RouteParameters(idParam, report);
+
+			UI.getCurrent().navigate(PrinterView.class, parameters);
+
+		});
+
+		MenuItem printAllInvoices = printSubMenu.addItem("Print Invoices", e -> {
+
+			List<String> orderIds = grid.getSelectedItems().stream().map(order -> order.getId().toString())
+					.collect(Collectors.toList());
+			RouteParam idParam = new RouteParam("id", String.join(",", orderIds));
+
+			RouteParam report = new RouteParam("report", Reports.SI.name());
+			RouteParameters parameters = new RouteParameters(idParam, report);
+
+			UI.getCurrent().navigate(PrinterView.class, parameters);
+
+		});
+
+		MenuItem printAllStockTransfers = printSubMenu.addItem("Print Stock Transfers", e -> {
+
+			List<String> orderIds = grid.getSelectedItems().stream().map(order -> order.getId().toString())
+					.collect(Collectors.toList());
+			RouteParam idParam = new RouteParam("id", String.join(",", orderIds));
+
+			RouteParam report = new RouteParam("report", Reports.ST.name());
+			RouteParameters parameters = new RouteParameters(idParam, report);
+
+			UI.getCurrent().navigate(PrinterView.class, parameters);
+
+		});
+
+		printOptions.setEnabled(false);
+		printAllStockOrders.setEnabled(false);
+		printAllDeliveryReceipts.setEnabled(false);
+		printAllInvoices.setEnabled(false);
+		printAllStockTransfers.setEnabled(false);
+		MenuItem optionsMenu = options.addItem(new Icon(VaadinIcon.COG));
+
+		SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
+
+		MenuItem statusMenuItem = optionsMenuSubItems.addItem("Set Order Status");
+		optionsMenuSubItems.addItem(new Hr());
+
+		MenuItem rowsPerPage = optionsMenuSubItems.addItem("Rows per page");
+
+		SubMenu statusSubMenu = statusMenuItem.getSubMenu();
+
+		MenuItem forDeliveryMenuItem = statusSubMenu.addItem("For Delivery", e -> {
+
+			Set<Order> orders = grid.getSelectedItems();
+
+			orders.forEach(order -> {
+
+				if (!order.getStatus().equals(OrderStatus.DELIVERED.getOrderStatusName())) {
+					Notification
+							.show("Order " + order.getStockOrderNumber()
+									+ " already delivered. Status could not be set to For Delivery.")
+							.addThemeVariants(NotificationVariant.LUMO_ERROR);
+					order.setStatus(OrderStatus.FOR_DELIVERY.getOrderStatusName());
+				}
+			});
+
+			if (!orders.isEmpty()) {
+				ordersService.updateAll(orders);
+			}
+
+			Notification.show("Selected Orders successfully set to delivered.")
+					.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+			grid.refreshPaginator();
+			grid.getDataProvider().refreshAll();
+		});
+		forDeliveryMenuItem.setEnabled(false);
+
+		MenuItem cancelOrdersMenuItem = statusSubMenu.addItem("Cancelled", e -> {
+
+			Set<Order> orders = grid.getSelectedItems();
+			// TODO change the
+			boolean othersAlreadyDelivered = false;
+			for (Order order : orders) {
+
+				if (!order.getStatus().equals(OrderStatus.DELIVERED.getOrderStatusName())) {
+					othersAlreadyDelivered = true;
+					order.setStatus(OrderStatus.CANCELLED.getOrderStatusName());
+				}
+
+			}
+
+			if (!orders.isEmpty()) {
+				ordersService.updateAll(orders);
+			}
+
+			if (othersAlreadyDelivered) {
+				Notification.show("Selected Orders successfully set to cancelled.")
+						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+			} else {
+				Notification.show(
+						"Orders successfully set to cancelled. Some orders could not be set to cancelled since those have already been delivered.")
+						.addThemeVariants(NotificationVariant.LUMO_CONTRAST);
+
+			}
+
+			grid.refreshPaginator();
+			grid.getDataProvider().refreshAll();
+		});
+		cancelOrdersMenuItem.setEnabled(false);
+
+		MenuItem setToDeliveryItem = statusSubMenu.addItem("Delivered", e -> {
+
+			Set<Order> orders = grid.getSelectedItems();
+
+			orders.forEach(order -> order.setStatus(OrderStatus.DELIVERED.getOrderStatusName()));
+
+			if (!orders.isEmpty()) {
+				ordersService.updateAll(orders);
+			}
+
+			Notification.show("Selected Orders successfully set to delivered.")
+					.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+
+			grid.refreshPaginator();
+			grid.getDataProvider().refreshAll();
+		});
+		setToDeliveryItem.setEnabled(false);
+
+		SubMenu rowsPerPageSubItem = rowsPerPage.getSubMenu();
+		rowsPerPageSubItem.addItem("10", e -> grid.setPageSize(10));
+		rowsPerPageSubItem.addItem("15", e -> grid.setPageSize(15));
+		rowsPerPageSubItem.addItem("20", e -> grid.setPageSize(20));
+		rowsPerPageSubItem.addItem("50", e -> grid.setPageSize(50));
+
+		grid.setItems(ldp);
+		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES,
+				GridVariant.MATERIAL_COLUMN_DIVIDERS);
 		grid.setVerticalScrollingEnabled(false);
-	    grid.addSelectionListener(e-> {
-        	Set<Order> selectedItems = grid.getSelectedItems();
-        	printOptions.setEnabled(selectedItems != null && !selectedItems.isEmpty());
-        	printAllButton.setEnabled(selectedItems != null && !selectedItems.isEmpty());
-        	setToDeliveryItem.setEnabled(selectedItems != null && !selectedItems.isEmpty());
-        	cancelOrdersMenuItem.setEnabled(selectedItems != null && !selectedItems.isEmpty());
-        	forDeliveryMenuItem.setEnabled(selectedItems != null && !selectedItems.isEmpty());
-        });
-	    
-	    // Sets the max number of items to be rendered on the grid for each page
-	    grid.setPageSize(10);
+		grid.addSelectionListener(e -> {
+			Set<Order> selectedItems = grid.getSelectedItems();
+			printOptions.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+			printAllButton.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+			setToDeliveryItem.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+			cancelOrdersMenuItem.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+			forDeliveryMenuItem.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+			
 
-	    // Sets how many pages should be visible on the pagination before and/or after the current selected page
-	    grid.setPaginatorSize(5);
-	    
-	    grid.setHeight("90%");
-		
+			printAllStockOrders.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+			printAllDeliveryReceipts.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+			printAllInvoices.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+			printAllStockTransfers.setEnabled(selectedItems != null && !selectedItems.isEmpty());
+		});
+
+		// Sets the max number of items to be rendered on the grid for each page
+		grid.setPageSize(10);
+
+		// Sets how many pages should be visible on the pagination before and/or after
+		// the current selected page
+		grid.setPaginatorSize(5);
+
+		grid.setHeight("90%");
+
 		Button searchButton = new Button("Search Orders", new Icon(VaadinIcon.SEARCH));
 		searchButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS);
 		searchButton.setIconAfterText(true);
 		searchButton.addClickListener(e -> searchOrdersDialog.open());
-		
-		
+
 		HorizontalLayout printButtonContainer = new HorizontalLayout();
 		printButtonContainer.setJustifyContentMode(JustifyContentMode.END);
-		printButtonContainer.setPadding(false);	
+		printButtonContainer.setPadding(false);
 		printButtonContainer.setWidth("30%");
 		printButtonContainer.add(options);
 
@@ -725,11 +786,11 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		HorizontalLayout secondaryActionsLayout = new HorizontalLayout();
 		secondaryActionsLayout.setWidthFull();
 		secondaryActionsLayout.add(searchFiltersLayout, printButtonContainer);
-		
-		wrapper.add(secondaryActionsLayout, new Hr(),  grid);
+
+		wrapper.add(secondaryActionsLayout, new Hr(), grid);
 		verticalLayout.addAndExpand(wrapper);
 	}
-	
+
 	private Component getStockTransferLink(Order order, boolean isCompanyOwned) {
 		RouteParameters parameters = new RouteParameters("id", order.getId().toString());
 

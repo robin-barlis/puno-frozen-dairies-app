@@ -1,5 +1,6 @@
 package com.example.application.utils;
 
+import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,9 +15,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.example.application.data.Categories;
+import com.example.application.data.CustomerTags;
 import com.example.application.data.OrderStatus;
 import com.example.application.data.Role;
 import com.example.application.data.entity.AppUser;
+import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.Product;
@@ -199,6 +202,38 @@ public class PfdiUtil {
 
 	public static Map<String, ItemStock> createSizeMap(Product product) {
 		return product.getItemStock().stream().collect(Collectors.toMap(e -> e.getSize().getSizeName(), Function.identity()));
+	}
+	
+	public static boolean isRelative(CustomerTag customerTag) {
+		return customerTag.getCustomerTagName().equals(CustomerTags.RELATIVE_OWNED.getCustomerTagName());
+	}
+	
+	public static boolean isCompanyOwned(CustomerTag customerTag) {
+		return customerTag.getCustomerTagName().equals(CustomerTags.COMPANY_OWNED.getCustomerTagName())
+				|| customerTag.getCustomerTagName().equals(CustomerTags.MAIN_STORE.getCustomerTagName());
+	}
+	
+	public static boolean isDealer(CustomerTag customerTag) {
+		return customerTag.getCustomerTagName().equals(CustomerTags.DEALER.getCustomerTagName());
+	}
+	
+	public static boolean isReseller(CustomerTag customerTag) {
+		return customerTag.getCustomerTagName().equals(CustomerTags.RESELLER.getCustomerTagName());
+	}
+	
+	public static boolean isPartner(CustomerTag customerTag) {
+		return customerTag.getCustomerTagName().equals(CustomerTags.PARTNER.getCustomerTagName());
+	}
+	
+	public static BigDecimal getTotalPrice(OrderItems orderItem, CustomerTag customerTag) {
+		if (PfdiUtil.isCompanyOwned(customerTag)) {
+			System.out.println("SRP : "  +  orderItem.getProductSrp()  + " Q: " + orderItem.getQuantity() );
+			return orderItem.getProductSrp().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
+		} else if (PfdiUtil.isRelative(customerTag)) {
+			return orderItem.getProductPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
+		} else {
+			return orderItem.getProductPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
+		}
 	}
 
 }

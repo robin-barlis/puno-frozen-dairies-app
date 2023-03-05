@@ -16,6 +16,7 @@ import javax.annotation.security.PermitAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import com.example.application.IncorrectOrderException;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
@@ -36,8 +37,10 @@ import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.datetimepicker.DateTimePicker;
+import com.vaadin.flow.component.dialog.Dialog.DialogCloseActionEvent;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Hr;
@@ -162,27 +165,38 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		nextButton = new Button("Next");
 		nextButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		nextButton.addClickListener(e -> {
-			if (order == null) {
-				order = createNewOrder();
-			} else {
-				order.setOrderItems(itemOrderCategorySubView.updateOrderItems(authenticatedUser.get().get()));
-				order.setAmountDue(itemOrderCategorySubView.getTotalAmount());
-				order.setBalance(itemOrderCategorySubView.getTotalAmount());
-			}
-			
+			try {
+				if (order == null) {
 
-			order = orderService.update(order);
-			
-			List<ItemStock> itemInventorList = order.getOrderItems().stream().map(ord -> ord.getItemInventory()).collect(Collectors.toList());
-			
-			if (Objects.nonNull(itemInventorList)) {
-				itemStockService.updateAll(itemInventorList);
+					order = createNewOrder();
+				} else {
+					order.setOrderItems(itemOrderCategorySubView.updateOrderItems(authenticatedUser.get().get()));
+					order.setAmountDue(itemOrderCategorySubView.getTotalAmount());
+					order.setAmountSrp(itemOrderCategorySubView.getTotalSrpAmount());
+					order.setBalance(itemOrderCategorySubView.getTotalAmount());
+				}
+
+				order = orderService.update(order);
+
+				List<ItemStock> itemInventorList = order.getOrderItems().stream().map(ord -> ord.getItemInventory())
+						.collect(Collectors.toList());
+
+				if (Objects.nonNull(itemInventorList)) {
+					itemStockService.updateAll(itemInventorList);
+				}
+				RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+
+				Notification.show("Successfully created order.");
+				UI.getCurrent().navigate(StockOrderSummaryView.class, parameters);
+
+			} catch (IncorrectOrderException e1) {
+				ConfirmDialog dialog = new ConfirmDialog();
+				dialog.setHeader("Invalid fields");
+				dialog.setText("Could not create order. Please correct the invalid fields.");
+
+				dialog.setConfirmText("OK");
+				dialog.open();
 			}
-			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
-					
-			
-			Notification.show("Successfully created order.");
-			UI.getCurrent().navigate(StockOrderSummaryView.class, parameters);
 		});
 		
 
@@ -208,7 +222,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 
 	}
 
-	private Order createNewOrder() {
+	private Order createNewOrder() throws IncorrectOrderException {
 		Order order = new Order();
 		
 		
@@ -229,6 +243,7 @@ public class CreateOrderFormView extends AbstractPfdiView implements HasComponen
 		order.setOrderItems(orderItemSet);
 		
 		order.setAmountDue(itemOrderCategorySubView.getTotalAmount());
+		order.setAmountSrp(itemOrderCategorySubView.getTotalSrpAmount());
 		order.setDueDate(dueDate.getValue());
 		order.setBalance(itemOrderCategorySubView.getTotalAmount());
 		return order;

@@ -3,9 +3,11 @@ package com.example.application.reports;
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import com.example.application.data.Categories;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
+import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.utils.PfdiUtil;
 import com.google.common.collect.Lists;
 
@@ -30,18 +33,17 @@ import net.sf.jasperreports.engine.JRDataSource;
 @Service
 public class StockTransferReport {
 
-	private Map<Object, List<OrderItems>> orderItemPerCategoryMap;
-
 	public byte[] buildReport(Order order) {
 
-		this.orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
+	 Map<Object, List<OrderItems>>  orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
 				.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getCategory().getCategoryType()));
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
 		try {
 
-			report().title(Templates.createStockTransferDetailsComponent(order), cmp.subreport(createSubreport()))
+			report().title(Templates.createStockTransferDetailsComponent(order), 
+					cmp.subreport(createSubreport(order, orderItemPerCategoryMap)))
 					.addPageFooter(Templates.createStockTransferDetailsFooterComponent())
 					.pageFooter(Templates.footerComponent).toPdf(baos);
 
@@ -55,66 +57,148 @@ public class StockTransferReport {
 	
 	public JasperReportBuilder getReportBuilder(Order order) {
 
-		this.orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
+		Map<Object, List<OrderItems>> orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
 				.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getCategory().getCategoryType()));
-		JasperReportBuilder report = report().title(Templates.createStockTransferDetailsComponent(order), cmp.subreport(createSubreport()))
+		
+		JasperReportBuilder report = report().title(Templates.createStockTransferDetailsComponent(order), cmp.subreport(createSubreport(order, orderItemPerCategoryMap)))
 					.addPageFooter(Templates.createStockTransferDetailsFooterComponent())
 					.pageFooter(Templates.footerComponent);
 
 		return report;
 	}
 
-	private JasperReportBuilder createSubreport() {
+	private JasperReportBuilder createSubreport(Order order, Map<Object, List<OrderItems>> orderItemPerCategoryMap) {
 		JasperReportBuilder report = report();
 		
-		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
-		report.setTemplate(Templates.reportTemplate2)
-				.columns(col.column("Quantity", "quantity", type.stringType()),
-						col.column("Size", "size", type.stringType()),
-						categoryColumn)
-				.setDataSource(createSubreportDataSource())
-				.addColumnFooter(Templates.stockOrderFooter());
+		
+		if (PfdiUtil.isCompanyOwned(order.getCustomer().getCustomerTagId())) {
+			getCompanyOwnedReport(report,order, orderItemPerCategoryMap);
+		} else if (PfdiUtil.isRelative(order.getCustomer().getCustomerTagId())) {
+			getRelativeOwnedReport(report, order, orderItemPerCategoryMap);
+		} else {
+			buildOthersReport(report, order, orderItemPerCategoryMap);
 
+		}
+		
 		return report;
 	}
 	
 
-	private JRDataSource createSubreportDataSource() {
-		DRDataSource dataSource = new DRDataSource("quantity", "size", "category");
+	private void buildOthersReport(JasperReportBuilder report, Order order, Map<Object, List<OrderItems>> orderItemPerCategoryMap) {
+		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
+		TextColumnBuilder<String> quantityColumn = col.column("Quantity", "quantity", type.stringType());
+		TextColumnBuilder<String> sizeColumn =  col.column("Size", "size", type.stringType());
+		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Transfer Price", "price", type.bigDecimalType());
+		report.setTemplate(Templates.reportTemplate2)
+		.columns(categoryColumn,
+				sizeColumn,
+				quantityColumn,
+				priceColumn
+				)
+		.subtotalsAtSummary(sbt.text("Total Transfer Price", categoryColumn), 
+				sbt.text("", sizeColumn), 
+				sbt.text("", quantityColumn),  
+				sbt.sum(priceColumn))
+	
+		.setDataSource(createSubreportDataSource(order, orderItemPerCategoryMap))
+		.addColumnFooter(Templates.stockOrderFooter());
+		
+	}
+
+	private void getRelativeOwnedReport(JasperReportBuilder report, Order order, Map<Object, List<OrderItems>> orderItemPerCategoryMap) {
+		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
+		TextColumnBuilder<String> quantityColumn = col.column("Quantity", "quantity", type.stringType());
+		TextColumnBuilder<String> sizeColumn =  col.column("Size", "size", type.stringType());
+		//TextColumnBuilder<BigDecimal>  priceColumn = col.column("Transfer Price", "price", type.bigDecimalType());
+		report.setTemplate(Templates.reportTemplate2)
+		.columns(categoryColumn,
+				sizeColumn,
+				quantityColumn
+				)
+		.subtotalsAtSummary(sbt.text("Total Transfer Price", categoryColumn), 
+				sbt.text("", sizeColumn), 
+				sbt.text(PfdiUtil.getFormatter().format(order.getAmountDue()), quantityColumn))
+	
+		.setDataSource(createSubreportDataSource(order, orderItemPerCategoryMap))
+		.addColumnFooter(Templates.stockOrderFooter());
+		
+	}
+
+	private void getCompanyOwnedReport(JasperReportBuilder report, Order order, Map<Object, List<OrderItems>> orderItemPerCategoryMap) {
+		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
+		TextColumnBuilder<String> quantityColumn = col.column("Quantity", "quantity", type.stringType());
+		TextColumnBuilder<String> sizeColumn =  col.column("Size", "size", type.stringType());
+		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Amount in SRP", "price", type.bigDecimalType());
+		report.setTemplate(Templates.reportTemplate2)
+		.columns(categoryColumn,
+				sizeColumn,
+				quantityColumn,
+				priceColumn
+				)
+		.subtotalsAtSummary(sbt.text("Total Amount (SRP)", categoryColumn), 
+				sbt.text("", sizeColumn), 
+				sbt.text("", quantityColumn),  
+				sbt.sum(priceColumn))
+	
+		.setDataSource(createSubreportDataSource(order, orderItemPerCategoryMap))
+		.addColumnFooter(Templates.stockOrderFooter());
+		
+	}
+
+	private JRDataSource createSubreportDataSource(Order order, Map<Object, List<OrderItems>> orderItemPerCategoryMap) {
+		DRDataSource dataSource = new DRDataSource( "category", "size", "quantity", "price" );
 		
 		
-		List<OrderItemData> regularFlavors = getRegularFlavors();
+		List<OrderItemData> regularFlavors = getRegularFlavors(order, orderItemPerCategoryMap);
 		
 		for (OrderItemData item : regularFlavors) {
 			
-			System.out.println(item.getCategory());
-			dataSource.add(item.getQuantity(), 
+			System.out.println(item.getProductPrice());
+			dataSource.add(item.getCategory(), 
 					item.getSize(), 
-					item.getCategory());
+					item.getQuantity(), 
+					item.getProductPrice());
 			
 		}
 		
 		List<OrderItems> cones = orderItemPerCategoryMap.get(Categories.Cones.name());
+		
+	
 			
 		if (Objects.nonNull(cones)) {
+			Collections.sort(cones, (o1,o2) -> {
+				return o1.getItemInventory().getProduct().getProductName().compareTo(o2.getItemInventory().getProduct().getProductName());
+			});
+			
+			
 			for (OrderItems item : orderItemPerCategoryMap.get(Categories.Cones.name())) {
-				System.out.println(item.getItemInventory().getProduct().getProductName());
-				dataSource.add(item.getQuantity().toString(), 
+
+				BigDecimal currentPrice = PfdiUtil.getTotalPrice(item, order.getCustomer().getCustomerTagId());
+				dataSource.add(
+						item.getItemInventory().getProduct().getProductName(),
 						item.getItemInventory().getSize().getSizeName(), 
-						item.getItemInventory().getProduct().getProductName());
+						item.getQuantity().toString(), 
+						currentPrice);
 				
 			}
 		}
 		
 		List<OrderItems> others = orderItemPerCategoryMap.get(Categories.Others.name());
 		
-		
+
 		if (Objects.nonNull(others)) {
+			Collections.sort(others, (o1,o2) -> {
+				return o1.getItemInventory().getProduct().getProductName().compareTo(o2.getItemInventory().getProduct().getProductName());
+			});
 			for (OrderItems item : others) {
 				System.out.println(item.getItemInventory().getProduct().getProductName());
-				dataSource.add(item.getQuantity().toString(), 
+
+				BigDecimal currentPrice = PfdiUtil.getTotalPrice(item, order.getCustomer().getCustomerTagId());
+				dataSource.add(
+						item.getItemInventory().getProduct().getProductName(),
 						item.getItemInventory().getSize().getSizeName(), 
-						item.getItemInventory().getProduct().getProductName());
+						item.getQuantity().toString(), 
+						currentPrice);
 				
 			}
 		}
@@ -122,7 +206,7 @@ public class StockTransferReport {
 		return dataSource;
 	}
 
-	private List<OrderItemData> getRegularFlavors() {
+	private List<OrderItemData> getRegularFlavors(Order order, Map<Object, List<OrderItems>> orderItemPerCategoryMap) {
 		List<OrderItems> flavors = orderItemPerCategoryMap.get(Categories.Flavors.name());
 		
 		List<OrderItemData> orders = Lists.newArrayList();
@@ -146,20 +230,21 @@ public class StockTransferReport {
 				return sortingIndex1.compareTo(sortingIndex2);
 			});
 			if ("Regular Ice Cream".equalsIgnoreCase(key)) {
-				
 				Map<String, List<OrderItems>> regularFlavorsBySize = flavorsValuePerCategory.stream()
 						.collect(Collectors.groupingBy(orderItem -> orderItem.getItemInventory().getSize().getSizeName()));
-				collectRegularIceCream(regularFlavorsBySize).forEach(e-> {
-					OrderItemData orderData = new OrderItemData(e.getQuantity(), e.getSize(), e.getCategory());
-					orders.add(orderData);
-				});
+				orders.addAll(collectRegularIceCream(regularFlavorsBySize, order));
+
 			} else {
 				
 				
-				flavorsValuePerCategory.forEach(e-> {
-					OrderItemData orderData = new OrderItemData(e.getQuantity().toString(), e.getItemInventory().getSize().getSizeName(), e.getItemInventory().getProduct().getProductName());
+				for (OrderItems orderItem : flavorsValuePerCategory) {
+					BigDecimal currentPrice = PfdiUtil.getTotalPrice(orderItem, order.getCustomer().getCustomerTagId());
+					OrderItemData orderData = new OrderItemData(orderItem.getQuantity().toString(), 
+							orderItem.getItemInventory().getSize().getSizeName(),
+							orderItem.getItemInventory().getProduct().getProductName(), 
+							currentPrice);
 					orders.add(orderData);
-				});
+				}
 			}
 		}
 		
@@ -167,21 +252,28 @@ public class StockTransferReport {
 		return orders;
 	}
 
-	private List<OrderItemData> collectRegularIceCream(Map<String, List<OrderItems>> regularFlavorsBySize) {
+	private List<OrderItemData> collectRegularIceCream(Map<String, List<OrderItems>> regularFlavorsBySize, Order order) {
 		
 		
 		List<OrderItemData> orderItemDataRegularList = Lists.newArrayList();
+
 		for (Entry<String, List<OrderItems>> regularFlavorSizeEntry : regularFlavorsBySize.entrySet()) {
 
 			Integer quantity = 0;
-	
+
+			BigDecimal productPrice = BigDecimal.ZERO;
 			for (OrderItems item : regularFlavorSizeEntry.getValue()) {
 				int currentQuantity = item.getQuantity();
 				quantity = quantity + currentQuantity;
-
+				BigDecimal price = PfdiUtil.getTotalPrice(item, order.getCustomer().getCustomerTagId());
+				
+				productPrice = productPrice.add(price);
 			}
 			
-			OrderItemData orderItemData = new OrderItemData(quantity.toString(), regularFlavorSizeEntry.getKey(), "Regular Ice Cream");
+			OrderItemData orderItemData = new OrderItemData(quantity.toString(), 
+					regularFlavorSizeEntry.getKey(),
+					"Regular Ice Cream",
+					productPrice);
 			orderItemDataRegularList.add(orderItemData);
 		}
 		
@@ -194,12 +286,14 @@ public class StockTransferReport {
 		private String quantity;
 		private String size;
 		private String category;
+		private BigDecimal productPrice;
 		
 		
-		public OrderItemData(String quantity, String size, String category) {
+		public OrderItemData(String quantity, String size, String category, BigDecimal productPrice) {
 			this.category = category;
 			this.size = size;
 			this.quantity = quantity;
+			this.productPrice = productPrice;
 		}
 
 
@@ -215,6 +309,11 @@ public class StockTransferReport {
 
 		public String getSize() {
 			return size;
+		}
+		
+
+		public BigDecimal getProductPrice() {
+			return productPrice;
 		}
 		
 		

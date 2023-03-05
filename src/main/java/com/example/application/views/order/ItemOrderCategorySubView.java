@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.example.application.IncorrectOrderException;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
@@ -22,6 +23,7 @@ import com.example.application.data.entity.products.ProductPrice;
 import com.example.application.data.entity.products.Size;
 import com.example.application.data.entity.stock.ItemStock;
 import com.example.application.utils.PfdiUtil;
+import com.google.common.collect.Sets;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Hr;
@@ -42,6 +44,8 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 	private Set<OrderItems> orderItems;
 
 	private BigDecimal currentTotalPrice = BigDecimal.valueOf(0);
+	
+	private BigDecimal currentTotalSrp = BigDecimal.valueOf(0);
 
 	private H1 totalAmount = new H1();
 	private Map<String, OrderItems> orderItemMap = null;
@@ -169,12 +173,18 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 										.multiply(BigDecimal.valueOf(e.getOldValue() != null ? e.getOldValue() : 0));
 								BigDecimal newAmount = productPrice.getTransferPrice()
 										.multiply(BigDecimal.valueOf(e.getValue() != null ? e.getValue() : 0));
+								
+								
+								BigDecimal oldSrpAmount = productPrice.getSuggestedRetailPrice()
+										.multiply(BigDecimal.valueOf(e.getOldValue() != null ? e.getOldValue() : 0));
+								BigDecimal newSrpAmount = productPrice.getSuggestedRetailPrice()
+										.multiply(BigDecimal.valueOf(e.getValue() != null ? e.getValue() : 0));
 
 								currentTotalPrice = currentTotalPrice.subtract(oldAmount);
 								currentTotalPrice = currentTotalPrice.add(newAmount);
-								System.out.println("Old Amount : " + oldAmount);
-								System.out.println("New Amount : " + newAmount);
-								System.out.println("Current Total Amount : " + currentTotalPrice);
+								
+								currentTotalSrp = currentTotalSrp.subtract(oldSrpAmount);
+								currentTotalSrp = currentTotalSrp.add(newSrpAmount);
 
 								totalAmount
 										.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
@@ -183,7 +193,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 							});
 							contentWrapper.add(quantityField);
 
-							itemsList.add(new Items(quantityField, productPrice.getTransferPrice(), stock));
+							itemsList.add(new Items(quantityField, productPrice.getTransferPrice(), stock, productPrice.getSuggestedRetailPrice()));
 						}
 
 					}
@@ -208,9 +218,16 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 	}
 
-	public Set<OrderItems> createOrderItems(AppUser user, LocalDateTime localDateTime, Order order) {
-		return itemsList.stream().map(items -> {
-			if (items.getNumberField().getValue() > 0) {
+	public Set<OrderItems> createOrderItems(AppUser user, LocalDateTime localDateTime, Order order) throws IncorrectOrderException{
+		Set<OrderItems> orderItems  = Sets.newHashSet();
+		
+		for (Items items : itemsList) {
+			
+			if (Objects.nonNull(items.getNumberField()) && items.getNumberField().getValue() > 0) {
+				
+				if (items.getNumberField().isInvalid()) {
+					throw new IncorrectOrderException("");
+				}
 
 				int quantity = items.getNumberField().getValue();
 
@@ -224,20 +241,27 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 				stock.setAvailableStock(adjustment);
 				orderItem.setItemInventory(stock);
 				orderItem.setProductPrice(items.getPrice());
+				orderItem.setProductSrp(items.getSrp());
+				
 				orderItem.setUpdatedDate(localDateTime);
 				orderItem.setCreatedBy(user);
 				orderItem.setCreatedDate(localDateTime);
 				orderItem.setUpdatedBy(user);
 				orderItem.setOrder(order);
-
-				return orderItem;
+				
+				orderItems.add(orderItem);
 			}
-			return null;
-		}).filter(Objects::nonNull).collect(Collectors.toSet());
+		}
+		
+		return orderItems;
 	}
 
 	public BigDecimal getTotalAmount() {
 		return currentTotalPrice;
+	}
+	
+	public BigDecimal getTotalSrpAmount() {
+		return currentTotalSrp;
 	}
 
 	private class Items {
@@ -245,12 +269,14 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 		private IntegerField numberField;
 		private BigDecimal price;
 		private ItemStock itemStock;
+		private BigDecimal srp;
 
-		public Items(IntegerField numberField, BigDecimal price, ItemStock itemStock) {
+		public Items(IntegerField numberField, BigDecimal price, ItemStock itemStock, BigDecimal srp) {
 			super();
 			this.numberField = numberField;
 			this.price = price;
 			this.itemStock = itemStock;
+			this.srp = srp;
 		}
 
 		public IntegerField getNumberField() {
@@ -265,6 +291,12 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			return itemStock;
 
 		}
+
+		public BigDecimal getSrp() {
+			return srp;
+		}
+		
+		
 	}
 
 	public void setOrderItems(Set<OrderItems> orderItems) {

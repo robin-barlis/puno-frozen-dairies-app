@@ -6,9 +6,11 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import com.example.application.data.Categories;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
+import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.utils.PfdiUtil;
 import com.google.common.collect.Lists;
 
@@ -29,11 +32,10 @@ import net.sf.jasperreports.engine.JRDataSource;
 @Service
 public class DeliveryReceiptReport {
 
-	private Map<Object, List<OrderItems>> orderItemPerCategoryMap;
 
 	public byte[] buildReport(Order order) {
 
-		this.orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
+		Map<Object, List<OrderItems>> orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
 				.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getCategory().getCategoryType()));
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -41,7 +43,7 @@ public class DeliveryReceiptReport {
 		try {
 
 			report().title(Templates.createDeliveryReceiptHeaderComponent(order), 
-					cmp.subreport(createSubreport()))
+					cmp.subreport(createSubreport(orderItemPerCategoryMap, order)))
 					.addPageFooter(Templates.createStockTransferDetailsFooterComponent())
 					.pageFooter(Templates.footerComponent).toPdf(baos);
 
@@ -55,59 +57,69 @@ public class DeliveryReceiptReport {
 	
 	public JasperReportBuilder getReportBuilder(Order order) {
 
-		this.orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
+		 Map<Object, List<OrderItems>> orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
 				.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getCategory().getCategoryType()));
-		JasperReportBuilder report = report().title(Templates.createStockTransferDetailsComponent(order), cmp.subreport(createSubreport()))
+		JasperReportBuilder report = report().title(Templates.createDeliveryReceiptHeaderComponent(order), 
+				cmp.subreport(createSubreport(orderItemPerCategoryMap, order)))
 					.addPageFooter(Templates.createDeliveryReceiptDetailsFooterComponent())
 					.pageFooter(Templates.footerComponent);
 
 		return report;
 	}
 
-	private JasperReportBuilder createSubreport() {
-		JasperReportBuilder report = report();
-		
-		TextColumnBuilder<String> productColumn = col.column("Flavor", "flavor", type.stringType());
 
-		report.setTemplate(Templates.reportTemplate2)
-				.columns(productColumn,
-						col.column("Product", "productSize", type.stringType()),
-						col.column("Transfer Price", "tp", type.stringType()),
-						col.column("Quantity", "quantity", type.stringType()))
-				.groupBy(productColumn)
-				
-				.setDataSource(createSubreportDataSource())
-				.addColumnFooter(Templates.stockOrderFooter());
+	private JasperReportBuilder createSubreport(Map<Object, List<OrderItems>> orderItemPerCategoryMap, Order order) {
+		JasperReportBuilder report = report();
+	
+		buildOthersReport(report, orderItemPerCategoryMap, order);
 
 		return report;
 	}
 	
 
-	private JRDataSource createSubreportDataSource() {
-		DRDataSource dataSource = new DRDataSource("flavor", "productSize", "tp", "quantity");
+	private void buildOthersReport(JasperReportBuilder report, Map<Object, List<OrderItems>> orderItemPerCategoryMap, Order order) {
+		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
+		TextColumnBuilder<String> quantityColumn = col.column("Quantity", "quantity", type.stringType());
+		TextColumnBuilder<String> sizeColumn =  col.column("Size", "size", type.stringType());
+		report.setTemplate(Templates.reportTemplate2)
+		.columns(categoryColumn,
+				sizeColumn,
+				quantityColumn)
+		.setDataSource(createSubreportDataSource(orderItemPerCategoryMap, order.getCustomer().getCustomerTagId()))
+		.addColumnFooter(Templates.stockOrderFooter());
+		
+	}
+
+	private JRDataSource createSubreportDataSource(Map<Object, List<OrderItems>> orderItemPerCategoryMap, CustomerTag customerTag) {
+		DRDataSource dataSource = new DRDataSource( "category", "size", "quantity");
 		
 		
-		List<OrderItemData> regularFlavors = getRegularFlavors();
-		if (Objects.nonNull(regularFlavors)) {
+		List<OrderItemData> regularFlavors = getRegularFlavors(orderItemPerCategoryMap, customerTag);
+		
+		for (OrderItemData item : regularFlavors) {
 			
-			//Collections.sort(regularFlavors, (o1, o2) -> (o1.getProductName().compareTo(o2.getProductName())));
-			for (OrderItemData item : regularFlavors) {
-				
-				dataSource.add(item.getProductName(), item.getSize(), item.getPrice(), item.getQuantity());
-				
-			}
+			System.out.println(item.getProductPrice());
+			dataSource.add(item.getCategory(), 
+					item.getSize(), 
+					item.getQuantity());
+			
 		}
 		
 		List<OrderItems> cones = orderItemPerCategoryMap.get(Categories.Cones.name());
 		
+	
+			
 		if (Objects.nonNull(cones)) {
-			Collections.sort(cones, (o1, o2) -> (o1.getItemInventory().getProduct().getProductName().compareTo(o2.getItemInventory().getProduct().getProductName())));
+			Collections.sort(cones, (o1,o2) -> {
+				return o1.getItemInventory().getProduct().getProductName().compareTo(o2.getItemInventory().getProduct().getProductName());
+			});
+			
 			
 			for (OrderItems item : orderItemPerCategoryMap.get(Categories.Cones.name())) {
-				System.out.println(item.getItemInventory().getProduct().getProductName());
-				dataSource.add(item.getItemInventory().getProduct().getProductName(),
-						item.getItemInventory().getSize().getSizeName(),
-						item.getProductPrice().toString(),
+
+				dataSource.add(
+						item.getItemInventory().getProduct().getProductName(),
+						item.getItemInventory().getSize().getSizeName(), 
 						item.getQuantity().toString());
 				
 			}
@@ -115,16 +127,15 @@ public class DeliveryReceiptReport {
 		
 		List<OrderItems> others = orderItemPerCategoryMap.get(Categories.Others.name());
 		
-		
-		if (Objects.nonNull(others)) {	
-			Collections.sort(others, (o1, o2) -> (o2.getItemInventory().getProduct().getProductName().compareTo(o1.getItemInventory().getProduct().getProductName())));
-		
+
+		if (Objects.nonNull(others)) {
+			Collections.sort(others, (o1,o2) -> {
+				return o1.getItemInventory().getProduct().getProductName().compareTo(o2.getItemInventory().getProduct().getProductName());
+			});
 			for (OrderItems item : others) {
-				System.out.println(item.getItemInventory().getProduct().getProductName());
-				String productName = item.getItemInventory().getProduct().getProductName();
-				dataSource.add(productName,
-						item.getItemInventory().getSize().getSizeName(),
-						item.getProductPrice().toString(),
+				dataSource.add(
+						item.getItemInventory().getProduct().getProductName(),
+						item.getItemInventory().getSize().getSizeName(), 
 						item.getQuantity().toString());
 				
 			}
@@ -133,9 +144,8 @@ public class DeliveryReceiptReport {
 		return dataSource;
 	}
 
-	private List<OrderItemData> getRegularFlavors() {
+	private List<OrderItemData> getRegularFlavors(Map<Object, List<OrderItems>> orderItemPerCategoryMap, CustomerTag customerTag) {
 		List<OrderItems> flavors = orderItemPerCategoryMap.get(Categories.Flavors.name());
-
 		
 		List<OrderItemData> orders = Lists.newArrayList();
 		
@@ -150,46 +160,83 @@ public class DeliveryReceiptReport {
 
 			List<OrderItems> flavorsValuePerCategory = flavorPerCategory.get(key);
 			
+
 			
-				Collections.sort(flavorsValuePerCategory, (o1, o2) -> {
-					Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
-					Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
-					return sortingIndex1.compareTo(sortingIndex2);
-				});
-				flavorsValuePerCategory.forEach(item-> {
-					String flavor = 
-							item.getItemInventory().getProduct().getProductName();
-					OrderItemData orderData = new OrderItemData(flavor.toUpperCase(), 
-							item.getQuantity().toString(), 
-							item.getItemInventory().getSize().getSizeName(),
-							item.getProductPrice().toString());
+			Collections.sort(flavorsValuePerCategory, (o1, o2) -> {
+				Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+				Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
+				return sortingIndex1.compareTo(sortingIndex2);
+			});
+			if ("Regular Ice Cream".equalsIgnoreCase(key)) {
+				Map<String, List<OrderItems>> regularFlavorsBySize = flavorsValuePerCategory.stream()
+						.collect(Collectors.groupingBy(orderItem -> orderItem.getItemInventory().getSize().getSizeName()));
+				orders.addAll(collectRegularIceCream(regularFlavorsBySize, customerTag));
+
+			} else {
+				
+				
+				for (OrderItems orderItem : flavorsValuePerCategory) {
+					BigDecimal currentPrice = PfdiUtil.getTotalPrice(orderItem, customerTag);
+					OrderItemData orderData = new OrderItemData(orderItem.getQuantity().toString(), 
+							orderItem.getItemInventory().getSize().getSizeName(),
+							orderItem.getItemInventory().getProduct().getProductName(), 
+							currentPrice);
 					orders.add(orderData);
-				});
-			
+				}
+			}
 		}
 		
 		
 		return orders;
-	}	
+	}
+
+	private List<OrderItemData> collectRegularIceCream(Map<String, List<OrderItems>> regularFlavorsBySize, CustomerTag customerTag) {
+		
+		
+		List<OrderItemData> orderItemDataRegularList = Lists.newArrayList();
+
+		for (Entry<String, List<OrderItems>> regularFlavorSizeEntry : regularFlavorsBySize.entrySet()) {
+
+			Integer quantity = 0;
+
+			BigDecimal productPrice = BigDecimal.ZERO;
+			for (OrderItems item : regularFlavorSizeEntry.getValue()) {
+				int currentQuantity = item.getQuantity();
+				quantity = quantity + currentQuantity;
+				BigDecimal price = PfdiUtil.getTotalPrice(item, customerTag);
+				
+				productPrice = productPrice.add(price);
+			}
+			
+			OrderItemData orderItemData = new OrderItemData(quantity.toString(), 
+					regularFlavorSizeEntry.getKey(),
+					"Regular Ice Cream",
+					productPrice);
+			orderItemDataRegularList.add(orderItemData);
+		}
+		
+		return orderItemDataRegularList;
+	}
+	
 	
 	protected class OrderItemData {
 		
 		private String quantity;
 		private String size;
-		private String price;
-		private String productName;
+		private String category;
+		private BigDecimal productPrice;
 		
 		
-		public OrderItemData(String productName, String quantity, String size, String price) {
-			this.price = price;
+		public OrderItemData(String quantity, String size, String category, BigDecimal productPrice) {
+			this.category = category;
 			this.size = size;
 			this.quantity = quantity;
-			this.productName = productName;
+			this.productPrice = productPrice;
 		}
 
 
-		public String getPrice() {
-			return price;
+		public String getCategory() {
+			return category;
 		}
 
 
@@ -202,10 +249,10 @@ public class DeliveryReceiptReport {
 			return size;
 		}
 		
-		public String getProductName() {
-			return productName;
+
+		public BigDecimal getProductPrice() {
+			return productPrice;
 		}
-		
 		
 		
 	}

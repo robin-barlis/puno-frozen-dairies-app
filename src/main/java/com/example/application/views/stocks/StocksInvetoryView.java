@@ -6,10 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
 import com.example.application.data.entity.stock.ItemStock;
+import com.example.application.data.service.products.ProductService;
 import com.example.application.data.service.stock.ItemStockService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.Uses;
@@ -53,13 +55,15 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 
 	private ListDataProvider<ItemStock> ldp = null;
 	private ItemStockService itemStockService;
+	private ProductService productService;
 
 
 	@Autowired
-	public StocksInvetoryView(ItemStockService itemStockService) {
+	public StocksInvetoryView(ItemStockService itemStockService, ProductService productService) {
 		super("Admin", "Admin");
 		addClassNames("administration-view");
 		this.itemStockService = itemStockService;
+		this.productService = productService;
 
 		VerticalLayout tableContent = new VerticalLayout();
 		createGridLayout(tableContent);
@@ -68,7 +72,7 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 
 	}
 
-		@Override
+	@Override
 	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
 		HorizontalLayout headerContainer = new HorizontalLayout();
 		headerContainer.setWidthFull();
@@ -81,8 +85,23 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 		header.addClassNames("mb-0", "mt-s", "text-xl");
 		headerNameWrapper.add(header);
 		headerNameWrapper.setWidth("50%");
+		
+		FlexLayout flexWrapper = new FlexLayout();
+		flexWrapper.setFlexDirection(FlexDirection.ROW);
+		flexWrapper.setJustifyContentMode(JustifyContentMode.END);
+		flexWrapper.setClassName("button-layout");
+		flexWrapper.setWidth("50%");
+		
+		Button manageInventory = new Button("Manage Inventory");
+		manageInventory.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		manageInventory.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
+	
+		manageInventory.addClickListener(e -> {
+			UI.getCurrent().navigate(ManageInventoryView.class);
+		});
 
-		headerContainer.add(headerNameWrapper);
+		flexWrapper.add(manageInventory);
+		headerContainer.add(headerNameWrapper, flexWrapper);
 		contentHeaderContainer.add(headerContainer);
 
 	}

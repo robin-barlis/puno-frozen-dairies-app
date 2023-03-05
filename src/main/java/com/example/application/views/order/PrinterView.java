@@ -8,11 +8,16 @@ import javax.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
+import com.example.application.data.Reports;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.orders.Order;
+import com.example.application.data.entity.products.Size;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.products.SizesService;
+import com.example.application.reports.DeliveryReceiptReport;
 import com.example.application.reports.OrderSummaryReport;
+import com.example.application.reports.SalesInvoiceReport;
+import com.example.application.reports.StockTransferReport;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.service.ReportConsolidatorService;
 import com.example.application.views.MainLayout;
@@ -42,8 +47,8 @@ import com.vaadin.flow.server.StreamResource;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 
 @PageTitle("Stock Orders")
-@Route(value = "order/printAll/:id", layout = MainLayout.class)
-@RouteAlias(value = "/order/printAll/:id", layout = MainLayout.class)
+@Route(value = "order/printAll/:id/:report", layout = MainLayout.class)
+@RouteAlias(value = "/order/printAll/:id/:report", layout = MainLayout.class)
 @RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" })
 @Uses(Icon.class)
 public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
@@ -55,17 +60,21 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 
 	private OrdersService ordersService;
 	
-	private Order order;
 	
 	
 	private String orderId;
+	private String report;
 //	private BigDecimal totalAmount = BigDecimal.valueOf(0);
 
 	private AppUser appUser;
 	private SizesService sizesService;
 	private OrderSummaryReport orderSummaryReport;
-
-	private byte[] orderSummaryReportData;
+	private DeliveryReceiptReport deliveryReceiptReport;
+	private SalesInvoiceReport salesInvoiceReport;
+	private StockTransferReport stockTransferReport;
+	
+//
+//	private byte[] orderSummaryReportData;
 	private Div mainDiv = new Div();
 
 	private ReportConsolidatorService reportConsolidatorService;
@@ -74,13 +83,17 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 	@Autowired
 	public PrinterView(SizesService sizesService, OrdersService ordersService, AuthenticatedUser user, 
 			OrderSummaryReport orderSummaryReport, 
-			ReportConsolidatorService reportConsolidatorService) {
+			ReportConsolidatorService reportConsolidatorService,
+			DeliveryReceiptReport deliveryReceiptReport,
+			StockTransferReport stockTransferReport) {
 		this.ordersService = ordersService;
 		this.appUser = user.get().get();
 		
 		this.sizesService = sizesService;
 		this.orderSummaryReport = orderSummaryReport;
 		this.reportConsolidatorService = reportConsolidatorService;
+		this.deliveryReceiptReport = deliveryReceiptReport;
+		this.stockTransferReport = stockTransferReport;
 		addClassNames("administration-view");
 		
 		addChildrenToContentHeaderContainer(this);
@@ -120,6 +133,7 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {
 		orderId = event.getRouteParameters().get("id").get();
+		report = event.getRouteParameters().get("report").get();
 		
 		List<Order> orders = Lists.newArrayList();
 		
@@ -133,11 +147,51 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
     	
     	
     	for (Order order : orders) {
-    		JasperReportBuilder orderReport = orderSummaryReport
-    				.getReportBuilder(order, 
-    						sizesService.listAll(Sort.unsorted()), 
-    						appUser);
-    		orderSummaryReportBuilder.add(orderReport);
+    		
+    		if (report.equals(Reports.ALL.name()) || report.equals(Reports.SO.name()) ) {
+    			JasperReportBuilder orderReport = createStockOrderReports(Reports.SO, 
+    					order, 
+    					sizesService.listAll(Sort.unsorted()), appUser);
+    			
+    			if (orderReport != null) {
+
+            		orderSummaryReportBuilder.add(orderReport);
+    			}
+    		}
+    		
+    		if (report.equals(Reports.ALL.name()) || report.equals(Reports.SI.name()) ) {
+    			JasperReportBuilder orderReport = createStockOrderReports(Reports.SI, 
+    					order, 
+    					sizesService.listAll(Sort.unsorted()), appUser);
+
+    			if (orderReport != null) {
+
+            		orderSummaryReportBuilder.add(orderReport);
+    			}
+    		}
+    		
+    		if (report.equals(Reports.ALL.name()) || report.equals(Reports.ST.name()) ) {
+    			JasperReportBuilder orderReport = createStockOrderReports(Reports.ST, 
+    					order, 
+    					sizesService.listAll(Sort.unsorted()), appUser);
+
+    			if (orderReport != null) {
+
+            		orderSummaryReportBuilder.add(orderReport);
+    			}
+    		}
+    		
+    		if (report.equals(Reports.ALL.name()) || report.equals(Reports.DR.name()) ) {
+    			JasperReportBuilder orderReport = createStockOrderReports(Reports.DR, 
+    					order, 
+    					sizesService.listAll(Sort.unsorted()), appUser);
+
+    			if (orderReport != null) {
+
+            		orderSummaryReportBuilder.add(orderReport);
+    			}
+    		}
+    		
     	}
     	
     	byte[] consolidatedReport = reportConsolidatorService.build(orderSummaryReportBuilder.toArray(new JasperReportBuilder[orderSummaryReportBuilder.size()]));
@@ -162,11 +216,30 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 		mainDiv.setHeight("75%");
 	}
 
+	private JasperReportBuilder createStockOrderReports(Reports report, Order order, List<Size> listAll, AppUser appUser2) {
+		JasperReportBuilder reportBuilder = null;
+		
+		if (Reports.SO == report) {
+			reportBuilder = orderSummaryReport
+					.getReportBuilder(order, 
+							sizesService.listAll(Sort.unsorted()), 
+							appUser);
+			
+		} else if (Reports.ST == report) {
+			reportBuilder = stockTransferReport
+					.getReportBuilder(order);
+			
+		} else if (Reports.DR == report) {
+			reportBuilder = deliveryReceiptReport
+					.getReportBuilder(order);
+			
+		}
 
-	private Integer generateStockOrderNumber() {
-		return ordersService.getLastId() + 1;
+		return reportBuilder;
+		
+
+		
 	}
-
 
 	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
 		Div headerWrapper = new Div();

@@ -25,7 +25,6 @@
     "@vaadin/component-base": "23.3.0-alpha2",
     "@vaadin/confirm-dialog": "23.3.0-alpha2",
     "@vaadin/context-menu": "23.3.0-alpha2",
-    "@vaadin/cookie-consent": "23.3.0-alpha2",
     "@vaadin/custom-field": "23.3.0-alpha2",
     "@vaadin/date-picker": "23.3.0-alpha2",
     "@vaadin/date-time-picker": "23.3.0-alpha2",
@@ -75,7 +74,6 @@
     "@vaadin/vaadin-combo-box": "23.3.0-alpha2",
     "@vaadin/vaadin-confirm-dialog": "23.3.0-alpha2",
     "@vaadin/vaadin-context-menu": "23.3.0-alpha2",
-    "@vaadin/vaadin-cookie-consent": "23.3.0-alpha2",
     "@vaadin/vaadin-custom-field": "23.3.0-alpha2",
     "@vaadin/vaadin-date-picker": "23.3.0-alpha2",
     "@vaadin/vaadin-date-time-picker": "23.3.0-alpha2",
@@ -160,7 +158,6 @@
       "@vaadin/component-base": "23.3.0-alpha2",
       "@vaadin/confirm-dialog": "23.3.0-alpha2",
       "@vaadin/context-menu": "23.3.0-alpha2",
-      "@vaadin/cookie-consent": "23.3.0-alpha2",
       "@vaadin/custom-field": "23.3.0-alpha2",
       "@vaadin/date-picker": "23.3.0-alpha2",
       "@vaadin/date-time-picker": "23.3.0-alpha2",
@@ -209,7 +206,6 @@
       "@vaadin/vaadin-combo-box": "23.3.0-alpha2",
       "@vaadin/vaadin-confirm-dialog": "23.3.0-alpha2",
       "@vaadin/vaadin-context-menu": "23.3.0-alpha2",
-      "@vaadin/vaadin-cookie-consent": "23.3.0-alpha2",
       "@vaadin/vaadin-custom-field": "23.3.0-alpha2",
       "@vaadin/vaadin-date-picker": "23.3.0-alpha2",
       "@vaadin/vaadin-date-time-picker": "23.3.0-alpha2",
@@ -269,7 +265,7 @@
       "workbox-core": "6.5.0",
       "workbox-precaching": "6.5.0"
     },
-    "hash": "be85dd8b5823813e1c91d01dfaccbff5a9cf016638429658282e8ac468eda119"
+    "hash": "122899909e8ba01ef203402b4b0223dfdfbb1e1be02b986e0c8c335c8691407c"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -385,8 +381,6 @@
     "lit-html": "$lit-html",
     "sortablejs": "$sortablejs",
     "@fontsource/roboto": "$@fontsource/roboto",
-    "line-awesome": "$line-awesome",
-    "@vaadin/cookie-consent": "$@vaadin/cookie-consent",
-    "@vaadin/vaadin-cookie-consent": "$@vaadin/vaadin-cookie-consent"
+    "line-awesome": "$line-awesome"
   }
 }

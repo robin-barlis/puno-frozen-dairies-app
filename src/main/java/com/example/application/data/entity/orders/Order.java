@@ -35,14 +35,11 @@ public class Order implements Serializable {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
-	private Integer stockOrderNumber;
 	
 	@OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "customer_id", nullable = false)
 	@Fetch(FetchMode.SELECT)
 	private Customer customer;
-	
-	private String status;
 	
 	@OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "created_by", nullable = false)
@@ -67,14 +64,6 @@ public class Order implements Serializable {
 	@Fetch(value = FetchMode.SELECT)
 	private List<Payment> payments;
 	
-	public List<Payment> getPayments() {
-		return payments;
-	}
-
-	public void setPayments(List<Payment> payments) {
-		this.payments = payments;
-	}
-
 	private LocalDateTime creationDate;
 	
 	private LocalDateTime updatedDate;
@@ -82,6 +71,22 @@ public class Order implements Serializable {
 	private LocalDateTime checkedDate;
 	
 	private Integer invoiceId;
+	
+	private BigDecimal amountSrp;
+
+	private Integer deliveryReceiptId;
+	
+	private Integer stockTransferId;
+	
+	private LocalDate dueDate;
+	
+	private BigDecimal amountDue;
+	
+	private BigDecimal balance;
+
+	private Integer stockOrderNumber;
+	
+	private String status;
 	
 	public LocalDate getDueDate() {
 		return dueDate;
@@ -106,16 +111,6 @@ public class Order implements Serializable {
 	public void setBalance(BigDecimal balance) {
 		this.balance = balance;
 	}
-
-	private Integer deliveryReceiptId;
-	
-	private Integer stockTransferId;
-	
-	private LocalDate dueDate;
-	
-	private BigDecimal amountDue;
-	
-	private BigDecimal balance;
 	
 	public Integer getInvoiceId() {
 		return invoiceId;
@@ -240,6 +235,33 @@ public class Order implements Serializable {
 	public void setOrderItems(Set<OrderItems> orderItems) {
 		this.orderItems = orderItems;
 	}
+	
+	public List<Payment> getPayments() {
+		return payments;
+	}
+
+	public void setPayments(List<Payment> payments) {
+		this.payments = payments;
+	}
+
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
+	}
+
+	public BigDecimal getAmountSrp() {
+		return amountSrp;
+	}
+
+	public void setAmountSrp(BigDecimal amountSrp) {
+		this.amountSrp = amountSrp;
+	}
+
+
 
 	
 	@Override
@@ -259,14 +281,5 @@ public class Order implements Serializable {
 		}
 		return getId().equals(other.getId());
 	}
-
-	public String getNotes() {
-		return notes;
-	}
-
-	public void setNotes(String notes) {
-		this.notes = notes;
-	}
-
 
 }

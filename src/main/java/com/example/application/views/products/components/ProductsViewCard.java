@@ -46,21 +46,28 @@ public class ProductsViewCard extends ListItem {
         Span iceCreamName = new Span();
         iceCreamName.addClassNames("text-l", "font-semibold");
         iceCreamName.setText(product.getProductName());
-
         VerticalLayout iceCreamDescriptionContainer = new VerticalLayout();
+
+        iceCreamDescriptionContainer.add(iceCreamName);
+        
+        Span categorySpan = new Span();
+        categorySpan.getElement().setAttribute("theme", "badge");
+        categorySpan.setText(product.getCategory().getCategoryName());
+        
+        
         if (category != null) {
 
             Set<String> sizes = category.getSizeSet().stream().map(e->e.getSizeName()).collect(Collectors.toSet());
             Paragraph sizesContainer = new Paragraph(String.join(" | ", sizes));
             sizesContainer.addClassName("my-m");
 
-            Span categorySpan = new Span();
-            categorySpan.getElement().setAttribute("theme", "badge");
-            categorySpan.setText(category.getCategoryName());
+
 
             iceCreamDescriptionContainer.setAlignItems(Alignment.START);
-            iceCreamDescriptionContainer.add(iceCreamName, sizesContainer, categorySpan );
+            iceCreamDescriptionContainer.add(sizesContainer);
         }
+        
+        iceCreamDescriptionContainer.add(categorySpan);
         
        RouterLink productLink = new RouterLink();
         

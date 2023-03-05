@@ -37,6 +37,8 @@ public class OrderItems implements Serializable {
 
 	private BigDecimal productPrice;
 	
+	private BigDecimal productSrp;
+	
 	private LocalDateTime createdDate;
 
 
@@ -124,6 +126,16 @@ public class OrderItems implements Serializable {
 
 	public void setCreatedBy(AppUser createdBy) {
 		this.createdBy = createdBy;
+	}
+	
+
+
+	public BigDecimal getProductSrp() {
+		return productSrp;
+	}
+
+	public void setProductSrp(BigDecimal productSrp) {
+		this.productSrp = productSrp;
 	}
 
 	@Override

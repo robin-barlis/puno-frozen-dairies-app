@@ -154,6 +154,13 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 			DocumentTrackingNumber paymentNumber = documentTrackingNumberService.findByType(DocumentTrackingNumberEnum.PAYMENT_NUMBER.name());
 			try {
 				paymentBinder.writeBean(payment);
+				if (paymentNumber == null) {
+					paymentNumber = new DocumentTrackingNumber();
+					paymentNumber.setNumber(0);
+					paymentNumber.setType(DocumentTrackingNumberEnum.PAYMENT_NUMBER.name());
+				}
+				
+				
 				payment.setPaymentNumber(paymentNumber.getNumber());
 				payment.setDueDate(payment.getOrderId().getDueDate());
 				payment.setPaymentDate(LocalDate.now());

@@ -190,7 +190,15 @@ public class OrderSummaryReport {
 				
 				Collections.sort(flavors, (o1, o2) -> {
 					Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+
 					Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
+					if (sortingIndex1 == null) {
+						sortingIndex1 =0;
+					}
+					
+					if (sortingIndex2 == null) {
+						sortingIndex2 =0;
+					}
 					return sortingIndex1.compareTo(sortingIndex2);
 				});
 				
@@ -238,7 +246,15 @@ public class OrderSummaryReport {
 				
 				Collections.sort(cones, (o1, o2) -> {
 					Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+
 					Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
+					if (sortingIndex1 == null) {
+						sortingIndex1 =0;
+					}
+					
+					if (sortingIndex2 == null) {
+						sortingIndex2 =0;
+					}
 					return sortingIndex1.compareTo(sortingIndex2);
 				});
 				
@@ -279,7 +295,15 @@ public class OrderSummaryReport {
 				
 				Collections.sort(others, (o1, o2) -> {
 					Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
+
 					Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
+					if (sortingIndex1 == null) {
+						sortingIndex1 =0;
+					}
+					
+					if (sortingIndex2 == null) {
+						sortingIndex2 =0;
+					}
 					return sortingIndex1.compareTo(sortingIndex2);
 				});
 				Map<String, List<OrderItems>> othersItemMap = others.stream()
