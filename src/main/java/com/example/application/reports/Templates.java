@@ -103,6 +103,7 @@ public class Templates {
 	public static final StyleBuilder lineStyle;
 	public static final StyleBuilder smallItalicFont;
 	public static final StyleBuilder columnRight;
+	public static final StyleBuilder smallFont;
 
     static {
         rootStyle = stl.style().setPadding(2);
@@ -110,6 +111,8 @@ public class Templates {
         italicStyle = stl.style(rootStyle).italic();
         
         smallItalicFont = stl.style(italicStyle).setFontSize(8);
+        
+        smallFont = stl.style(italicStyle).setFontSize(8);
         
         boldCenteredStyle = stl.style(boldStyle).setTextAlignment(HorizontalTextAlignment.CENTER, VerticalTextAlignment.MIDDLE);
         bold12CenteredStyle = stl.style(boldCenteredStyle).setFontSize(10);
@@ -270,6 +273,66 @@ public class Templates {
                   .add(cmp.verticalGap(40));
     }
     
+    
+    public static ComponentBuilder<?, ?> createSalesInvoiceDetailsComponents(Order order) {
+        return cmp.horizontalList()
+                  .add(cmp.text("PUNO'S FROZEN DAIRIES INC")
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT), 
+                		  cmp.text("SALES INVOICE")
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))
+                  .newRow()
+                  .add(cmp.text("Manufacturer & Distributor of Puno’s Ice Cream & Sherbet Products")
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  .setStyle(smallFont), 
+                		  cmp.text("NO. " + order.getInvoiceId())
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))                  
+                  .newRow()
+                  .add(cmp.text("Office Address: Victoria Subd., Bitas, Cabanatuan City")
+                		  	.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  	.setStyle(smallFont), 
+                	   cmp.text(PfdiUtil.formatDate(order.getCreationDate()))
+                	   		.setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))                
+                  .newRow()
+                  .add(cmp.text("Sales Outlet: Mabini Street, Mabini Homesite, Cabanatuan City")
+              		  	.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+              		  	.setStyle(smallFont)) 
+              	  .newRow()
+              	  .add(cmp.text("VAT Reg. TIN: 006-745-463-000")
+                		  	.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                  		  	.setStyle(smallFont)) 
+                  .newRow()
+              	  .add(cmp.text("Tel. No.: (044) 463-0818/464-8694")
+              		  	.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  	.setStyle(smallFont)) 
+                  .add(cmp.verticalGap(30))
+              	  .newRow()
+                  .add(cmp.text("Address: ")
+                		  	.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  	.setFixedWidth(80), 
+                		  cmp.text(order.getCustomer().getAddress())
+                		  	.setStyle(boldStyle),                 	   
+                		  cmp.text("Terms: _______________________________")
+              	   			.setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))
+                  .newRow()
+                  .add(cmp.text("Owner Name: ")
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  .setFixedWidth(80), 
+                		  cmp.text(order.getCustomer().getOwnerName())
+                		  .setStyle(boldStyle),                 	   
+                		  cmp.text("OSCA/PWD ID No.:: ____________________")
+            	   			.setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))
+                  .newRow()
+                  .add(cmp.text("TIN: ")
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  .setFixedWidth(80), 
+                		  cmp.text(order.getCustomer().getTinNumber())
+                		  .setStyle(boldStyle),                 	   
+                		  cmp.text("Cardholder Signature: ___________________")
+            	   			.setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))
+                  .newRow()
+                  .add(cmp.verticalGap(40));
+    }
+    
     public static ComponentBuilder<?, ?> createDeliveryReceiptHeaderComponent(Order order) {
         return cmp.horizontalList()
                   .add(cmp.text("PUNO'S FROZEN DAIRIES INC")
@@ -357,6 +420,29 @@ public class Templates {
 	}
 
 	public static ComponentBuilder<?, ?> stockOrderFooter() {
+		
+		return cmp.horizontalList()
+                .add(cmp.line().setStyle(lineStyle))
+                .newRow().newRow()
+                .add(cmp.text("THIS SALES INVOICE SHALL BE VALID FOR FIVE (5) YEARS FROM THE DATE OF RELEASE.")
+               		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+               		  .setStyle(smallItalicFont));
+	}
+	
+	public static ComponentBuilder<?, ?> signatureSalesInvoice() {
+		
+	     return cmp.horizontalList()
+	                .add(cmp.text("By: _______________________________")
+	                 		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))
+	                .newRow()
+	                .add(cmp.text("Authorized Signature")
+	                 		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
+	                 		  .setStyle(smallItalicFont))
+	                
+	                .add(cmp.verticalGap(40));
+	}
+	
+	public static ComponentBuilder<?, ?> salesInvoiceFooter() {
 		
 		return cmp.horizontalList()
                 .add(cmp.line().setStyle(lineStyle))

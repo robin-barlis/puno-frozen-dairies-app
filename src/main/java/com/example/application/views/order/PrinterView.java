@@ -1,6 +1,7 @@
 package com.example.application.views.order;
 
 import java.io.ByteArrayInputStream;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.security.RolesAllowed;
@@ -17,8 +18,10 @@ import com.example.application.data.service.products.SizesService;
 import com.example.application.reports.DeliveryReceiptReport;
 import com.example.application.reports.OrderSummaryReport;
 import com.example.application.reports.SalesInvoiceReport;
+import com.example.application.reports.SalesInvoiceReportOld;
 import com.example.application.reports.StockTransferReport;
 import com.example.application.security.AuthenticatedUser;
+import com.example.application.utils.PfdiUtil;
 import com.example.application.utils.service.ReportConsolidatorService;
 import com.example.application.views.MainLayout;
 import com.google.gwt.thirdparty.guava.common.collect.Lists;
@@ -85,6 +88,7 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 			OrderSummaryReport orderSummaryReport, 
 			ReportConsolidatorService reportConsolidatorService,
 			DeliveryReceiptReport deliveryReceiptReport,
+			SalesInvoiceReport salesInvoiceReport,
 			StockTransferReport stockTransferReport) {
 		this.ordersService = ordersService;
 		this.appUser = user.get().get();
@@ -94,6 +98,7 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 		this.reportConsolidatorService = reportConsolidatorService;
 		this.deliveryReceiptReport = deliveryReceiptReport;
 		this.stockTransferReport = stockTransferReport;
+		this.salesInvoiceReport = salesInvoiceReport;
 		addClassNames("administration-view");
 		
 		addChildrenToContentHeaderContainer(this);
@@ -143,6 +148,10 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 			orders.add(order);
 		}
 		
+		
+		Collections.sort(orders, (o1, o2) -> {
+			return o1.getStockOrderNumber().compareTo(o2.getStockOrderNumber());
+		});
     	List<JasperReportBuilder> orderSummaryReportBuilder = Lists.newArrayList();
     	
     	
@@ -159,7 +168,7 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
     			}
     		}
     		
-    		if (report.equals(Reports.ALL.name()) || report.equals(Reports.SI.name()) ) {
+    		if ((report.equals(Reports.ALL.name()) || report.equals(Reports.SI.name())) && !PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId())) {
     			JasperReportBuilder orderReport = createStockOrderReports(Reports.SI, 
     					order, 
     					sizesService.listAll(Sort.unsorted()), appUser);
@@ -224,6 +233,10 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 					.getReportBuilder(order, 
 							sizesService.listAll(Sort.unsorted()), 
 							appUser);
+			
+		} else if (Reports.SI == report) {
+			reportBuilder = salesInvoiceReport
+					.getReportBuilder(order);
 			
 		} else if (Reports.ST == report) {
 			reportBuilder = stockTransferReport

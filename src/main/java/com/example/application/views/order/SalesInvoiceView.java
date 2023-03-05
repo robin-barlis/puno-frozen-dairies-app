@@ -1,33 +1,18 @@
 package com.example.application.views.order;
 
 import java.io.ByteArrayInputStream;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.stefan.table.Table;
-import org.vaadin.stefan.table.TableDataCell;
-import org.vaadin.stefan.table.TableHead;
-import org.vaadin.stefan.table.TableHeaderCell;
-import org.vaadin.stefan.table.TableRow;
 
 import com.example.application.data.entity.orders.Order;
-import com.example.application.data.entity.orders.OrderItemSalesInvoiceWrapper;
-import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.service.orders.DocumentTrackingNumberService;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.reports.SalesInvoiceReport;
 import com.example.application.security.AuthenticatedUser;
-import com.example.application.utils.PfdiUtil;
 import com.example.application.views.MainLayout;
-import com.google.gwt.thirdparty.guava.common.collect.Lists;
 import com.vaadin.componentfactory.pdfviewer.PdfViewer;
-import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -128,13 +113,8 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 			order.setStockOrderNumber(stockOrderNumber);
 		}
 
+		salesInvoiceData = salesInvoiceReport.buildReport(order);
 
-		try {
-			salesInvoiceData = salesInvoiceReport.buildReport(order);
-		} catch (ColumnBuilderException | ClassNotFoundException | JRException e1) {
-
-			e1.printStackTrace();
-		}
 		PdfViewer pdfViewer = new PdfViewer();
 		pdfViewer.setWidthFull();
 		pdfViewer.setHeightFull();
