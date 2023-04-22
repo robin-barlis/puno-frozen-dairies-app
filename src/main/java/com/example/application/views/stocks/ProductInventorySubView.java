@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.assertj.core.util.Lists;
+import org.apache.commons.compress.utils.Lists;
 
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.products.Product;

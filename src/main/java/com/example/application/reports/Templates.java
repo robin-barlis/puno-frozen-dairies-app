@@ -25,10 +25,15 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 
 import java.awt.Color;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.orders.Order;
+import com.example.application.data.entity.payment.Payment;
 import com.example.application.utils.PfdiUtil;
 
 import net.sf.dynamicreports.report.base.expression.AbstractValueFormatter;
@@ -112,7 +117,7 @@ public class Templates {
         
         smallItalicFont = stl.style(italicStyle).setFontSize(8);
         
-        smallFont = stl.style(italicStyle).setFontSize(8);
+        smallFont = stl.style(rootStyle).setFontSize(8);
         
         boldCenteredStyle = stl.style(boldStyle).setTextAlignment(HorizontalTextAlignment.CENTER, VerticalTextAlignment.MIDDLE);
         bold12CenteredStyle = stl.style(boldCenteredStyle).setFontSize(10);
@@ -149,6 +154,7 @@ public class Templates {
 				.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
 	
 				.setBottomBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY));
+        
         reportTemplate = template().setLocale(Locale.ENGLISH)
         						   .setGroupStyle(groupStyle)
                                    .setColumnTitleStyle(columnTitleStyle)
@@ -240,6 +246,29 @@ public class Templates {
                 		  cmp.text(order.getCustomer().getOwnerName())
                 		  .setStyle(boldStyle))
                   .add(cmp.verticalGap(40));
+    }
+    
+    public static ComponentBuilder<?, ?> createRemittancesDetailsComponent() {
+    	 return cmp.horizontalList()
+    			 .add(cmp.verticalGap(15))
+    			 .newRow()
+                 .add(cmp.text("Puno’s Frozen Dairies, Inc.")
+               		  .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+               		  .setStyle(bold12CenteredStyle))
+                 .newRow()
+                 .add(cmp.text("Victoria Subdivision, Bitas, Cabanatuan City")
+               		  .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+               		  .setStyle(smallFont))                 
+                 .newRow()
+                 .add(cmp.text("Daily Remittances Summary")
+               		  .setHorizontalTextAlignment(HorizontalTextAlignment.CENTER)
+               		  .setStyle(smallFont))    
+                
+                 .newRow()
+                 .add(cmp.text("Date: " + PfdiUtil.formatDate(LocalDateTime.now())))
+                 .add(cmp.verticalGap(30))
+                 .newRow();
+                
     }
     
     public static ComponentBuilder<?, ?> createStockTransferDetailsComponent(Order order) {
@@ -470,6 +499,29 @@ public class Templates {
              		  .setStyle(smallItalicFont))
                .add(cmp.verticalGap(40));
  
+	}
+
+	public static ComponentBuilder<?, ?> createRemittancesPageFooterComponent(AppUser appUser) {
+		return cmp.horizontalList()
+                .add(cmp.text("PREPARED BY: " + appUser.getUsername())
+                 		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT))
+                .add(cmp.text("REVIEWED BY: _____________________________________")
+                 		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))          
+                .add(cmp.verticalGap(40));
+	}
+
+	public static ComponentBuilder<?, ?> createRemittancesDetailsFooterComponent(Map<String, List<Payment>> payments) {
+		
+		BigDecimal sum = payments.values().stream()
+	            .flatMap(List::stream)
+	            .map(Payment::getAmount)
+	            .reduce(BigDecimal.ZERO, (a, b) -> a.add(b) );
+		
+		return cmp.horizontalList()
+                .add(cmp.text("TOTAL REMITTANCES: PHP " + PfdiUtil.getFormatter().format(sum))
+               		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
+               		  .setStyle(boldStyle))
+                .add(cmp.verticalGap(80));
 	}
 	
 	

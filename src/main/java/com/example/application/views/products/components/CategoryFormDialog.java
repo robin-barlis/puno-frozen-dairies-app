@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -76,6 +77,17 @@ public class CategoryFormDialog  extends ConfirmDialog {
 
 		saveButton = new Button("Save");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setEnabled(!StringUtils.isEmpty(categoryName.getValue()) && !categoryType.getValue().isBlank());
+		
+		
+		categoryType.addValueChangeListener( e-> {
+			saveButton.setEnabled(!StringUtils.isEmpty(categoryName.getValue()) && !categoryType.getValue().isBlank());
+		});
+		
+		categoryName.addValueChangeListener(e-> {
+
+			saveButton.setEnabled(!StringUtils.isEmpty(categoryName.getValue()) && !categoryType.getValue().isBlank());
+		});
 		binder = new BeanValidationBinder<>(Category.class);
 		
 		binder.bind(categoryName, "categoryName");

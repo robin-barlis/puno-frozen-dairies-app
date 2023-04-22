@@ -79,6 +79,11 @@ public class PfdiUtil {
 		return Role.Superuser.name().equalsIgnoreCase(user.getRole());
 
 	}
+	
+	public static final boolean isAccounting(AppUser user) {
+		return Role.Accounting.name().equalsIgnoreCase(user.getRole());
+
+	}
 
 	public static final boolean isAdmin(AppUser user) {
 		return Role.Admin.name().equalsIgnoreCase(user.getRole());
@@ -234,6 +239,12 @@ public class PfdiUtil {
 		} else {
 			return orderItem.getProductPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
 		}
+	}
+
+	public static String getFullName(AppUser appUser) {
+		final String firstName = appUser.getFirstName();
+		final String lastName = appUser.getLastName();
+		return firstName + " " + lastName;
 	}
 
 }

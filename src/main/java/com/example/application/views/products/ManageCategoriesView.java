@@ -70,7 +70,7 @@ public class ManageCategoriesView extends AbstractPfdiView implements HasCompone
 		HorizontalLayout sizeWrapper = new HorizontalLayout();
 		sizeWrapper.setSpacing(true);
 		sizeWrapper.setPadding(false);
-		Label customerTagLabel = new Label("Product Management > Manage Categories");
+		Label customerTagLabel = new Label("Manage Categories");
 		customerTagLabel.addClassName(CssClassNamesConstants.PROFILE_DETAILS_LABEL_WRAPPER);
 		sizeWrapper.add(customerTagLabel);
 		categoryFormDialog = new CategoryFormDialog("Add New Size",categoryService, sizesService );

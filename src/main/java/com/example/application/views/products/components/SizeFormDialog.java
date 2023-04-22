@@ -1,5 +1,6 @@
 package com.example.application.views.products.components;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -48,8 +49,6 @@ public class SizeFormDialog  extends ConfirmDialog {
 		sizeName.setRequiredIndicatorVisible(true);
 		
 		sizeDescription = new TextField("Size Description");
-		sizeDescription.setRequired(true);
-		sizeDescription.setRequiredIndicatorVisible(true);
 		
 		customerTagComboBox = new MultiSelectComboBox<>("Add Customer Tags");
 		customerTagComboBox.setItems(customerTagService.listAll(Sort.unsorted()));
@@ -59,7 +58,12 @@ public class SizeFormDialog  extends ConfirmDialog {
 
 		saveButton = new Button("Save");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setEnabled(!StringUtils.isEmpty(sizeName.getValue()));
 		binder = new BeanValidationBinder<>(Size.class);
+		
+		sizeName.addValueChangeListener(e-> {
+			saveButton.setEnabled(!StringUtils.isEmpty(sizeName.getValue()));
+		});
 		
 		binder.bind(sizeName, "sizeName");
 		binder.bind(sizeDescription, "sizeDescription");

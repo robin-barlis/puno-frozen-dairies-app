@@ -57,7 +57,7 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 	
 	@Autowired
 	public ManageSizesView(SizesService sizesService, CustomerTagService customerTagService) {
-		super("manage-sizes", "Product Management > Manage Sizes");
+		super("manage-sizes", "Manage Sizes");
 		
 		this.sizesService = sizesService;
 		this.customerTagService = customerTagService;

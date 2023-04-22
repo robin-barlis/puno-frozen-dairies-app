@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,13 +23,15 @@ import com.example.application.utils.PfdiUtil;
 import com.example.application.views.administration.AdministrationView;
 import com.example.application.views.constants.CssClassNamesConstants;
 import com.example.application.views.customer.CustomerView;
-import com.example.application.views.order.InvoicesView;
 import com.example.application.views.order.StockOrderView;
 import com.example.application.views.payments.PaymentsView;
 import com.example.application.views.products.ManageCategoriesView;
 import com.example.application.views.products.ManageSizesView;
 import com.example.application.views.products.ManageTagsView;
 import com.example.application.views.products.ProductsView;
+import com.example.application.views.reports.AccountsReportsView;
+import com.example.application.views.reports.RemittancesView;
+import com.example.application.views.reports.SalesReports;
 import com.example.application.views.stocks.StocksInvetoryView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.accordion.Accordion;
@@ -40,7 +43,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
-import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
@@ -75,20 +77,20 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
 	private static final long serialVersionUID = 3493362210483888466L;
 	private AuthenticatedUser authenticatedUser;
-	private AccessAnnotationChecker accessChecker;
+	//private AccessAnnotationChecker accessChecker;
 	private UserService userService;
 
 	private final static int MAX_FILE_SIZE_BYTES = 2000 * 10 * 1024 * 1024; // 10MB
 	private final Cloudinary cloudinary = Singleton.getCloudinary();
 	private AppUser currentUser;
 	private Tabs tabs;
-	private Button showChildrenButton = new Button(new Icon(VaadinIcon.ANGLE_DOWN));
 	private boolean showIcon = false;
+	private boolean showReports = false;
 
 	public MainLayout(AuthenticatedUser authenticatedUser, AccessAnnotationChecker accessChecker,
 			UserService userService) {
 		this.authenticatedUser = authenticatedUser;
-		this.accessChecker = accessChecker;
+	//	this.accessChecker = accessChecker;
 		this.userService = userService;
 		this.currentUser = authenticatedUser.get().get();
 		createHeaderContent();
@@ -370,25 +372,11 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		}
 
 		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser)) {
+
+			Icon showProductsChildrenButton = new Icon(VaadinIcon.ANGLE_RIGHT);
 			Icon packageIcon = new Icon(VaadinIcon.PACKAGE);
-			Tab productsTab = createTabWtihChildren("Products", ProductsView.class, "admin-view-tab", packageIcon);
-			
-			MenuBar menuBar = new MenuBar();
-			menuBar.setOpenOnHover(true);
-			menuBar.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
-			MenuItem menuItem = menuBar.addItem(new Icon(VaadinIcon.ANGLE_RIGHT));
-			menuItem.getElement().setAttribute("aria-label", "More options");
-			SubMenu subMenu = menuItem.getSubMenu();
-
-			// RouterLink productList = createNewRoute("Product List", ProductsView.class);
-			// RouterLink createNewProductPageLink = createNewRoute("Add Product",
-			// AddNewProductView.class);
-			RouterLink manageTag = createNewRoute("Tags", ManageTagsView.class);
-			RouterLink manageSizes = createNewRoute("Sizes", ManageSizesView.class);
-			RouterLink manageCategories = createNewRoute("Categories", ManageCategoriesView.class);
-			
-
-			
+			Tab productsTab = createTabWtihChildren("Products", ProductsView.class, "admin-view-tab", packageIcon, showProductsChildrenButton);
+		
 			Tab customerTagTab = createChildTab("Tags", ManageTagsView.class, "admin-view-tab", null);
 			customerTagTab.setVisible(false);
 			
@@ -398,17 +386,16 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			Tab categoriesTab = createChildTab("Categories", ManageCategoriesView.class, "admin-view-tab", null);
 			categoriesTab.setVisible(false);
 			
-			showChildrenButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-			showChildrenButton.addClickListener(e-> {
+			showProductsChildrenButton.addClickListener(e-> {
 				
 				if (!showIcon) {
-					showChildrenButton.setIcon(new Icon(VaadinIcon.ANGLE_DOWN));
+					showProductsChildrenButton.getElement().setAttribute("icon", "vaadin" + ':' + VaadinIcon.ANGLE_DOWN.name().toLowerCase(Locale.ENGLISH).replace('_', '-'));
 					customerTagTab.setVisible(true);
 					sizesTab.setVisible(true);
 					categoriesTab.setVisible(true);
 					showIcon = true;
 				} else {
-					showChildrenButton.setIcon(new Icon(VaadinIcon.ANGLE_RIGHT));
+					showProductsChildrenButton.getElement().setAttribute("icon", "vaadin" + ':' + VaadinIcon.ANGLE_RIGHT.name().toLowerCase(Locale.ENGLISH).replace('_', '-'));
 					customerTagTab.setVisible(false);
 					sizesTab.setVisible(false);
 					categoriesTab.setVisible(false);
@@ -416,12 +403,6 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 				}
 			});
 
-			// subMenu.addItem(productList);
-			// subMenu.addItem(createNewProductPageLink);
-			subMenu.addItem(manageTag);
-			subMenu.addItem(manageSizes);
-			subMenu.addItem(manageCategories);
-			//productsTab.add(menuBar);
 			Icon customerIcon = new Icon(VaadinIcon.USER_HEART);
 			Tab customersTab = createTab("Customers", CustomerView.class, "admin-view-tab",customerIcon);
 			tabs.add(productsTab,customerTagTab,sizesTab,categoriesTab , customersTab);
@@ -445,57 +426,79 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			tabs.add(ordersTab, stocksInventory);
 		}
 		
-		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser)) {		
+		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser) || PfdiUtil.isAccounting(currentUser)) {		
 			Tab paymentTab = createTab("Payments", PaymentsView.class, "admin-view-tab", new Icon(VaadinIcon.MONEY_DEPOSIT));
 			tabs.add(paymentTab);
 		}
+		
+		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser)) {
+			
+
+			Icon showReportsChildrenButton = new Icon(VaadinIcon.ANGLE_RIGHT);
+			Tab reportsMain = createTabWtihChildren("Reports", RemittancesView.class, "admin-view-tab", new Icon(VaadinIcon.RECORDS), showReportsChildrenButton);
+			
+			
+			Tab remittances = createChildTab("Remittances", RemittancesView.class, "admin-view-tab", null);
+			remittances.setVisible(false);
+			
+			Tab accounts = createChildTab("Accounts", AccountsReportsView.class, "admin-view-tab", null);
+			accounts.setVisible(false);
+			
+			Tab stocks = createChildTab("Stocks", AccountsReportsView.class, "admin-view-tab", null);
+			stocks.setVisible(false);
+			
+			Tab sales = createChildTab("Sales", SalesReports.class, "admin-view-tab", null);
+			sales.setVisible(false);
+			
+			
+			showReportsChildrenButton.addClickListener(e-> {
+				
+				if (!showReports) {
+					showReportsChildrenButton.getElement().setAttribute("icon", "vaadin" + ':' + VaadinIcon.ANGLE_DOWN.name().toLowerCase(Locale.ENGLISH).replace('_', '-'));
+					remittances.setVisible(true);
+					accounts.setVisible(true);
+					stocks.setVisible(true);
+					sales.setVisible(true);
+					showReports = true;
+				} else {
+					showReportsChildrenButton.getElement().setAttribute("icon", "vaadin" + ':' + VaadinIcon.ANGLE_RIGHT.name().toLowerCase(Locale.ENGLISH).replace('_', '-'));
+					remittances.setVisible(false);
+					accounts.setVisible(false);
+					stocks.setVisible(false);
+					sales.setVisible(false);
+					showReports = false;
+				}
+			});
+			
+			tabs.add(reportsMain, remittances, accounts, stocks, sales);
+		}
+		
+
 
 		return tabs;
 	}
 
-	private Tab createTabWtihChildren(String viewName, Class<? extends Component> viewClass, String id, Icon icon) {
+	private Tab createTabWtihChildren(String viewName, Class<? extends Component> viewClass, String id, Icon icon, Icon showChildrenButton) {
 		
-		HorizontalLayout tabContainer= new HorizontalLayout();
 
 		RouterLink link = new RouterLink();
 		link.addClassName(id);
 		link.setText(viewName);
 		link.setRoute(viewClass);
 
-		tabContainer.setVerticalComponentAlignment(Alignment.CENTER, link);
-		tabContainer.setAlignItems(Alignment.CENTER);
-		
-		
-		
-		
-		tabContainer.add(link);
-
-		tabContainer.add(showChildrenButton);
-		return new Tab(icon, tabContainer);
+		return new Tab(icon, link, showChildrenButton);
 	}
 	
 	private Tab createChildTab(String viewName, Class<? extends Component> viewClass, String id, Icon icon) {
 		
-		HorizontalLayout tabContainer= new HorizontalLayout();
-		tabContainer.setClassName("padding-left-40px");
 		RouterLink link = new RouterLink();
-		link.addClassName(id);
+		link.addClassName("padding-left-40px");
 		link.setText(viewName);
 		link.setRoute(viewClass);
-
-		tabContainer.setVerticalComponentAlignment(Alignment.CENTER, link);
-		tabContainer.setAlignItems(Alignment.CENTER);		
-		tabContainer.add(link);
 		
-		return new Tab(tabContainer);
+		return new Tab(link);
 	}
 
-	private RouterLink createNewRoute(String routeText, Class<? extends Component> routeClass) {
-		RouterLink manageTag = new RouterLink();
-		manageTag.setText(routeText);
-		manageTag.setRoute(routeClass);
-		return manageTag;
-	}
 
 	private Tab createTab(String viewName, Class<? extends Component> viewClass, String id, Icon icon) {
 		

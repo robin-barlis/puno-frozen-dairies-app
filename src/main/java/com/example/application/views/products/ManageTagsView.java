@@ -66,7 +66,7 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 
 	@Autowired
 	public ManageTagsView(LocationTagService locationTagService, CustomerTagService customerTagService) {
-		super("manage-tags", "Product Management > Manage Tags");
+		super("manage-tags", "Manage Tags");
 
 		this.locationTagService = locationTagService;
 		this.customerTagService = customerTagService;
@@ -166,7 +166,7 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 		});	
 		
 		addNewTagButton.addClickListener(e -> {
-			locationTagDialog.clearForm(false);
+			locationTagDialog.clearForm(true);
 			locationTagDialog.open();
 		});
 		buttonWrapper.add(addNewTagButton);
@@ -264,7 +264,7 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 		});	
 		Button addNewCustomerTagButton = new Button("Add Customer Tag");
 		addNewCustomerTagButton.addClickListener(e -> {
-			customerTagFormDialog.clearForm(false);
+			customerTagFormDialog.clearForm(true);
 			customerTagFormDialog.open();
 		});
 		customerTagButtonWrapper.add(addNewCustomerTagButton);

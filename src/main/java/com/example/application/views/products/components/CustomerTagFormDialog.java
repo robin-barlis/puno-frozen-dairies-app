@@ -1,5 +1,6 @@
 package com.example.application.views.products.components;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
@@ -49,8 +50,6 @@ public class CustomerTagFormDialog  extends ConfirmDialog {
 		customerTagName.setRequiredIndicatorVisible(true);
 		
 		customerTagDescription = new TextField("Customer Tag Description");
-		customerTagDescription.setRequired(true);
-		customerTagDescription.setRequiredIndicatorVisible(true);
 		
 		locationTagComboBox = new MultiSelectComboBox<>("Add Location Tags");
 		locationTagComboBox.setItems(locationTagService.listAll(Sort.unsorted()));
@@ -60,6 +59,13 @@ public class CustomerTagFormDialog  extends ConfirmDialog {
 
 		saveButton = new Button("Save");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setEnabled(!StringUtils.isEmpty(customerTagName.getValue()));
+		
+		customerTagName.addValueChangeListener(e -> {
+			saveButton.setEnabled(!StringUtils.isEmpty(customerTagName.getValue()));
+		});
+		
+		
 		binder = new BeanValidationBinder<>(CustomerTag.class);
 		
 		binder.bind(customerTagName, "customerTagName");

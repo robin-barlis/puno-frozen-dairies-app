@@ -11,6 +11,7 @@
     "@polymer/paper-button": "^3.0.1",
     "@polymer/paper-icon-button": "^3.0.2",
     "@polymer/polymer": "3.5.1",
+    "@vaadin-component-factory/keyboard-shortcut-manager": "23.3.1",
     "@vaadin-component-factory/vcf-pdf-viewer": "1.2.0",
     "@vaadin/accordion": "23.3.0-alpha2",
     "@vaadin/app-layout": "23.3.0-alpha2",
@@ -25,6 +26,7 @@
     "@vaadin/component-base": "23.3.0-alpha2",
     "@vaadin/confirm-dialog": "23.3.0-alpha2",
     "@vaadin/context-menu": "23.3.0-alpha2",
+    "@vaadin/cookie-consent": "23.3.0-alpha2",
     "@vaadin/custom-field": "23.3.0-alpha2",
     "@vaadin/date-picker": "23.3.0-alpha2",
     "@vaadin/date-time-picker": "23.3.0-alpha2",
@@ -74,6 +76,7 @@
     "@vaadin/vaadin-combo-box": "23.3.0-alpha2",
     "@vaadin/vaadin-confirm-dialog": "23.3.0-alpha2",
     "@vaadin/vaadin-context-menu": "23.3.0-alpha2",
+    "@vaadin/vaadin-cookie-consent": "23.3.0-alpha2",
     "@vaadin/vaadin-custom-field": "23.3.0-alpha2",
     "@vaadin/vaadin-date-picker": "23.3.0-alpha2",
     "@vaadin/vaadin-date-time-picker": "23.3.0-alpha2",
@@ -144,6 +147,7 @@
       "@polymer/paper-button": "^3.0.1",
       "@polymer/paper-icon-button": "^3.0.2",
       "@polymer/polymer": "3.5.1",
+      "@vaadin-component-factory/keyboard-shortcut-manager": "23.3.1",
       "@vaadin-component-factory/vcf-pdf-viewer": "1.2.0",
       "@vaadin/accordion": "23.3.0-alpha2",
       "@vaadin/app-layout": "23.3.0-alpha2",
@@ -158,6 +162,7 @@
       "@vaadin/component-base": "23.3.0-alpha2",
       "@vaadin/confirm-dialog": "23.3.0-alpha2",
       "@vaadin/context-menu": "23.3.0-alpha2",
+      "@vaadin/cookie-consent": "23.3.0-alpha2",
       "@vaadin/custom-field": "23.3.0-alpha2",
       "@vaadin/date-picker": "23.3.0-alpha2",
       "@vaadin/date-time-picker": "23.3.0-alpha2",
@@ -206,6 +211,7 @@
       "@vaadin/vaadin-combo-box": "23.3.0-alpha2",
       "@vaadin/vaadin-confirm-dialog": "23.3.0-alpha2",
       "@vaadin/vaadin-context-menu": "23.3.0-alpha2",
+      "@vaadin/vaadin-cookie-consent": "23.3.0-alpha2",
       "@vaadin/vaadin-custom-field": "23.3.0-alpha2",
       "@vaadin/vaadin-date-picker": "23.3.0-alpha2",
       "@vaadin/vaadin-date-time-picker": "23.3.0-alpha2",
@@ -265,7 +271,7 @@
       "workbox-core": "6.5.0",
       "workbox-precaching": "6.5.0"
     },
-    "hash": "122899909e8ba01ef203402b4b0223dfdfbb1e1be02b986e0c8c335c8691407c"
+    "hash": "9cdae2127d38e6a83a7b3a325cabef6a49b9aa39702ef0569ee5210d0c5cf0fb"
   },
   "overrides": {
     "@vaadin/bundles": "$@vaadin/bundles",
@@ -380,7 +386,10 @@
     "lit-element": "$lit-element",
     "lit-html": "$lit-html",
     "sortablejs": "$sortablejs",
+    "@vaadin/cookie-consent": "$@vaadin/cookie-consent",
+    "@vaadin/vaadin-cookie-consent": "$@vaadin/vaadin-cookie-consent",
     "@fontsource/roboto": "$@fontsource/roboto",
-    "line-awesome": "$line-awesome"
+    "line-awesome": "$line-awesome",
+    "@vaadin-component-factory/keyboard-shortcut-manager": "$@vaadin-component-factory/keyboard-shortcut-manager"
   }
 }

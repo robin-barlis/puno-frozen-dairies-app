@@ -1,5 +1,6 @@
 package com.example.application.views.products.components;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import com.example.application.data.entity.products.LocationTag;
@@ -17,6 +18,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.spring.annotation.UIScope;
+
 
 @Component
 @UIScope
@@ -39,13 +41,13 @@ public class LocationTagFormDialog  extends ConfirmDialog {
 		locationTagName = new TextField("Location Tag Name");
 		locationTagName.setRequired(true);
 		locationTagName.setRequiredIndicatorVisible(true);
+	
 		
 		locationTagDescription = new TextField("Location Tag Description");
-		locationTagDescription.setRequired(true);
-		locationTagDescription.setRequiredIndicatorVisible(true);
 
 		saveButton = new Button("Save Tag");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setEnabled(!StringUtils.isEmpty(locationTagName.getValue()));
 		binder = new BeanValidationBinder<>(LocationTag.class);
 		
 		binder.bind(locationTagName, "locationTagName");
@@ -62,6 +64,12 @@ public class LocationTagFormDialog  extends ConfirmDialog {
 		formLayout.setColspan(addTagLabel, 2);
 		formLayout.setColspan(divider1, 2);
 		add(formLayout);
+		
+		
+		locationTagName.addValueChangeListener(e-> {
+
+			saveButton.setEnabled(!StringUtils.isEmpty(locationTagName.getValue()));
+		});
 
 		
 		saveButton.addClickListener(e -> {

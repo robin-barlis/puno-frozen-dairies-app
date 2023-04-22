@@ -24,6 +24,7 @@ import com.example.application.utils.service.EmailService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
+import com.example.application.views.products.AddNewProductView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -39,6 +40,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
@@ -47,6 +49,7 @@ import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
@@ -361,8 +364,6 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		searchFiltersLayout.addClassName("padding-bottom-medium");
 		
 		
-		
-		Button filterButton = new Button(new Icon(VaadinIcon.SLIDERS));
 
 		GridListDataView<AppUser> dataView = grid.setItems(ldp);
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
@@ -379,7 +380,7 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		searchField.addValueChangeListener(e -> dataView.refreshAll());
 		searchField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);
 		
-		searchFiltersLayout.add(searchField, filterButton);
+		searchFiltersLayout.add(searchField);
 		
 		
 
@@ -464,9 +465,32 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 
 	@Override
 	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
-		VerticalLayout tableFunctions = new VerticalLayout();
-		createTableFunctions(tableFunctions);
-		contentHeaderContainer.add(tableFunctions);
+		
+		HorizontalLayout headerContainer = new HorizontalLayout();
+		headerContainer.setWidthFull();
+
+		FlexLayout headerNameWrapper = new FlexLayout();
+		headerNameWrapper.setFlexDirection(FlexDirection.ROW);
+		headerNameWrapper.setJustifyContentMode(JustifyContentMode.START);
+		headerNameWrapper.setAlignItems(Alignment.CENTER);
+		H1 header = new H1("Profiles");
+		header.addClassNames("mb-0", "mt-s", "text-xl");
+		headerNameWrapper.add(header);
+		headerNameWrapper.setWidth("50%");
+
+		FlexLayout flexWrapper = new FlexLayout();
+		flexWrapper.setFlexDirection(FlexDirection.ROW);
+		flexWrapper.setJustifyContentMode(JustifyContentMode.END);
+		flexWrapper.setClassName("button-layout");
+		
+		addProfileButton = new Button("Add Profile");
+		addProfileButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
+
+		flexWrapper.add(addProfileButton);
+		flexWrapper.setWidth("50%");
+
+		headerContainer.add(headerNameWrapper, flexWrapper);
+		contentHeaderContainer.add(headerContainer);
 	}
 
 	private static Renderer<AppUser> createEmployeeRenderer() {

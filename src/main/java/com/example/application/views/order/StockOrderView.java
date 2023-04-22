@@ -74,7 +74,6 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.QueryParameters;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.router.RouteConfiguration;
@@ -90,9 +89,8 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 	private static final long serialVersionUID = 2754507440441771890L;
 
-//	private PaginatedGrid<Order> grid = new PaginatedGrid<Order>();
 	PaginatedGrid<Order, ?> grid = new PaginatedGrid<>();
-	private Button addCustomerButton;
+	private Button addStockOrderButton;
 
 	private OrdersService ordersService;
 	private final CustomerService customerService;
@@ -203,10 +201,6 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 				filters.put("store", storeName.getValue());
 			}
 
-//			if (!paymentStatus.isEmpty()) {
-//				filters.put("payments", paymentStatus.getValue());
-//			}
-
 			if (!orderStatusField.isEmpty()) {
 
 				List<String> orderStatusName = orderStatusField.getValue().stream().map(osf -> osf.getOrderStatusName())
@@ -276,6 +270,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 	@Override
 	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
+		
 		HorizontalLayout headerContainer = new HorizontalLayout();
 		headerContainer.setWidthFull();
 
@@ -293,16 +288,14 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		flexWrapper.setJustifyContentMode(JustifyContentMode.END);
 		flexWrapper.setClassName("button-layout");
 
-		addCustomerButton = new Button("Create Stock Order");
-		addCustomerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		addCustomerButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
-		// addCustomerButton.setVisible(PfdiUtil.isSales(appUser) ||
-		// PfdiUtil.isSuperUser(appUser));
-		addCustomerButton.addClickListener(e -> {
+		addStockOrderButton = new Button("Create Stock Order");
+		addStockOrderButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		addStockOrderButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
+		addStockOrderButton.addClickListener(e -> {
 
 			UI.getCurrent().navigate(CreateOrderFormView.class);
 		});
-		flexWrapper.add(addCustomerButton);
+		flexWrapper.add(addStockOrderButton);
 		flexWrapper.setWidth("50%");
 
 		headerContainer.add(headerNameWrapper, flexWrapper);
@@ -788,7 +781,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		secondaryActionsLayout.add(searchFiltersLayout, printButtonContainer);
 
 		wrapper.add(secondaryActionsLayout, new Hr(), grid);
-		verticalLayout.addAndExpand(wrapper);
+		verticalLayout.add(wrapper);
 	}
 
 	private Component getStockTransferLink(Order order, boolean isCompanyOwned) {

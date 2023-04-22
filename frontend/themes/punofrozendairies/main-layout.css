@@ -243,3 +243,15 @@ vaadin-icon.grid-icons {
 	width: var(--lumo-icon-size-s) !important;
     height: var(--lumo-icon-size-s)!important;
 }
+
+.admin-view-tab {
+	width: auto;
+}
+
+.header-layout {
+	height : 80px;
+}
+
+vaadin-combo-box {
+	padding-bottom: 15px;
+}

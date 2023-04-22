@@ -25,8 +25,8 @@ public abstract class AbstractPfdiView extends Main implements BeforeEnterObserv
 
 	private static final long serialVersionUID = 2754507440441771890L;
 	
-	private VerticalLayout contentHeaderContainer;
-	private VerticalLayout contentContainer;
+	protected VerticalLayout contentHeaderContainer;
+	protected VerticalLayout contentContainer;
 	private String headerName;
 
 	public AbstractPfdiView(String className, String headerName) {
@@ -35,6 +35,8 @@ public abstract class AbstractPfdiView extends Main implements BeforeEnterObserv
 		addClassNames(Margin.Horizontal.AUTO, Padding.Bottom.LARGE, Padding.Horizontal.LARGE);
 
 		this.contentHeaderContainer = createContentHeaderContainer();
+		this.contentHeaderContainer.addClassName("header-layout");
+		this.contentHeaderContainer.setAlignItems(Alignment.CENTER);
 		addChildrenToContentHeaderContainer(contentHeaderContainer);
 		
 		this.contentContainer = new VerticalLayout();

@@ -44,6 +44,7 @@ public class FlavorSortingDialog extends Dialog {
 
 	private void createDialog() {
 		this.setWidth("800px");
+		this.setHeight("75vh");
 		
 		Label addProfileLabel = new Label("Drag cards to sort flavors");
 		

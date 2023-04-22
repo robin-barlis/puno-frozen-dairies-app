@@ -11,7 +11,6 @@ import org.springframework.data.domain.Sort;
 import org.vaadin.klaudeta.PaginatedGrid;
 
 import com.example.application.data.entity.customers.Customer;
-import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.LocationTag;
 import com.example.application.data.service.customers.CustomerService;
@@ -31,7 +30,6 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Div;
@@ -53,7 +51,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -105,6 +102,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 	private Customer customer;
 
 	private Set<LocationTag> locationTags = Collections.emptySet();
+	private List<Customer> customers;
 
 	@Autowired
 	public CustomerView(CustomerTagService customerTagService, CustomerService customerService,
@@ -113,6 +111,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		this.customerTagService = customerTagService;
 		this.customerService = customerService;
 		this.locationTagService = locationTagService;
+		customers = customerService.listAll(Sort.by("id"));
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
@@ -124,7 +123,18 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 
 		// Bind fields. This is where you'd define e.g. validation rules
 		binder = new BeanValidationBinder<>(Customer.class);
+		binder.forField(locationTag).asRequired("Please select Location Tag").bind(Customer::getLocationTagId, Customer::setLocationTagId);
+		binder.forField(customerTag).asRequired("Please select Customer Tag").bind(Customer::getCustomerTagId, Customer::setCustomerTagId);
+		binder.forField(storeName).asRequired("Please enter Store Name").bind(Customer::getStoreName, Customer::setStoreName);
+		binder.forField(ownerName).asRequired("Please enter Owner Name").bind(Customer::getOwnerName, Customer::setOwnerName);
+		binder.forField(address).asRequired("Please enter Customer Address").bind(Customer::getAddress, Customer::setAddress);
+		binder.forField(tinNumber).asRequired("Please enter Customer Tin Number").bind(Customer::getTinNumber, Customer::setTinNumber);
+		binder.forField(contactNumber).asRequired("Please enter Customer Contact Number").bind(Customer::getContactNumber, Customer::setContactNumber);
+		
+		
+		
 		binder.bindInstanceFields(this);
+
 //		binder.forField(emailAddress).withValidator(email -> validateEmailExists(email) != true,
 //				"Email address already exists in the system. Please enter a valid email address.").bind(AppUser::getEmailAddress, AppUser::setEmailAddress);
 //	
@@ -184,7 +194,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		tinNumber = new TextField("Tin Number");
 		tinNumber.setRequired(true);
 		tinNumber.setRequiredIndicatorVisible(true);
-		
+
 		contractStartDate = new DatePicker("Contract Start Date");
 		contractStartDate.getStyle().set("padding-top", "20px");
 		contractStartDate.getStyle().set("padding-bottom", "40px");
@@ -192,24 +202,32 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		contractEndDate = new DatePicker("Contract End Date");
 		contractEndDate.getStyle().set("padding-top", "20px");
 		contractEndDate.getStyle().set("padding-bottom", "40px");
+		
+		
 
 		saveButton = new Button("Save");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		//saveButton.setEnabled(saveButtonEnabled());
 		saveButton.addClickListener(e -> {
 			try {
-				prepareCustomer();
-				binder.writeBean(customer);
-				customer.setLocationTagId(locationTag.getValue());
-				customer.setCustomerTagId(customerTag.getValue());
+				if (binder.validate().isOk()) {
+					prepareCustomer();
+					binder.writeBean(customer);
+					customer.setLocationTagId(locationTag.getValue());
+					customer.setCustomerTagId(customerTag.getValue());
+					
 
-				Customer updateCustomer = customerService.update(customer);
-				clearForm();
-				refreshGrid(updateCustomer);
+					Customer updateCustomer = customerService.update(customer);
+					clearForm();
+					//refreshGrid(updateCustomer);
 
-				addCustomerDialog.close();
-				Notification.show("Customer successfully created/updated")
-						.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-				UI.getCurrent().navigate(CustomerView.class);
+					updateCustomers();
+					addCustomerDialog.close();
+					Notification.show("Customer successfully created/updated")
+							.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					UI.getCurrent().navigate(CustomerView.class);
+				}
+			
 			} catch (ValidationException validationException) {
 				Notification.show("An exception happened while trying to store the customer Details.");
 			}
@@ -269,7 +287,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		addCustomerButton = new Button("Add New Customer");
 		addCustomerButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		addCustomerButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
-	
+
 		addCustomerButton.addClickListener(e -> {
 			this.customer = null;
 			populateDataAndCallDialog();
@@ -303,11 +321,14 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		Div wrapper = new Div();
 		wrapper.setClassName("grid-wrapper");
 
-		grid.addColumn(Customer::getStoreName).setHeader("Store Name").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getStoreName).setHeader("Store Name").setAutoWidth(true)
+				.setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn(Customer::getOwnerName).setHeader("Owner").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
-		
-		grid.addColumn(Customer::getTinNumber).setHeader("Tin Number").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getOwnerName).setHeader("Owner").setAutoWidth(true)
+				.setTextAlign(ColumnTextAlign.START);
+
+		grid.addColumn(Customer::getTinNumber).setHeader("Tin Number").setAutoWidth(true)
+				.setTextAlign(ColumnTextAlign.START);
 
 		grid.addColumn(customer -> {
 			return customer.getCustomerTagId().getCustomerTagName();
@@ -319,11 +340,14 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 
 		grid.addColumn(Customer::getAddress).setHeader("Address").setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn(Customer::getContactNumber).setHeader("Contact Number").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getContactNumber).setHeader("Contact Number").setAutoWidth(true)
+				.setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn(Customer::getContractStartDate).setHeader("Contract Start Date").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getContractStartDate).setHeader("Contract Start Date").setAutoWidth(true)
+				.setTextAlign(ColumnTextAlign.START);
 
-		grid.addColumn(Customer::getContractEndDate).setHeader("Contract End Date").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn(Customer::getContractEndDate).setHeader("Contract End Date").setAutoWidth(true)
+				.setTextAlign(ColumnTextAlign.START);
 
 		grid.addComponentColumn(currentCustomer -> {
 
@@ -340,7 +364,9 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 			subMenu.addItem("Delete", e -> {
 				customerService.delete(currentCustomer.getId());
 				clearForm();
-				refreshGrid(currentCustomer);
+				//refreshGrid(currentCustomer, true);
+				
+				updateCustomers();
 
 				addCustomerDialog.close();
 				Notification.show("Customer successfully deleted").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
@@ -350,7 +376,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 			return menuBar;
 		}).setWidth("70px").setFlexGrow(0);
 
-		ldp = DataProvider.ofCollection(customerService.listAll(Sort.by("id")));
+		ldp = DataProvider.ofCollection(customers);
 
 		GridListDataView<Customer> dataView = grid.setItems(ldp);
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
@@ -363,8 +389,8 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		Icon searchIcon = new Icon(VaadinIcon.SEARCH);
 		searchIcon.setClassName(CssClassNamesConstants.PFDI_ICONS);
 		searchField.setSuffixComponent(searchIcon);
-		searchField.setValueChangeMode(ValueChangeMode.EAGER);
-		searchField.addValueChangeListener(e -> dataView.refreshAll());
+		searchField.setValueChangeMode(ValueChangeMode.LAZY);
+		searchField.addValueChangeListener(e -> filter(searchField.getValue()));
 		searchField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);
 
 		dataView.addFilter(customer -> {
@@ -398,6 +424,30 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		grid.getListDataView().refreshAll();
 	}
 
+	private void filter(String searchFieldValue) {
+		String searchTerm = searchFieldValue.trim();
+
+		
+
+		List<Customer> filteredList = customers.stream().filter(cust -> {
+			if (searchTerm.isEmpty()) {
+				return true;
+			}
+			boolean matchesCustomerName = matchesTerm(cust.getStoreName(), searchTerm);
+			boolean matchesOwnerName = matchesTerm(cust.getOwnerName(), searchTerm);
+
+			return matchesCustomerName || matchesOwnerName;
+		}).toList();
+		
+		
+
+		ldp = DataProvider.ofCollection(filteredList);
+
+		grid.setItems(ldp);
+
+		refreshGrid();
+	}
+
 	private void refreshGrid(Customer updateCustomer, boolean delete) {
 		if (delete) {
 
@@ -427,12 +477,24 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 	}
 
 	private boolean matchesTerm(String value, String searchTerm) {
+		System.out.println("Value : " + value);
+		System.out.println("searchTerm : " + searchTerm);
+		System.out.println("match : " + value.toLowerCase().contains(searchTerm.toLowerCase()));
 		return value.toLowerCase().contains(searchTerm.toLowerCase());
 	}
 
 	@Override
 	protected void createMainContentLayout(VerticalLayout mainContentContainer) {
 
+	}
+	
+	private void updateCustomers() {
+		customers = customerService.listAll(Sort.by("id"));
+		ldp = DataProvider.ofCollection(customers);
+
+		grid.setItems(ldp);
+
+		refreshGrid();
 	}
 
 }

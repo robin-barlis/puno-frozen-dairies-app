@@ -252,6 +252,16 @@
 			<artifactId>dynamicreports-core</artifactId>
 			<version>6.12.0</version>
 		</dependency>
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.12.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.vaadin.addons.componentfactory</groupId>
+			<artifactId>keyboard-shortcut-manager-flow</artifactId>
+			<version>23.3.7</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<defaultGoal>spring-boot:run</defaultGoal>

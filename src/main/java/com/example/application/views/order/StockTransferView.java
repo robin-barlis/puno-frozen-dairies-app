@@ -1,34 +1,18 @@
 package com.example.application.views.order;
 
 import java.io.ByteArrayInputStream;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.vaadin.stefan.table.Table;
-import org.vaadin.stefan.table.TableDataCell;
-import org.vaadin.stefan.table.TableHead;
-import org.vaadin.stefan.table.TableHeaderCell;
-import org.vaadin.stefan.table.TableRow;
 
 import com.example.application.data.entity.orders.Order;
-import com.example.application.data.entity.orders.OrderItemSalesInvoiceWrapper;
-import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.service.orders.DocumentTrackingNumberService;
 import com.example.application.data.service.orders.OrdersService;
-import com.example.application.reports.SalesInvoiceReportOld;
 import com.example.application.reports.StockTransferReport;
 import com.example.application.security.AuthenticatedUser;
-import com.example.application.utils.PfdiUtil;
 import com.example.application.views.MainLayout;
-import com.google.gwt.thirdparty.guava.common.collect.Lists;
 import com.vaadin.componentfactory.pdfviewer.PdfViewer;
-import com.vaadin.flow.component.Html;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -44,17 +28,12 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.StreamResource;
-
-import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
-import net.sf.jasperreports.engine.JRException;
 
 @PageTitle("Stock Orders")
 @Route(value = "order/stockTransfer/:id", layout = MainLayout.class)
@@ -153,22 +132,6 @@ public class StockTransferView extends VerticalLayout implements BeforeEnterObse
 		mainDiv.add(pdfViewer);
 		mainDiv.setWidthFull();
 		mainDiv.setHeight("75%");
-	}
-
-	private void createFooterDiv(Div mainDiv) {
-		Div disclaimerDiv = new Div();
-		Span disclaimer1 = new Span("THIS SALES INVOICE SHALL BE VALID FOR FIVE (5) YEARS FROM THE DATE OF RELEASE..");
-		disclaimerDiv.addClassNames("report-header-text-subheading", "padding-bottom-large");
-		disclaimerDiv.add(disclaimer1);
-
-		Div signatureLine = new Div();
-		Span signatureText = new Span("Authorized Signature");
-		signatureText.addClassNames("float-right", "text-align-center");
-		signatureLine.addClassNames("report-header-text-subheading", "padding-bottom-large", "float-right",
-				"signature-line");
-		signatureLine.add(signatureText);
-
-		mainDiv.add(disclaimerDiv, signatureLine);
 	}
 
 	private Integer generateStockOrderNumber() {

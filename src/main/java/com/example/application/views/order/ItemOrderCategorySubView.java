@@ -23,7 +23,9 @@ import com.example.application.data.entity.products.ProductPrice;
 import com.example.application.data.entity.products.Size;
 import com.example.application.data.entity.stock.ItemStock;
 import com.example.application.utils.PfdiUtil;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Hr;
@@ -49,6 +51,10 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 	private H1 totalAmount = new H1();
 	private Map<String, OrderItems> orderItemMap = null;
+	private Map<String, IntegerField> itemMap = Maps.newHashMap();
+
+
+	int productIndex = 0;
 
 	public ItemOrderCategorySubView(List<Category> categories, Customer customer,
 			Map<String, List<Product>> productCategoryMap) {
@@ -57,7 +63,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 		totalAmount.setText("Total Amount: " + currentTotalPrice);
 		totalAmount.addClassNames("mb-1", "mt-s", "text-l", "span-order-flavor-column-header");
 		totalAmount.setWidthFull();
-		categories.forEach(category -> {
+		for (Category category : categories){
 
 			List<Product> productsPerCategory = productCategoryMap.get(category.getCategoryName());
 			if (productsPerCategory != null && !productsPerCategory.isEmpty()) {
@@ -65,7 +71,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 				createContent(category, productsPerCategory);
 			}
 
-		});
+		}
 
 	}
 
@@ -135,7 +141,12 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			flavorColumnWrapper.add(flavorColumnRow);
 			contentWrapper.add(flavorColumnWrapper);
 
-			sizes.forEach(size -> {
+			int sizeIndex = 0;
+
+			for (Size size : sizes) {
+
+
+				IntegerField quantityField = null;
 
 				Set<String> customerTagNameSet = size.getCustomerTagSet().stream().map(CustomerTag::getCustomerTagName)
 						.collect(Collectors.toSet());
@@ -151,7 +162,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 					if (!productPriceOpt.isEmpty()) {
 						ProductPrice productPrice = productPriceOpt.get();
 						if (productPrice != null) {
-							IntegerField quantityField = new IntegerField();
+							quantityField = new IntegerField();
 
 							int quantity = 0;
 
@@ -159,14 +170,35 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 							if (stock != null) {
 								quantity = itemStock.get(size.getSizeName()).getAvailableStock();
 							}
-
 							quantityField.setMax(quantity);
-							quantityField.setId("id-" + product.getProductShortCode() + "-" + size.getSizeName());
+							
+							quantityField.addKeyDownListener(e-> {
+								if (e.getKey().equals(Key.ARROW_DOWN)) {
+									IntegerField field = (IntegerField) e.getSource();
+									String[] id = field.getId().get().split("-");
+									
+									int productIndexParsd = Integer.parseInt(id[0]);
+									int sizeIndexParsed = Integer.parseInt(id[1]);
+									System.out.println("field id " + field.getId());
+									
+									
+									int pIndex = productIndexParsd + 1;
+									
+									String key = pIndex + "-" + sizeIndexParsed;
+									itemMap.get(key).focus();
+									
+									
+									
+								}
+							});
+
+							String itemId = productIndex + "-" + sizeIndex;
+
+							quantityField.setId(itemId);
 							quantityField.addClassName("span-order-size-column");
 							quantityField.setHelperText("Stock: " + quantity);
 							quantityField.setValue(0);
 							quantityField.setMin(0);
-							System.out.println("id-" + product.getProductShortCode() + "-" + size.getSizeName());
 							quantityField.addValueChangeListener(e -> {
 
 								BigDecimal oldAmount = productPrice.getTransferPrice()
@@ -186,20 +218,26 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 								currentTotalSrp = currentTotalSrp.subtract(oldSrpAmount);
 								currentTotalSrp = currentTotalSrp.add(newSrpAmount);
 
-								totalAmount
-										.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
+								totalAmount.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
 								add(totalAmount);
 
 							});
 							contentWrapper.add(quantityField);
+							
+							Items item = new Items(quantityField, productPrice.getTransferPrice(), stock, productPrice.getSuggestedRetailPrice(), itemId );
+							System.out.println("item Id " + itemId);
+							itemMap.put(itemId, quantityField);
+							itemsList.add(item);
 
-							itemsList.add(new Items(quantityField, productPrice.getTransferPrice(), stock, productPrice.getSuggestedRetailPrice()));
+							sizeIndex++;
 						}
+						
 
 					}
 
+
 				} else {
-					IntegerField quantityField = new IntegerField();
+					quantityField = new IntegerField();
 					quantityField.setMax(0);
 					quantityField.addClassName("span-order-size-column");
 					quantityField.setHelperText("Stock: N/A");
@@ -207,10 +245,12 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 					quantityField.setMin(0);
 					quantityField.setEnabled(false);
 					contentWrapper.add(quantityField);
+
 				}
-			});
+			}
 
 			layout.add(contentWrapper);
+			productIndex++;
 
 		}
 
@@ -270,13 +310,15 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 		private BigDecimal price;
 		private ItemStock itemStock;
 		private BigDecimal srp;
+		private String itemId;
 
-		public Items(IntegerField numberField, BigDecimal price, ItemStock itemStock, BigDecimal srp) {
+		public Items(IntegerField numberField, BigDecimal price, ItemStock itemStock, BigDecimal srp, String itemId) {
 			super();
 			this.numberField = numberField;
 			this.price = price;
 			this.itemStock = itemStock;
 			this.srp = srp;
+			this.itemId = itemId;
 		}
 
 		public IntegerField getNumberField() {
@@ -294,6 +336,14 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 		public BigDecimal getSrp() {
 			return srp;
+		}
+
+		public String getItemId() {
+			return itemId;
+		}
+
+		public void setItemId(String itemId) {
+			this.itemId = itemId;
 		}
 		
 		
