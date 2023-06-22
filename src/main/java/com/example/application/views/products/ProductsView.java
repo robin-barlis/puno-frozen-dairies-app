@@ -50,7 +50,9 @@ import com.vaadin.flow.router.Route;
 public class ProductsView extends AbstractPfdiView implements HasComponents, HasStyle {
 
 	private static final long serialVersionUID = -6210105239749320428L;
-	private OrderedList flavorList;
+	private OrderedList regularFlavorList;
+	private OrderedList specialFlavorList;
+	private OrderedList sherbetFlavorList;
 	private OrderedList coneList;
 	private OrderedList otherList;
 
@@ -111,9 +113,13 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 		optionsContainer.setWidth("100%");
 
 		MenuBar options = new MenuBar();
-		options.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
-
-		MenuItem optionsMenu = options.addItem(new Icon(VaadinIcon.COG));
+		options.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON, MenuBarVariant.LUMO_LARGE);
+		
+		Icon cogIcon = new Icon(VaadinIcon.COG);
+		cogIcon.getStyle().set("font-size", "18px");
+		
+		MenuItem optionsMenu = options.addItem(cogIcon);
+		
 		SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
 
 		MenuItem flavorSorting = optionsMenuSubItems.addItem("Manage Flavor Sorting");
@@ -126,14 +132,26 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 
 		mainContent.addClassName("product-view-grid-container");
 
-		VerticalLayout flavorListHeaderContainer = createHeaderForLayout("Flavors List");
+		VerticalLayout flavorListHeaderContainer = createHeaderForLayout("Regular Flavor List");
+		
+		VerticalLayout specialListHeaderContainer = createHeaderForLayout("Special Flavor List");
+		
+		VerticalLayout sherbetListHeaderContainer = createHeaderForLayout("Sherbet List");
 
 		VerticalLayout coneListHeaderContainer = createHeaderForLayout("Cones List");
 
 		VerticalLayout otherListHeaderContainer = createHeaderForLayout("Other Products List");
 
-		flavorList = new OrderedList();
-		flavorList.addClassNames("gap-xl", "grid", "list-none", "m-0", "p-0");
+		regularFlavorList = new OrderedList();
+		regularFlavorList.addClassNames("gap-xl", "grid", "list-none", "m-0", "p-0");
+		
+		specialFlavorList = new OrderedList();
+		specialFlavorList.addClassNames("gap-xl", "grid", "list-none", "m-0", "p-0");
+
+		
+		sherbetFlavorList = new OrderedList();
+		sherbetFlavorList.addClassNames("gap-xl", "grid", "list-none", "m-0", "p-0");
+
 
 		coneList = new OrderedList();
 		coneList.addClassNames("gap-xl", "grid", "list-none", "m-0", "p-0");
@@ -141,7 +159,7 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 		otherList = new OrderedList();
 		otherList.addClassNames("gap-xl", "grid", "list-none", "m-0", "p-0");
 
-		mainContent.add(optionsContainer, flavorListHeaderContainer, flavorList, coneListHeaderContainer, coneList,
+		mainContent.add(optionsContainer, flavorListHeaderContainer, regularFlavorList, specialListHeaderContainer, specialFlavorList, sherbetListHeaderContainer, sherbetFlavorList, coneListHeaderContainer, coneList,
 				otherListHeaderContainer, otherList);
 
 	}
@@ -187,8 +205,14 @@ public class ProductsView extends AbstractPfdiView implements HasComponents, Has
 				ProductsViewCard card = new ProductsViewCard(product, category, imageUrl);
 
 				if (Categories.Flavors.name().equalsIgnoreCase(key)) {
-
-					flavorList.add(card);
+					
+					if ("Regular Ice Cream".equals(product.getCategory().getCategoryName())) {
+						regularFlavorList.add(card);			
+					} else if ("Sherbet".equals(product.getCategory().getCategoryName())) {
+						sherbetFlavorList.add(card);
+					} else if ("Special/Premium Ice Cream".equals(product.getCategory().getCategoryName())) {
+						specialFlavorList.add(card);
+					}
 				} else if (Categories.Cones.name().equalsIgnoreCase(key)) {
 					coneList.add(card);
 				} else {

@@ -157,7 +157,7 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 			//adjustmentField.setValue(0);
 			adjustmentField.setHasControls(true);
 			
-			Button saveButton = new Button(new Icon(VaadinIcon.PLUS)); // make this an icon
+			Button saveButton = new Button(new Icon(VaadinIcon.CHECK)); // make this an icon
 			saveButton.setVisible(false);
 			saveButton.addClickListener(e -> {
 				int currentStock = itemStock.getAvailableStock();
@@ -172,14 +172,14 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 			saveButton.addThemeVariants(ButtonVariant.LUMO_ICON);
 			saveButton.getElement().setAttribute("aria-label", "Save Adjustment");
 			
-			Button cancelButton = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
+			Button cancelButton = new Button(new Icon(VaadinIcon.CLOSE));
 			cancelButton.setVisible(false);
 			cancelButton.addClickListener(e -> {
 				adjustmentField.setValue(0);
 				saveButton.setVisible(false);
 				cancelButton.setVisible(false);
 			});
-			cancelButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+			cancelButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_ERROR);
 			cancelButton.getElement().setAttribute("aria-label", "Cancel Adjustment");
 			
 

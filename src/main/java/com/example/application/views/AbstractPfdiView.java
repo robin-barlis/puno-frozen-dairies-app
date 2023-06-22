@@ -35,7 +35,7 @@ public abstract class AbstractPfdiView extends Main implements BeforeEnterObserv
 		addClassNames(Margin.Horizontal.AUTO, Padding.Bottom.LARGE, Padding.Horizontal.LARGE);
 
 		this.contentHeaderContainer = createContentHeaderContainer();
-		this.contentHeaderContainer.addClassName("header-layout");
+		this.contentHeaderContainer.addClassNames("header-layout header-container-layout");
 		this.contentHeaderContainer.setAlignItems(Alignment.CENTER);
 		addChildrenToContentHeaderContainer(contentHeaderContainer);
 		
@@ -44,9 +44,6 @@ public abstract class AbstractPfdiView extends Main implements BeforeEnterObserv
 		createMainContentLayout(this.contentContainer); 
 
 		add(this.contentHeaderContainer);
-		Hr hr = new Hr();
-		hr.addClassName("hr-class-wrapper");
-		add(hr);
 		add(this.contentContainer);
 
 	}

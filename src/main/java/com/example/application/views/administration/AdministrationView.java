@@ -318,6 +318,8 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		grid.addColumn("role").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		grid.addColumn("position").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		grid.addColumn("location").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addColumn("userDateCreated").setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("User Date Created");
+		
 		grid.addColumn(createEmployeeAccessDates()).setHeader("Access Dates").setAutoWidth(true).setFlexGrow(0);
 
 		LitRenderer<AppUser> statusColumnRenderer = LitRenderer
@@ -329,6 +331,7 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 						user -> user.getEnabled() ? "var(--lumo-primary-text-color)"
 								: "var(--lumo-disabled-text-color)")
 				.withProperty("status", user -> user.getEnabled() ? "Active" : "Inactive");
+
 
 		grid.addColumn(statusColumnRenderer).setHeader("Status").setSortable(true)
 				.setTextAlign(ColumnTextAlign.START);
@@ -436,6 +439,7 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 			appUser = new AppUser();
 			appUser.setEnabled(true);
 			appUser.setLocked(false);
+			appUser.setUserDateCreated(LocalDate.now());
 
 			BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 			UUID uuidToken = UUID.randomUUID();

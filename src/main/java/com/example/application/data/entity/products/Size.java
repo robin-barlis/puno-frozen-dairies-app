@@ -31,6 +31,9 @@ public class Size implements Serializable {
 
 	private String sizeDescription;
 	
+	private String sizeCategory;
+	
+	
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "pfdi_size_customer_tag_mapping", 
 			joinColumns = {@JoinColumn(name = "size_id") },
@@ -116,6 +119,14 @@ public class Size implements Serializable {
 			return false;
 		}
 		return getId().equals(other.getId());
+	}
+
+	public String getSizeCategory() {
+		return sizeCategory;
+	}
+
+	public void setSizeCategory(String sizeCategory) {
+		this.sizeCategory = sizeCategory;
 	}
 
 }

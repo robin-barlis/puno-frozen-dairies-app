@@ -17,7 +17,7 @@ public interface OrdersRepository extends JpaRepository<Order, Integer>, OrderRe
     @Query(value = "SELECT order FROM Order order where order.customer.storeName = :storeName")
     List<Order> findReadyForPaymentOrdersByCustomerName(@Param("storeName") String storeName);
     
-    @Query(value = "SELECT order FROM Order order where order.invoiceId != null")
+    @Query(value = "SELECT order FROM Order order where order.balance > 0 order by order.stockOrderNumber asc")
     List<Order> findReadyForPaymentOrders();
 	
 

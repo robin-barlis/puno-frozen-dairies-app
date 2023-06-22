@@ -78,7 +78,7 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 		}
 
 		query.where(predicates.toArray(new Predicate[]{}));
-
+		query.orderBy(cb.asc(order.get("creationDate")));
 
 		return entityManager.createQuery(query).getResultList();
 	}

@@ -4,13 +4,13 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -31,7 +31,7 @@ public class ChequePaymentDetails implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 	
-	@OneToOne(fetch = FetchType.EAGER, optional = false)
+	@ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "payment_id", nullable = false)
 	@Fetch(FetchMode.SELECT)
 	private Payment payment;
@@ -56,6 +56,7 @@ public class ChequePaymentDetails implements Serializable {
 	@Fetch(FetchMode.SELECT)
 	private Banks bankId;
 	private LocalDate chequeIssueDate;
+	private LocalDate chequeDueDate;
 	private String accountNumber;
 	private String accountName;
 	private String chequeStatus;
@@ -195,6 +196,16 @@ public class ChequePaymentDetails implements Serializable {
 
 	public void setChequeStatus(String chequeStatus) {
 		this.chequeStatus = chequeStatus;
+	}
+
+
+	public LocalDate getChequeDueDate() {
+		return chequeDueDate;
+	}
+
+
+	public void setChequeDueDate(LocalDate chequeDueDate) {
+		this.chequeDueDate = chequeDueDate;
 	}
 
 

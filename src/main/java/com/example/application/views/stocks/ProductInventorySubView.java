@@ -14,6 +14,7 @@ import com.example.application.data.entity.products.ProductPrice;
 import com.example.application.data.entity.products.Size;
 import com.example.application.data.entity.stock.ItemStock;
 import com.example.application.utils.PfdiUtil;
+import com.vaadin.flow.component.html.H5;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
@@ -39,14 +40,25 @@ public class ProductInventorySubView extends VerticalLayout {
 		this.addClassNames("sub-pricing-wrapper");
 
 		Set<Size> sizes = product.getProductPrices().stream().map(ProductPrice::getSize).collect(Collectors.toSet());
+		HorizontalLayout productNameContainer = new HorizontalLayout();
 		
+		H5 productName = new H5(product.getProductName());
+		productNameContainer.add(productName);
+		
+		add(productNameContainer);
+		
+		if (sizes.size() == 0) {
+			H5 noSize = new H5("No Available Sizes for this product");
+			add(noSize);
+		}
 		for (Size productPrizePerSize : sizes) {
-			add(createSizeFormLayouts(productPrizePerSize));
+			add(createStockLayout(productPrizePerSize));
 		}
 
 	}
 
-	private HorizontalLayout createSizeFormLayouts(Size size) {
+	private HorizontalLayout createStockLayout(Size size) {
+		System.out.println("creating stock layout");
 		HorizontalLayout tagPriceWrapper = new HorizontalLayout();
 		tagPriceWrapper.setWidthFull();
 
@@ -111,10 +123,10 @@ public class ProductInventorySubView extends VerticalLayout {
 		HashSet<ItemStock> itemStockSet = new HashSet<>();
 		
 		for (ItemStockFieldMapping itemStockField : itemStockMappingList) {
-			Integer value = itemStockField.getAdjusmentField().getValue();
+			Integer value = itemStockField.getAdjusmentField().getValue() != null ?itemStockField.getAdjusmentField().getValue() :0 ;
 			ItemStock stock = itemStockField.getItemStock();
 			
-			Integer adjustment = stock.getAvailableStock();
+			Integer adjustment = stock.getAvailableStock() != null ? stock.getAvailableStock() : 0;
 			
 			stock.setAvailableStock(value + adjustment);
 			itemStockSet.add(stock);

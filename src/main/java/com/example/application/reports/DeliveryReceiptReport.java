@@ -60,7 +60,7 @@ public class DeliveryReceiptReport {
 		 Map<Object, List<OrderItems>> orderItemPerCategoryMap = order.getOrderItems().stream().collect(Collectors
 				.groupingBy(orderItem -> orderItem.getItemInventory().getProduct().getCategory().getCategoryType()));
 		JasperReportBuilder report = report().title(Templates.createDeliveryReceiptHeaderComponent(order), 
-				cmp.subreport(createSubreport(orderItemPerCategoryMap, order)))
+					cmp.subreport(createSubreport(orderItemPerCategoryMap, order)))
 					.addPageFooter(Templates.createDeliveryReceiptDetailsFooterComponent())
 					.pageFooter(Templates.footerComponent);
 

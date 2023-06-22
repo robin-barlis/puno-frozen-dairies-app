@@ -20,6 +20,7 @@ import com.example.application.views.products.components.SizeFormDialog;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -82,6 +83,7 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 		sizesGrid = new Grid<>(Size.class, false);
 		sizesGrid.addColumn("sizeName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		sizesGrid.addColumn("sizeDescription").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		sizesGrid.addColumn("sizeCategory").setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Size Type");
 		sizesGrid.addColumn(sizeTag -> {
 			Hibernate.initialize(sizeTag.getCustomerTagSet());
 			Set<String> locationTagsString = sizeTag.getCustomerTagSet().stream().map(CustomerTag::getCustomerTagName).collect(Collectors.toSet());
@@ -121,7 +123,6 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 
 			return menuBar;
 		}).setWidth("70px").setFlexGrow(0);
-		sizesGrid.setAllRowsVisible(true);
 
 		ldp = DataProvider.ofCollection(sizesService.listAll(Sort.by("id")));
 
@@ -130,7 +131,10 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 		sizesGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		sizesGrid.addThemeVariants(GridVariant.MATERIAL_COLUMN_DIVIDERS);
 		sizesGrid.addThemeVariants(GridVariant.LUMO_WRAP_CELL_CONTENT);
-		tableContent.addAndExpand(sizesGrid);
+		sizesGrid.setAllRowsVisible(true);
+		sizesGrid.setHeightFull();
+		sizesGrid.setMaxHeight("1eh");
+		tableContent.add(sizesGrid);
 		
 		HorizontalLayout sizeButtonWrapper = new HorizontalLayout();
 		sizeButtonWrapper.setSpacing(true);
@@ -149,6 +153,7 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 			}
 		});	
 		Button addNewSizeButton = new Button("Add Size");
+		addNewSizeButton.addThemeVariants(ButtonVariant.LUMO_LARGE);
 		addNewSizeButton.addClickListener(e -> {
 			sizeFormDialog.setCurrentSelectionToBinder(null);
 			sizeFormDialog.open();

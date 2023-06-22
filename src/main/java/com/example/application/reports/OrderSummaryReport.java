@@ -3,6 +3,7 @@ package com.example.application.reports;
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
 import java.io.ByteArrayOutputStream;
@@ -88,8 +89,9 @@ public class OrderSummaryReport {
 				.setDataSource(new SubreportDataSourceExpression(orderItemPerCategoryMap, flavorSize, coneSize, othersSize));
 		return report().title(Templates.createStockOrderDetailsComponent(order))
 				.detail(subreport, cmp.verticalGap(20))
-				.addPageFooter(Templates.createStockOrderDetailsFooterComponent(order, appUser))
-				.setDataSource(createDataSource());
+				.addLastPageFooter(Templates.createStockOrderDetailsFooterComponent(order, appUser))
+				.setDataSource(createDataSource())
+				.pageFooter(Templates.footerComponent);
 	}
 
 
@@ -120,16 +122,22 @@ public class OrderSummaryReport {
 
 			if (1 == masterRowNumber) {
 
+
+				//LinkedList<TextColumnBuilder<Integer>> columns = Lists.newLinkedList();
+				
 				TextColumnBuilder<String> flavorColumn = col.column("Flavor", "keyFlavor", type.stringType());
 				flavorColumn.setWidth(80);
 				report.addColumn(flavorColumn);
+				report.addSubtotalAtSummary(sbt.text("Total Quantity", flavorColumn).setStyle(Templates.boldStyle8Font));
 
 				for (Size size : flavorSize) {
-					TextColumnBuilder<String> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
-							type.stringType());
+					TextColumnBuilder<Integer> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),type.integerType());
+					//columns.add(sizeColumn);
 					sizeColumn.setWidth(20);
 					report.addColumn(sizeColumn);
+					report.addSubtotalAtSummary(sbt.sum(sizeColumn).setStyle(Templates.boldStyle8Font));
 				}
+				
 			}
 			
 			if (2 == masterRowNumber) {
@@ -137,12 +145,14 @@ public class OrderSummaryReport {
 				TextColumnBuilder<String> flavorColumn = col.column("Cone", "keyConeName", type.stringType());
 				flavorColumn.setWidth(80);
 				report.addColumn(flavorColumn);
+				report.addSubtotalAtSummary(sbt.text("Total Quantity", flavorColumn).setStyle(Templates.boldStyle8Font));
 
 				for (Size size : coneSize) {
-					TextColumnBuilder<String> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
-							type.stringType());
+					TextColumnBuilder<Integer> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
+							type.integerType());
 				//	sizeColumn.setWidth(20);
 					report.addColumn(sizeColumn);
+					report.addSubtotalAtSummary(sbt.sum(sizeColumn).setStyle(Templates.boldStyle8Font));
 				}
 			}
 			
@@ -151,13 +161,15 @@ public class OrderSummaryReport {
 				TextColumnBuilder<String> flavorColumn = col.column("Others", "keyOthersName", type.stringType());
 				flavorColumn.setWidth(80);
 				report.addColumn(flavorColumn);
+				report.addSubtotalAtSummary(sbt.text("Total Quantity", flavorColumn).setStyle(Templates.boldStyle8Font));
 
 				for (Size size : othersSize) {
 					
-					TextColumnBuilder<String> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
-							type.stringType());
+					TextColumnBuilder<Integer> sizeColumn = col.column(size.getSizeName(), "key" + size.getId(),
+							type.integerType());
 					//sizeColumn.setWidth(20);
 					report.addColumn(sizeColumn);
+					report.addSubtotalAtSummary(sbt.sum(sizeColumn).setStyle(Templates.boldStyle8Font));
 				}
 			}
 
@@ -225,7 +237,7 @@ public class OrderSummaryReport {
 					for (OrderItems items : orderItems) {
 						index++;
 						String key = "key" + items.getItemInventory().getSize().getId();
-						String value = items.getQuantity().toString();
+						Integer value = items.getQuantity();
 				
 						columns[index] = key;
 						values[index] = value;
@@ -280,7 +292,7 @@ public class OrderSummaryReport {
 	
 						index++;
 						String key = "key" + items.getItemInventory().getSize().getId();
-						String value = items.getQuantity().toString();
+						Integer value = items.getQuantity();
 						columns[index] = key;
 						values[index] = value;
 					}
@@ -329,7 +341,7 @@ public class OrderSummaryReport {
 	
 						index++;
 						String key = "key" + items.getItemInventory().getSize().getId();
-						String value = items.getQuantity().toString();
+						Integer value = items.getQuantity();
 						columns[index] = key;
 						values[index] = value;
 					}

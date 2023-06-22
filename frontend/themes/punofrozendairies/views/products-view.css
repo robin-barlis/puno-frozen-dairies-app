@@ -135,3 +135,11 @@
     opacity:50%;
 }
 
+vaadin-upload-file[error] {
+	width: 150px;
+}
+
+.product-menu-bar {
+	font-size: 20px !important;
+}
+

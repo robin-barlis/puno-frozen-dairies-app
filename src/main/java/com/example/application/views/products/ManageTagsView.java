@@ -20,6 +20,7 @@ import com.example.application.views.constants.CssClassNamesConstants;
 import com.example.application.views.products.components.CustomerTagFormDialog;
 import com.example.application.views.products.components.LocationTagFormDialog;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -169,6 +170,7 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 			locationTagDialog.clearForm(true);
 			locationTagDialog.open();
 		});
+		addNewTagButton.addThemeVariants(ButtonVariant.LUMO_LARGE);
 		buttonWrapper.add(addNewTagButton);
 		
 		tableContent.add(buttonWrapper);
@@ -263,6 +265,7 @@ public class ManageTagsView extends AbstractPfdiView implements BeforeEnterObser
 			}
 		});	
 		Button addNewCustomerTagButton = new Button("Add Customer Tag");
+		addNewCustomerTagButton.addThemeVariants(ButtonVariant.LUMO_LARGE);
 		addNewCustomerTagButton.addClickListener(e -> {
 			customerTagFormDialog.clearForm(true);
 			customerTagFormDialog.open();

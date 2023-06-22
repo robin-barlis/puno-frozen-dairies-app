@@ -17,7 +17,6 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.html.Hr;
@@ -47,6 +46,9 @@ public class CategoryFormDialog  extends ConfirmDialog {
 	public CategoryFormDialog(String label, CategoryService categoryService, SizesService sizeService) {
 		Label categoryLabel = new Label(label);
 		categoryLabel.getStyle().set("padding-bottom", "20px");
+		
+		List<Size> sizes = sizeService.listAll(Sort.unsorted());
+		
 
 		Hr divider1 = new Hr();
 
@@ -55,7 +57,6 @@ public class CategoryFormDialog  extends ConfirmDialog {
 		categoryName = new TextField("Category Name");
 		categoryName.setRequired(true);
 		categoryName.setRequiredIndicatorVisible(true);
-		
 		categoryType = new Select<>();
 		categoryType.setLabel("Category Type");
 		categoryType.setEmptySelectionAllowed(false);
@@ -68,25 +69,35 @@ public class CategoryFormDialog  extends ConfirmDialog {
 		categoryType.setPlaceholder("Select Category Type");
 		categoryType.setWidthFull();
 		categoryType.setEnabled(true);
+		categoryType.addValueChangeListener(e-> {
+			sizeComboBox.setEnabled(true);
+			
+			List<Size> sizeByType = sizes.stream().filter(s -> {
+				return s.getSizeCategory().equalsIgnoreCase(categoryType.getValue());
+			}).toList();
+			sizeComboBox.setItems(sizeByType);
+		
+		});
 		
 		sizeComboBox = new MultiSelectComboBox<>("Sizes");
-		sizeComboBox.setItems(sizeService.listAll(Sort.unsorted()));
+		sizeComboBox.setPlaceholder("Set Sizes");
+		sizeComboBox.setEnabled(sizeComboBox.getValue().size() > 0);
 		sizeComboBox.setItemLabelGenerator(Size::getSizeName);
 		sizeComboBox.setWidthFull();
 		
 
 		saveButton = new Button("Save");
 		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-		saveButton.setEnabled(!StringUtils.isEmpty(categoryName.getValue()) && !categoryType.getValue().isBlank());
+		saveButton.setEnabled(!StringUtils.isEmpty(categoryName.getValue()));
 		
 		
 		categoryType.addValueChangeListener( e-> {
-			saveButton.setEnabled(!StringUtils.isEmpty(categoryName.getValue()) && !categoryType.getValue().isBlank());
+			saveButton.setEnabled(!StringUtils.isEmpty(categoryName.getValue()));
 		});
 		
 		categoryName.addValueChangeListener(e-> {
 
-			saveButton.setEnabled(!StringUtils.isEmpty(categoryName.getValue()) && !categoryType.getValue().isBlank());
+			saveButton.setEnabled(!StringUtils.isEmpty(categoryName.getValue()));
 		});
 		binder = new BeanValidationBinder<>(Category.class);
 		
@@ -137,6 +148,7 @@ public class CategoryFormDialog  extends ConfirmDialog {
 	public void clearForm(boolean removeObject) {
 		this.categoryName.clear();
 		this.categoryType.clear();
+		this.sizeComboBox.clear();
 		
 		if (removeObject) {
 			category = null;

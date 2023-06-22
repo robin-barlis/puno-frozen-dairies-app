@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,14 +44,15 @@ import com.google.gwt.thirdparty.guava.common.collect.Sets;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.checkbox.CheckboxGroup;
+import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
@@ -63,6 +65,8 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
@@ -83,6 +87,8 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 
 	private TextField productName;
 	private TextField shortCode;
+	private DatePicker effectiveStartDate;
+	private DatePicker effectiveEndDate;
 	private Select<Category> category;
 	private MultiSelectComboBox<Size> sizes;
 	private Button cancelButton;
@@ -93,6 +99,9 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 	private ItemStockService itemStockService;
 	private AuthenticatedUser authenticatedUser;
 	private ProductPriceService priceService;
+	private CheckboxGroup<String> checkboxGroup;
+	
+	Binder<Product> binder = new Binder<>();
 	private Integer productId;
 	List<Category> categories;
 	Set<ProductPrice> productPrice= null;
@@ -102,7 +111,8 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 	
 	private final static int MAX_FILE_SIZE_BYTES = 2000 * 10 * 1024 * 1024; // 10MB
 	private final Cloudinary cloudinary = Singleton.getCloudinary();
-
+	private String imageUrl = "https://res.cloudinary.com/dw2qyhgar/image/upload/v1676078906/170043505_10158971498776278_8359436008848051948_n_jknb5u.jpg";
+	private Image image;
 	@Autowired
 	public AddNewProductView(AuthenticatedUser authenticatedUser, ProductPriceService priceService, CategoryService categoryService, ProductService productService, SizesService sizesService, ItemStockService itemStockService) {
 		super("add-new-product", "Add New Product");
@@ -137,11 +147,11 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		layout.setHeight("141px");
 		layout.setWidth("250px");
 		
-		Image profilePicture = new Image();
-		profilePicture.addClassName("product-picture");
-		profilePicture.setSrc("https://res.cloudinary.com/dw2qyhgar/image/upload/v1672584641/170043505_10158971498776278_8359436008848051948_n_nejhu1.jpg");
-		profilePicture.setHeight("150px");
-		profilePicture.setWidth("200px");
+        image = new Image();
+        image.setHeight("150px");
+        image.setWidth("180px");
+        image.setSrc(imageUrl);
+       // image.addClassName("product-view-image-attributes");
 		
 
 		MemoryBuffer memoryBuffer = new MemoryBuffer();
@@ -153,7 +163,17 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		uploadImage.setAcceptedFileTypes("image/*");
 		uploadImage.setMaxFiles(1);
 		uploadImage.setMaxFileSize(MAX_FILE_SIZE_BYTES);
+		UploadProductImageI18N i18N = new UploadProductImageI18N();
+	   
+	    uploadImage.setI18n(i18N);
+
 		uploadImage.setReceiver(memoryBuffer);
+		uploadImage.addFailedListener(event -> {
+			String errorMessage = event.getReason().getMessage();
+
+			Notification notification = Notification.show(errorMessage, 5000, Notification.Position.MIDDLE);
+			notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+		});
 		uploadImage.addFileRejectedListener(event -> {
 			String errorMessage = event.getErrorMessage();
 
@@ -177,7 +197,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 					StreamResource imageResource = new StreamResource("profilePicture",
 							() -> memoryBuffer.getInputStream());
 
-					profilePicture.setSrc(imageResource);
+					image.setSrc(imageResource);
 					//cloudinary.uploader().destroy(fileName, uploadResult);
 
 				}
@@ -185,20 +205,30 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 				
 
 			} catch (IOException e1) {
-				Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.MIDDLE);
+				e1.printStackTrace();
+				Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.BOTTOM_START);
 				notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 			} 
 			//processFile(fileData, fileName, contentLength, mimeType);
 
 		});
-
+		
+		
+		uploadImage.addAllFinishedListener(event -> {
+			 com.vaadin.flow.component.upload.UploadI18N.Uploading.Error error = i18N.getUploading().getError();
+			 
+			 if (error != null) {
+				 Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.BOTTOM_START);
+					notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			 }
+		});
+		
 		Button uploadButton = new Button();
 		uploadButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_SUCCESS, ButtonVariant.LUMO_TERTIARY);
-		uploadButton.setIcon(profilePicture);
+		uploadButton.setIcon(image);
 		uploadButton.setSizeFull();
-		
-		
 		uploadImage.setUploadButton(uploadButton);
+		uploadButton.setTooltipText("Image must be 10 MB or below.");
 		layout.add(uploadImage);
 		
 		
@@ -219,10 +249,49 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		shortCode.setRequiredIndicatorVisible(true);
 		shortCode.setVisible(true);
 		
+		effectiveStartDate = new DatePicker("Effective Start Date");
+		effectiveStartDate.setWidthFull();
+		effectiveStartDate.setRequired(true);
+		effectiveStartDate.setRequiredIndicatorVisible(true);
+		effectiveStartDate.setVisible(true);
+		effectiveStartDate.setValue(LocalDate.now());
+
+
+		checkboxGroup = new CheckboxGroup<>();
+		checkboxGroup.setLabel("Status");
+		checkboxGroup.setItems("Active");
+		checkboxGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
+		checkboxGroup.setEnabled(true);
+		checkboxGroup.setValue(Sets.newHashSet("Active"));
+		
+		
+		effectiveEndDate = new DatePicker("Effective End Date");
+		effectiveEndDate.setWidthFull();
+		effectiveEndDate.setRequired(true);
+		effectiveEndDate.setRequiredIndicatorVisible(true);
+		effectiveEndDate.setVisible(true);
+
+		effectiveEndDate.setValue(LocalDate.now().plusYears(100));
+		effectiveEndDate.addValueChangeListener(event -> {
+		    LocalDate effectiveStartDateValue = effectiveStartDate.getValue();
+		    String errorMessage = null;
+		    LocalDate currentValue = event.getValue();
+		    if (effectiveStartDateValue != null && currentValue != null) {
+		        if (effectiveStartDateValue.compareTo(currentValue) < 0) {
+		            errorMessage = "Effective End Date is earlier than Effective Start Date.";
+		            effectiveEndDate.setInvalid(true);
+		        } else {
+		        	 effectiveEndDate.setInvalid(false);
+		        }
+		    }
+		    effectiveEndDate.setErrorMessage(errorMessage);
+		});
+		
+		
 		HorizontalLayout productInfoContainer = new HorizontalLayout();
 		productInfoContainer.setAlignItems(Alignment.AUTO);
 		productInfoContainer.setSizeFull();
-		productInfoContainer.add(productName, shortCode);
+		productInfoContainer.add(productName, shortCode, effectiveStartDate, effectiveEndDate);
 		
 
 		
@@ -258,9 +327,6 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		
 		sizes = new MultiSelectComboBox<>();
 		sizes.setLabel("Sizes");
-
-		//sizes.setItems(sizesService.listAll(Sort.by("id")));
-		sizes.setRequiredIndicatorVisible(true);
 		sizes.setPlaceholder("Select Sizes");
 		sizes.setItemLabelGenerator(e -> e.getSizeName());
 		sizes.setWidthFull();
@@ -305,10 +371,46 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 			}
 		}); //TODO add a prompt that will ask the user if they want to change the selection
 		
+		binder.forField(productName)
+			.asRequired("Product Name must not be empty")
+			.bind(Product::getProductName,Product::setProductName);
+		binder.forField(category)
+			.asRequired("Category must not be empty")
+			.bind(Product::getCategory,Product::setCategory);
+		binder.forField(sizes)
+			.asRequired("Sizes must not be empty");
+		binder.forField(shortCode)
+			.asRequired("Product Short Code must not be empty")
+			.bind(Product::getProductShortCode,Product::setProductShortCode);
+		binder.forField(effectiveStartDate)
+			.asRequired("Effective Start Date must not be empty")
+			.bind(Product::getEffectiveStartDate,Product::setEffectiveStartDate);
+		binder.forField(effectiveEndDate)
+			.asRequired("Effective End Date must not be empty")
+			.withValidator(
+					effectiveEndDateValue -> effectiveStartDate.getValue().compareTo(effectiveEndDateValue) < 0, 
+					"Effective End Date must not be earlier than Effective Start Date")
+			.bind(Product::getEffectiveEndDate,Product::setEffectiveEndDate);
+		binder.forField(checkboxGroup)
+			.bind(e -> {
+				
+				if  (e.getActiveStatus()) {
+					return Sets.newHashSet("Active");
+				}
+				return Sets.newHashSet();
+				
+			}, (p, sets) -> {
+				if (sets != null && sets.size() == 1) {
+					p.setActiveStatus(sets.contains("Active"));
+				} else {
+					p.setActiveStatus(false);
+				}
+			});
+		
 		HorizontalLayout productSpecsContainer = new HorizontalLayout();
-		productSpecsContainer.setAlignItems(Alignment.AUTO);
+		productSpecsContainer.setAlignItems(Alignment.END);
 		productSpecsContainer.setSizeFull();
-		productSpecsContainer.add(category, sizes);
+		productSpecsContainer.add(category, sizes, checkboxGroup);
 
 		nameAndCategoryWrapper.add(productSpecsContainer, productInfoContainer);
 
@@ -336,16 +438,50 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		publishButton = new Button("Publish");
 		publishButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		publishButton.addClickListener(e -> {
-			product = createProduct();
 
-			product = productService.update(product);
-			if (productId == null) {
-
-				itemStockService.updateAll(createInitialItemStockData(product));
+			if (productName.isInvalid() && shortCode.isInvalid() && category.isInvalid() && effectiveStartDate.isInvalid() && effectiveEndDate.isInvalid()) {
+				
+			} else {
+				
 			}
+			
+			try {
 
-			Notification.show("Successfully updated the product: " + product.getProductName());
-			UI.getCurrent().navigate(ProductsView.class);
+	            product = createProduct();
+	            binder.writeBean(product);
+
+				try {
+					if (file != null) {
+
+						@SuppressWarnings("rawtypes")
+						Map response = cloudinary.uploader().upload(file, null);
+						String url = (String) response.get("url");
+						product.setProductPictureUrl(url);
+						
+						System.out.println(response);
+					}
+				} catch (IOException e1) {
+
+					Notification.show("Could not save image on the repository: " + product.getProductName());
+				}
+				
+				if (product.getProductPrices().isEmpty()) {
+					product.setActiveStatus(false);
+				}
+				product = productService.update(product);
+				
+				
+				if (productId == null) {
+
+					itemStockService.updateAll(createInitialItemStockData(product));
+				}
+
+				Notification.show("Successfully updated the product: " + product.getProductName());
+				UI.getCurrent().navigate(ProductsView.class); 
+	        } catch (ValidationException validationException) {
+				Notification.show("Could not create new product. Please check if fields are valid.");
+				//UI.getCurrent().navigate(ProductsView.class); 
+	        }
 		});
 		
 		
@@ -382,10 +518,8 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 
 	private Product createProduct() {
 		if (product == null) {
-
 			product = new Product();
 
-			
 			if (file != null) {
 				try {
 					Map<?, ?>  uploadResult = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
@@ -401,30 +535,24 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 				
 			}
 		} else {
+			// delete all product prices first before adding new product
 			product.getProductPrices().forEach(e -> {
-				priceService.delete(e.getId());
+				if (e.getId() != null) {
+					// price has already been inserted to the database
+					priceService.delete(e.getId());
+				}
 			});
 		}
 		
-		
-		product.setProductName(productName.getValue());
-		product.setProductShortCode(shortCode.getValue());
-		product.setProductDescription("product test"); //TODO add field description
-		product.setCategory(category.getValue());
 
+		product.setProductDescription("product test"); //TODO add field description
 		HashSet<ProductPrice> prices = new HashSet<>();
 		for (SizePricingSubView pricingView : pricingSubViewSet ) {
 			
 			prices.addAll(pricingView.extractFieldValues(product));
 			
 		}
-
-		product.setProductPrices(prices);
-
-		
-		
-		
-			
+		product.setProductPrices(prices);	
 		return product;
 		
 	}
@@ -454,11 +582,27 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		
 		if (productIdString != null) {
 			productId = Integer.parseInt(productIdString);
+			
 			product = productService.get(productId).orElse(null);
+
+			
+			if  (product.getActiveStatus()) {
+				checkboxGroup.setValue(Sets.newHashSet("Active"));
+			} else {
+				checkboxGroup.setValue(Sets.newHashSet());
+			}
 			productPrice = product.getProductPrices();
 			if (product != null) {
 				productName.setValue(product.getProductName());
+				
+				if (product.getProductPictureUrl() != null) {
+					image.setSrc(product.getProductPictureUrl());
+				} else {
+					image.setSrc(imageUrl);
+				}
 				shortCode.setValue(product.getProductShortCode());
+				effectiveStartDate.setValue(product.getEffectiveStartDate());
+				effectiveEndDate.setValue(product.getEffectiveEndDate());
 				Optional<Category> optionalCategory = categories.stream().filter(category -> category.getId().equals(product.getCategory().getId())).findFirst();
 				if (optionalCategory.isPresent()) {
 					category.setValue(optionalCategory.get());

@@ -104,6 +104,8 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 	private Set<LocationTag> locationTags = Collections.emptySet();
 	private List<Customer> customers;
 
+	private int currentPage = 1;
+
 	@Autowired
 	public CustomerView(CustomerTagService customerTagService, CustomerService customerService,
 			LocationTagService locationTagService) {
@@ -225,7 +227,6 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 					addCustomerDialog.close();
 					Notification.show("Customer successfully created/updated")
 							.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-					UI.getCurrent().navigate(CustomerView.class);
 				}
 			
 			} catch (ValidationException validationException) {
@@ -358,6 +359,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 			SubMenu subMenu = menuItem.getSubMenu();
 			subMenu.addItem("Edit Details", e -> {
 				this.customer = currentCustomer;
+				currentPage = grid.getPage();
 				populateDataAndCallDialog();
 			});
 
@@ -393,17 +395,17 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		searchField.addValueChangeListener(e -> filter(searchField.getValue()));
 		searchField.addClassName(CssClassNamesConstants.SEARCH_FILTER_FIELD);
 
-		dataView.addFilter(customer -> {
-			String searchTerm = searchField.getValue().trim();
-
-			if (searchTerm.isEmpty())
-				return true;
-
-			boolean matchesCustomerName = matchesTerm(customer.getStoreName(), searchTerm);
-			boolean matchesOwnerName = matchesTerm(customer.getOwnerName(), searchTerm);
-
-			return matchesCustomerName || matchesOwnerName;
-		});
+//		dataView.addFilter(customer -> {
+//			String searchTerm = searchField.getValue().trim();
+//
+//			if (searchTerm.isEmpty())
+//				return true;
+//
+//			boolean matchesCustomerName = matchesTerm(customer.getStoreName(), searchTerm);
+//			boolean matchesOwnerName = matchesTerm(customer.getOwnerName(), searchTerm);
+//
+//			return matchesCustomerName || matchesOwnerName;
+//		});
 
 		wrapper.add(searchField, grid);
 		verticalLayout.addAndExpand(wrapper);
@@ -422,6 +424,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 	private void refreshGrid() {
 		grid.select(null);
 		grid.getListDataView().refreshAll();
+		grid.setPage(currentPage);
 	}
 
 	private void filter(String searchFieldValue) {
@@ -477,9 +480,6 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 	}
 
 	private boolean matchesTerm(String value, String searchTerm) {
-		System.out.println("Value : " + value);
-		System.out.println("searchTerm : " + searchTerm);
-		System.out.println("match : " + value.toLowerCase().contains(searchTerm.toLowerCase()));
 		return value.toLowerCase().contains(searchTerm.toLowerCase());
 	}
 
@@ -493,6 +493,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		ldp = DataProvider.ofCollection(customers);
 
 		grid.setItems(ldp);
+		
 
 		refreshGrid();
 	}

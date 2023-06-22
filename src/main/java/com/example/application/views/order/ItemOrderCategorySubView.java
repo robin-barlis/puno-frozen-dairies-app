@@ -1,6 +1,7 @@
 package com.example.application.views.order;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +27,10 @@ import com.example.application.utils.PfdiUtil;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.accordion.Accordion;
+import com.vaadin.flow.component.accordion.AccordionPanel;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.BoxSizing;
@@ -50,7 +53,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 	private BigDecimal currentTotalSrp = BigDecimal.valueOf(0);
 
 	private H1 totalAmount = new H1();
-	private Map<String, OrderItems> orderItemMap = null;
+	private Map<String, OrderItems> orderItemMap = Maps.newHashMap();;
 	private Map<String, IntegerField> itemMap = Maps.newHashMap();
 
 
@@ -60,28 +63,36 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			Map<String, List<Product>> productCategoryMap) {
 		this.customer = customer;
 
-		totalAmount.setText("Total Amount: " + currentTotalPrice);
-		totalAmount.addClassNames("mb-1", "mt-s", "text-l", "span-order-flavor-column-header");
+		
+		VerticalLayout totalAmountContainer = new VerticalLayout();
+		totalAmount.setText("Total Amount: " + PfdiUtil.getFormatter().format(currentTotalPrice));
+		totalAmount.addClassNames("mb-1", "mt-s", "text-l");
 		totalAmount.setWidthFull();
+		totalAmountContainer.add(totalAmount);
+		Accordion accordion = new Accordion();
 		for (Category category : categories){
 
 			List<Product> productsPerCategory = productCategoryMap.get(category.getCategoryName());
 			if (productsPerCategory != null && !productsPerCategory.isEmpty()) {
+
+				H2 categoryHeader = new H2(category.getCategoryName());
+				categoryHeader.addClassNames("mb-1", "mt-s", "text-l");
 				System.out.println("Category Name: " + category.getCategoryName());
-				createContent(category, productsPerCategory);
+				accordion.add(new AccordionPanel(categoryHeader, createContent(category, productsPerCategory)));
 			}
 
 		}
+		
+		accordion.setWidthFull();
+		add(accordion);
+		add(totalAmountContainer);
 
 	}
 
-	private void createContent(Category category, List<Product> products) {
+	private VerticalLayout createContent(Category category, List<Product> products) {
 
 		VerticalLayout layout = new VerticalLayout();
 		layout.setClassName("item-order-category-subview");
-		H3 categoryHeader = new H3(category.getCategoryName());
-		categoryHeader.addClassNames("mb-0", "mt-s", "text-m");
-		layout.add(categoryHeader);
 
 		HorizontalLayout headerWrapper = new HorizontalLayout();
 		headerWrapper.setWidthFull();
@@ -92,6 +103,10 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 		boolean headerAlreadyRendered = false;
 		for (Product product : products) {
+			LocalDate now = LocalDate.now();
+			if (!PfdiUtil.isProductValid(product, product.getEffectiveStartDate(), product.getEffectiveEndDate())) {
+				continue;
+			}
 
 			CustomerTag customerTag = customer.getCustomerTagId();
 
@@ -179,7 +194,6 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 									
 									int productIndexParsd = Integer.parseInt(id[0]);
 									int sizeIndexParsed = Integer.parseInt(id[1]);
-									System.out.println("field id " + field.getId());
 									
 									
 									int pIndex = productIndexParsd + 1;
@@ -192,7 +206,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 								}
 							});
 
-							String itemId = productIndex + "-" + sizeIndex;
+							String itemId = product.getProductShortCode() + "-" + size.getSizeName();
 
 							quantityField.setId(itemId);
 							quantityField.addClassName("span-order-size-column");
@@ -219,7 +233,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 								currentTotalSrp = currentTotalSrp.add(newSrpAmount);
 
 								totalAmount.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
-								add(totalAmount);
+//								add(totalAmount);
 
 							});
 							contentWrapper.add(quantityField);
@@ -254,7 +268,9 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 		}
 
-		add(layout);
+		//add(layout);
+		
+		return layout;
 
 	}
 
@@ -263,7 +279,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 		
 		for (Items items : itemsList) {
 			
-			if (Objects.nonNull(items.getNumberField()) && items.getNumberField().getValue() > 0) {
+			if (Objects.nonNull(items.getNumberField()) && Objects.nonNull(items.getNumberField().getValue()) && items.getNumberField().getValue() > 0) {
 				
 				if (items.getNumberField().isInvalid()) {
 					throw new IncorrectOrderException("");
@@ -356,6 +372,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 	}
 
 	public Set<OrderItems> updateOrderItems(AppUser user) {
+		setValues();
 		itemsList.forEach(itemField -> {
 			IntegerField field = itemField.getNumberField();
 			String itemFieldId = field.getId().orElse(null);
@@ -389,7 +406,8 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 			String productShortCode = e.getItemInventory().getProduct().getProductShortCode();
 			String sizeName = e.getItemInventory().getSize().getSizeName();
-			return "id-" + productShortCode + "-" + sizeName;
+			System.out.println("id-" + productShortCode + "-" + sizeName);
+			return productShortCode + "-" + sizeName;
 		}, Function.identity()));
 
 		itemsList.forEach(itemField -> {
@@ -400,6 +418,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			if (fieldId != null) {
 				System.out.println("Field ID: " + fieldId);
 				OrderItems orderItem = orderItemMap.get(fieldId);
+				
 				Integer value = orderItem != null ? orderItem.getQuantity() : 0;
 				field.setValue(value);
 			}

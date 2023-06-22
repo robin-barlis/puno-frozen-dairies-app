@@ -52,10 +52,9 @@ public class OrdersService implements Serializable{
 		List<Order> ordersWithInvoices =repository.findReadyForPaymentOrdersByCustomerName(customerName).
 				stream().filter(order-> { 
 						return !BigDecimal.ZERO.equals(order.getBalance()) 
-								&& (order.getInvoiceId() != null || order.getStockTransferId() != null);
+								&& order.getStockOrderNumber() != null;
 		}).collect(Collectors.toList());
 			
-		// filter orders with zero balance
 		return ordersWithInvoices;
 	}
 	

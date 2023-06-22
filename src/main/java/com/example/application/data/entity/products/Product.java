@@ -1,6 +1,7 @@
 package com.example.application.data.entity.products;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -46,7 +47,27 @@ public class Product implements Serializable {
 	
 	private Integer sortingIndex;
 	
+	private LocalDate effectiveStartDate;
 	
+	private LocalDate effectiveEndDate;
+	
+	
+	public LocalDate getEffectiveStartDate() {
+		return effectiveStartDate;
+	}
+
+	public void setEffectiveStartDate(LocalDate effectiveStartDate) {
+		this.effectiveStartDate = effectiveStartDate;
+	}
+
+	public LocalDate getEffectiveEndDate() {
+		return effectiveEndDate;
+	}
+
+	public void setEffectiveEndDate(LocalDate effectiveEndDate) {
+		this.effectiveEndDate = effectiveEndDate;
+	}
+
 	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
 	@JoinColumn(name = "product_id")
 	private Set<ProductPrice> productPrices;

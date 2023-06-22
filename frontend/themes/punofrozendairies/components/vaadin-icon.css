@@ -7,3 +7,7 @@ vaadin-icon.grid-icons [icon^='vaadin:']{
 	width: var(--lumo-icon-size-s) !important;
     height: var(--lumo-icon-size-s)!important;
 }
+
+.product-menu-bar {
+	font-size: 20px;
+}

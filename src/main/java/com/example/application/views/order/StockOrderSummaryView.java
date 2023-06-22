@@ -7,7 +7,6 @@ import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.vaadin.stefan.table.Table;
 
 import com.example.application.data.DocumentTrackingNumberEnum;
 import com.example.application.data.OrderStatus;
@@ -18,6 +17,7 @@ import com.example.application.data.service.orders.DocumentTrackingNumberService
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.products.SizesService;
 import com.example.application.reports.OrderSummaryReport;
+import com.example.application.reports.StockTransferReport;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
 import com.example.application.views.MainLayout;
@@ -46,15 +46,18 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouteParam;
 import com.vaadin.flow.router.RouteParameters;
 import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.spring.annotation.UIScope;
 
 @PageTitle("Stock Orders")
 @Route(value = "order/stockOrderSummary/:id", layout = MainLayout.class)
 @RouteAlias(value = "/order/stockOrderSummary/:id", layout = MainLayout.class)
 @RolesAllowed({"Superuser", "Checker", "Sales", "CHECKER", "SALES" })
 @Uses(Icon.class)
+@UIScope
 public class StockOrderSummaryView extends VerticalLayout implements BeforeEnterObserver {
 
 	private static final long serialVersionUID = 2754507440441771890L;
@@ -152,7 +155,9 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 		back.setVisible(true);
 		back.addClassNames("order-view-button", "float-right");
 		back.addClickListener(e -> {
-			UI.getCurrent().navigate(StockOrderView.class);
+			RouteParam param = new RouteParam("orderId", orderId);
+        	RouteParameters routeParams = new RouteParameters(param);
+        	UI.getCurrent().navigate(CreateOrderFormView.class, routeParams);
 		});
 		
 		saveAsDraft = new Button("Save As Draft");
@@ -231,7 +236,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			order = ordersService.update(order);
 			Notification.show("Delivery Receipt, Stock Trasnfer, and Invoice numbers for" + order.getStockOrderNumber() + " successfully created.");
 			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
-			UI.getCurrent().navigate(DeliveryReceiptView.class, parameters);
+			UI.getCurrent().navigate(DeliveryReceiptReportView.class, parameters);
 		});
 		
 		createStockTransfer = new Button("Create S.T. & D.R.");
@@ -258,7 +263,9 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 			
 			order = ordersService.update(order);
 			Notification.show("Delivery Receipt & Invoice numbers for" + order.getStockOrderNumber() + " successfully created.");
-			UI.getCurrent().navigate(StockOrderView.class);
+			
+			RouteParameters parameters = new RouteParameters("id", order.getId().toString());
+			UI.getCurrent().navigate(StockTransferView.class, parameters);
 		});
 		
 		buttonContainer.add(submit, saveAsDraft, createSalesInvoice, createStockTransfer, back );
@@ -268,6 +275,7 @@ public class StockOrderSummaryView extends VerticalLayout implements BeforeEnter
 
 	private Order setStatus(OrderStatus forDelivery) {
 		order.setStatus(forDelivery.getOrderStatusName());
+		order.setDeliveryDate(LocalDateTime.now());
 		order.setCheckedByUser(appUser);
 		order.setCheckedDate(LocalDateTime.now());
 		order.setUpdatedByUser(appUser);

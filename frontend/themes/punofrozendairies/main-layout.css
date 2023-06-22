@@ -255,3 +255,11 @@ vaadin-icon.grid-icons {
 vaadin-combo-box {
 	padding-bottom: 15px;
 }
+
+.header-container-layout {
+	width: 100%;
+    align-items: center;
+    border-bottom: var(--lumo-success-color-50pct);
+    border-bottom-style: solid;
+    border-bottom-width: 0.01em;
+}

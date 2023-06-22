@@ -27,15 +27,21 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 import java.awt.Color;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import com.example.application.data.entity.AppUser;
+import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
 import com.example.application.utils.PfdiUtil;
 
+import ar.com.fdvs.dj.domain.Style;
+import ar.com.fdvs.dj.domain.constants.Transparency;
+import ar.com.fdvs.dj.domain.constants.VerticalAlign;
+import ar.com.fdvs.dj.domain.entities.conditionalStyle.ConditionalStyle;
 import net.sf.dynamicreports.report.base.expression.AbstractValueFormatter;
 import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
 import net.sf.dynamicreports.report.builder.component.ComponentBuilder;
@@ -71,6 +77,8 @@ public class Templates {
      */
     public static final StyleBuilder columnStyle;
     
+    public static final StyleBuilder columnStyleWithBorder;
+    
     /**
      * Constant <code>columnStyle</code>
      */
@@ -99,6 +107,9 @@ public class Templates {
     /**
      * Constant <code>footerComponent</code>
      */
+    
+    public static final StyleBuilder bold16CenteredStyle;
+    
     public static final ComponentBuilder<?, ?> footerComponent;
 	public static final StyleBuilder columnHeaderStyle;
 	public static final ReportTemplateBuilder reportTemplate2;
@@ -109,10 +120,21 @@ public class Templates {
 	public static final StyleBuilder smallItalicFont;
 	public static final StyleBuilder columnRight;
 	public static final StyleBuilder smallFont;
+	public static final ReportTemplateBuilder reportTemplateWithBorder;
+	public static final StyleBuilder columnHeaderStyleWithBorder;
+	public static final StyleBuilder columnTitleStyleWithBorder;
+	public static final StyleBuilder columnTitleStyleRight;
+	public static final StyleBuilder boldStyle8Font;
+	public static final ReportTemplateBuilder reportTemplateSmall;
+	public static final StyleBuilder rootStyleSmallFont;
 
     static {
-        rootStyle = stl.style().setPadding(2);
-        boldStyle = stl.style(rootStyle).bold();
+        rootStyle = stl.style().setPadding(2).setFontSize(8);
+        
+        rootStyleSmallFont = stl.style().setPadding(2).setFontSize(5);
+        boldStyle = stl.style(rootStyle).bold().setFontSize(9);
+        
+        boldStyle8Font = stl.style(rootStyle).bold().setFontSize(8).setHorizontalTextAlignment(HorizontalTextAlignment.LEFT);
         italicStyle = stl.style(rootStyle).italic();
         
         smallItalicFont = stl.style(italicStyle).setFontSize(8);
@@ -122,13 +144,20 @@ public class Templates {
         boldCenteredStyle = stl.style(boldStyle).setTextAlignment(HorizontalTextAlignment.CENTER, VerticalTextAlignment.MIDDLE);
         bold12CenteredStyle = stl.style(boldCenteredStyle).setFontSize(10);
         
+        bold16CenteredStyle = stl.style(boldCenteredStyle).setFontSize(16);
+        
         detailStyle = stl.style(boldCenteredStyle)
-        		.setFontSize(10)
+        		.setFontSize(7)
         		.setLeftPadding(4);
 
         columnStyle = stl.style(rootStyle)
 				.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
 				.setBottomBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY));
+        
+        columnStyleWithBorder = stl.style(rootStyle)
+				.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+				.setBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY))
+				.setRightBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY));
         
         columnRight = stl.style(rootStyle)
 				.setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
@@ -140,19 +169,33 @@ public class Templates {
         columnHeaderStyle = stl.style(rootStyle)
   				.setTopBorder(stl.penThin())
   				.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT);
+        
+        columnHeaderStyleWithBorder = stl.style(rootStyle)
+        		.setBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY))
+				.setRightBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY))
+  				.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT);
 
 
         columnTitleStyle = stl.style(columnStyle)
 				.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
 				//.setBackgroundColor(Color.LIGHT_GRAY)
 				.bold();
+        
+        columnTitleStyleRight = stl.style(columnStyle)
+				.setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
+				.bold();
+        
+        columnTitleStyleWithBorder = stl.style(boldStyle)
+  				.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+  				.bold();
+        
         groupStyle = stl.style(rootStyle).setHorizontalTextAlignment(HorizontalTextAlignment.LEFT);
         
-        subtotalStyle = stl.style(boldStyle).setTopBorder(stl.pen1Point());
+        subtotalStyle = stl.style(boldStyle)
+        		.setTopBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY));
 
         flavorColumnStyle = stl.style(rootStyle)
 				.setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
-	
 				.setBottomBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY));
         
         reportTemplate = template().setLocale(Locale.ENGLISH)
@@ -162,6 +205,26 @@ public class Templates {
                                    .setGroupTitleStyle(groupStyle)
                                    .setSubtotalStyle(subtotalStyle)
                                    .setColumnStyle(columnStyle);
+        
+        reportTemplateSmall = template().setLocale(Locale.ENGLISH)
+				 .setGroupStyle(groupStyle)
+                .setColumnTitleStyle(columnTitleStyle)
+                .setColumnHeaderStyle(columnHeaderStyle)
+                .setGroupTitleStyle(groupStyle)
+                .setSubtotalStyle(subtotalStyle)
+                .setColumnStyle(columnStyle);
+        
+        reportTemplateWithBorder = template().setLocale(Locale.ENGLISH)
+				.setGroupStyle(groupStyle)
+                .setColumnTitleStyle(columnTitleStyleWithBorder)
+                .setColumnHeaderStyle(columnHeaderStyleWithBorder)
+                .setGroupTitleStyle(groupStyle)
+                .setSubtotalStyle(subtotalStyle)
+                .setColumnStyle(columnStyleWithBorder)
+                .setSubtotalStyle(stl.style().setBottomBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY))
+                		.setTopBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY)))
+                ;
+
         
         reportTemplate2 = template().setLocale(Locale.ENGLISH)
 				.setGroupStyle(groupStyle)
@@ -222,27 +285,30 @@ public class Templates {
     public static ComponentBuilder<?, ?> createStockOrderDetailsComponent(Order order) {
         return cmp.horizontalList()
                   .add(cmp.text("S.O. No. " + order.getStockOrderNumber())
-                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT), 
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  .setStyle(boldStyle), 
                 		  cmp.text(PfdiUtil.formatDate(order.getCreationDate()))
-                		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
+                		  .setStyle(boldStyle))
                   .newRow()
                   .add(cmp.verticalGap(20))
                   .newRow()
                   .add(cmp.text("Store Name: ")
                 		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
-                		  .setFixedWidth(80), 
+                		  .setFixedWidth(80)
+                		  .setStyle(rootStyle), 
                 		  cmp.text(order.getCustomer().getStoreName())
                 		  .setStyle(boldStyle))                  
                   .newRow()
                   .add(cmp.text("Address: ")
                 		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
-                		  .setFixedWidth(80), 
+                		  .setFixedWidth(80).setStyle(rootStyle), 
                 		  cmp.text(order.getCustomer().getAddress())
                 		  .setStyle(boldStyle))                  
                   .newRow()
                   .add(cmp.text("Owner Name: ")
                 		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
-                		  .setFixedWidth(80), 
+                		  .setFixedWidth(80).setStyle(rootStyle), 
                 		  cmp.text(order.getCustomer().getOwnerName())
                 		  .setStyle(boldStyle))
                   .add(cmp.verticalGap(40));
@@ -271,32 +337,52 @@ public class Templates {
                 
     }
     
+ 
+    
+    public static ComponentBuilder<?, ?> createOutstandingChequeDetailsComponent(Customer customer) {
+    	return cmp.horizontalList()
+                .add(cmp.text("OUTLET : " + customer.getStoreName())
+              		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+              		  .setStyle(rootStyle), 
+              		  cmp.text("ACCOUNT NAME: " + customer.getOwnerName())
+              		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
+              		  .setStyle(rootStyle));
+   }
+   
+    
     public static ComponentBuilder<?, ?> createStockTransferDetailsComponent(Order order) {
         return cmp.horizontalList()
                   .add(cmp.text("PUNO'S FROZEN DAIRIES INC")
-                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT), 
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  .setStyle(boldStyle), 
                 		  cmp.text("STOCK TRANSFER")
-                		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
+                		  .setStyle(boldStyle))
                   .newRow()
                   .add(cmp.text("Victoria Subdivision, Bitas, Cabanatuan City")
-                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT), 
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  .setStyle(rootStyle), 
                 		  cmp.text(PfdiUtil.formatDate(order.getCreationDate()))
-                		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))                  
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
+                		  .setStyle(rootStyle))                  
                   .newRow()
                   .add(cmp.text("Victoria Plant")
-                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT))                  
+                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                		  .setStyle(rootStyle))                  
                   .newRow()
                   .add(cmp.verticalGap(20))
                   .newRow()
                   .add(cmp.text("Store Name: ")
                 		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
-                		  .setFixedWidth(80), 
+                		  .setFixedWidth(80)
+                		  .setStyle(rootStyle), 
                 		  cmp.text(order.getCustomer().getStoreName())
                 		  .setStyle(boldStyle))
                   .newRow()
                   .add(cmp.text("SO No.: ")
                 		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
-                		  .setFixedWidth(80), 
+                		  .setFixedWidth(80)
+                		  .setStyle(rootStyle), 
                 		  cmp.text(order.getStockOrderNumber())
                 		  .setStyle(boldStyle))
                   .add(cmp.verticalGap(40));
@@ -419,19 +505,23 @@ public class Templates {
 	public static ComponentBuilder<?, ?> createStockOrderDetailsFooterComponent(Order order, AppUser appUser) {
 	     return cmp.horizontalList()
                  .add(cmp.text("NOTE: ____________________________________")
-               		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT))
+               		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+               		  .setStyle(rootStyle))
                  .newRow()
                  .add(cmp.text("TIME RELEASED: ___________________________ ")
-               		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT), 
+               		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+               		  .setStyle(rootStyle), 
                		  cmp.text("CHECKED BY: ___________________________ ")
-               		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))
+               		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
+               		  .setStyle(rootStyle))
                  .newRow()
                  .add(cmp.text("PREPARED BY: " + appUser.getFirstName() + " " + appUser.getLastName())
-                  		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT), 
+                  		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
+                  		  .setStyle(rootStyle), 
                   		  cmp.text("RECEIVED BY: ___________________________ ")
-                  		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT))
-                 
-                 .add(cmp.verticalGap(40));
+                  		  .setHorizontalTextAlignment(HorizontalTextAlignment.RIGHT)
+                  		  .setStyle(rootStyle))
+                 .newRow();
    
 	}
 	
@@ -453,9 +543,9 @@ public class Templates {
 		return cmp.horizontalList()
                 .add(cmp.line().setStyle(lineStyle))
                 .newRow().newRow()
-                .add(cmp.text("THIS SALES INVOICE SHALL BE VALID FOR FIVE (5) YEARS FROM THE DATE OF RELEASE.")
+                .add(cmp.text("This sales invoice shall be valid for five (5) years from the date of release.")
                		  .setHorizontalTextAlignment(HorizontalTextAlignment.LEFT)
-               		  .setStyle(smallItalicFont));
+               		  .setStyle(smallItalicFont.setTopPadding(10)));
 	}
 	
 	public static ComponentBuilder<?, ?> signatureSalesInvoice() {
@@ -524,6 +614,7 @@ public class Templates {
                 .add(cmp.verticalGap(80));
 	}
 	
+	 
 	
 	
 	

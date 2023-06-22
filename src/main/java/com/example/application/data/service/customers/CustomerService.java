@@ -1,7 +1,9 @@
 package com.example.application.data.service.customers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -46,6 +48,14 @@ public class CustomerService {
     
     public List<Customer> listAll(Sort sort) {
         return repository.findAll(sort);
+    }
+    
+    public Map<String, List<Customer>> listAllByCustomerTag() {
+    	List<Customer> allCustomer = repository.findAll(Sort.by(Sort.Order.asc("storeName")));
+    	Map<String, List<Customer>> customerByCategory = allCustomer.stream().collect(Collectors.groupingBy(customer -> (String) customer.getCustomerTagId().getCustomerTagName()));
+    	
+    	
+        return customerByCategory;
     }
 
     public int count() {

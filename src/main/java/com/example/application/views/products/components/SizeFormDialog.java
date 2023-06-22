@@ -1,9 +1,13 @@
 package com.example.application.views.products.components;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import com.example.application.data.Categories;
 import com.example.application.data.entity.products.CustomerTag;
 import com.example.application.data.entity.products.Size;
 import com.example.application.data.service.products.CustomerTagService;
@@ -14,10 +18,12 @@ import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
+import com.vaadin.flow.component.grid.GridMultiSelectionModel.SelectAllCheckboxVisibility;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.NotificationVariant;
+import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.ValidationException;
@@ -32,6 +38,7 @@ public class SizeFormDialog  extends ConfirmDialog {
 	private Button cancelButton;
 	private TextField sizeName;
 	private TextField sizeDescription;
+	private Select<String> sizeCategory;
 	private BeanValidationBinder<Size> binder;
 	private Size size;
 	MultiSelectComboBox<CustomerTag> customerTagComboBox;
@@ -50,6 +57,13 @@ public class SizeFormDialog  extends ConfirmDialog {
 		
 		sizeDescription = new TextField("Size Description");
 		
+		sizeCategory = new Select<String>();
+		sizeCategory.setLabel("Size Type");
+		sizeCategory.setItems(Stream.of(Categories.values())
+                .map(Categories::name)
+                .collect(Collectors.toList()));
+		sizeCategory.setRequiredIndicatorVisible(true);
+		
 		customerTagComboBox = new MultiSelectComboBox<>("Add Customer Tags");
 		customerTagComboBox.setItems(customerTagService.listAll(Sort.unsorted()));
 		customerTagComboBox.setItemLabelGenerator(CustomerTag::getCustomerTagName);
@@ -67,6 +81,7 @@ public class SizeFormDialog  extends ConfirmDialog {
 		
 		binder.bind(sizeName, "sizeName");
 		binder.bind(sizeDescription, "sizeDescription");
+		binder.bind(sizeCategory, "sizeCategory");
 		saveButton.addClickListener(e -> {
 			try {
 				if (size == null) {
@@ -95,7 +110,7 @@ public class SizeFormDialog  extends ConfirmDialog {
 
 		FormLayout formLayout = new FormLayout();
 		formLayout.setWidth("800px");
-		formLayout.add(addTagLabel, divider1, sizeName,  sizeDescription, customerTagComboBox,
+		formLayout.add(addTagLabel, divider1, sizeName,  sizeDescription, sizeCategory, customerTagComboBox,
 				divider2);
 
 		formLayout.setResponsiveSteps(new ResponsiveStep("0", 1), new ResponsiveStep("500px", 2));
@@ -114,6 +129,7 @@ public class SizeFormDialog  extends ConfirmDialog {
 	private void clearForm(boolean removeObject) {
 		this.sizeName.clear();
 		this.sizeDescription.clear();
+		this.sizeCategory.clear();
 		if (removeObject) {
 			size = null;	
 		}

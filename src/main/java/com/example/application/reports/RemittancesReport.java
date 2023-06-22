@@ -4,8 +4,10 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
+import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -17,6 +19,7 @@ import org.apache.commons.compress.utils.Lists;
 import org.springframework.stereotype.Service;
 
 import com.cloudinary.utils.StringUtils;
+import com.example.application.data.PaymentMode;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.payment.Payment;
 
@@ -48,9 +51,9 @@ public class RemittancesReport {
 
 	public JasperReportBuilder getReportBuilder(Map<String, List<Payment>> payments, AppUser appUser) {
 
-		SubreportBuilder subreport = cmp.subreport(new SubreportExpression(payments))
-				.setDataSource(new SubreportDataSourceExpression(payments));
-		return report().title(Templates.createRemittancesDetailsComponent()).detail(subreport, cmp.verticalGap(20))
+		SubreportBuilder subreport = cmp.subreport(new SubreportExpression(payments)).setDataSource(new SubreportDataSourceExpression(payments));
+		return report().title(Templates.createRemittancesDetailsComponent())
+				.detail(subreport)
 				.addLastPageFooter(Templates.createRemittancesDetailsFooterComponent(payments))
 				.addLastPageFooter(Templates.createRemittancesPageFooterComponent(appUser))
 				.setDataSource(createDataSource(payments));
@@ -88,13 +91,13 @@ public class RemittancesReport {
 
 				report.title(cmp.text("CASH PAYMENTS"));
 
-				TextColumnBuilder<String> dateColumn = col.column("Date", "dateKey", type.stringType());
+				TextColumnBuilder<String> dateColumn = col.column("Delivery Date", "dateKey", type.stringType());
 				TextColumnBuilder<String> soNumberColumn = col.column("S.O. Number", "soNumberKey", type.stringType());
 				TextColumnBuilder<String> siNumberColumn = col.column("S.I. Number", "siNumberKey", type.stringType());
-				TextColumnBuilder<String> accountNameColumn = col.column("Account Name", "accountNameKey",
-						type.stringType());
-				TextColumnBuilder<BigDecimal> amountColumn = col.column("Amount", "amountKey", type.bigDecimalType());
-
+				TextColumnBuilder<String> accountNameColumn = col.column("Outlet/Store Name", "accountNameKey",type.stringType());
+				TextColumnBuilder<BigDecimal> amountColumn = col.column("Amount", "amountKey", type.bigDecimalType()).setStyle(Templates.columnRight.setBottomBorder(stl.penThin().setLineColor(Color.LIGHT_GRAY)));
+				amountColumn.getColumn().setTitleStyle(Templates.columnTitleStyleRight.build());
+				
 				report.addColumn(dateColumn, soNumberColumn, siNumberColumn, accountNameColumn, amountColumn);
 				report.subtotalsAtSummary(sbt.text("", dateColumn), 
 						sbt.text("", soNumberColumn), 
@@ -118,7 +121,7 @@ public class RemittancesReport {
 
 				report.title(cmp.text("CHEQUE PAYMENT"));
 
-				TextColumnBuilder<String> dateColumn = col.column("Date", "dateChequeKey", type.stringType());
+				TextColumnBuilder<String> dateColumn = col.column("Delivery Date", "dateChequeKey", type.stringType());
 				TextColumnBuilder<String> soNumberColumn = col.column("S.O. Number", "soNumberChequeKey",
 						type.stringType());
 				TextColumnBuilder<String> siNumberColumn = col.column("S.I. Number", "siNumberChequeKey",
@@ -129,11 +132,12 @@ public class RemittancesReport {
 						type.stringType());
 				TextColumnBuilder<String> chequeNoColumn = col.column("Cheque Number", "chequeNoChequeKey",
 						type.stringType());
-				TextColumnBuilder<String> paymentDateColumn = col.column("Cheque Issue Date", "paymentDateChequeKey",
+				TextColumnBuilder<String> paymentDateColumn = col.column("Cheque Due Date", "paymentDateChequeKey",
 						type.stringType());
 				TextColumnBuilder<BigDecimal> amountColumn = col.column("Amount", "amountChequeKey",
-						type.bigDecimalType());
-
+						type.bigDecimalType()).setStyle(Templates.columnRight);;
+				amountColumn.getColumn().setTitleStyle(Templates.columnTitleStyleRight.build());
+						
 				report.addColumn(dateColumn, soNumberColumn, siNumberColumn, accountNameColumn, bankNameColumn,
 						chequeNoColumn, paymentDateColumn, amountColumn);
 				report.subtotalsAtSummary(sbt.text("", dateColumn), 
@@ -149,7 +153,7 @@ public class RemittancesReport {
 
 			if (4 == masterRowNumber) {
 				report.title(cmp.text("ONLINE REMITTANCE"));
-				TextColumnBuilder<String> dateColumn = col.column("Date", "dateBankBankKey", type.stringType());
+				TextColumnBuilder<String> dateColumn = col.column("Delivery Date", "dateBankBankKey", type.stringType());
 				TextColumnBuilder<String> soNumberColumn = col.column("S.O. Number", "soNumberBankKey",
 						type.stringType());
 				TextColumnBuilder<String> siNumberColumn = col.column("S.I. Number", "siNumberBankKey",
@@ -158,21 +162,23 @@ public class RemittancesReport {
 						type.stringType());
 				TextColumnBuilder<String> bankNameColumn = col.column("Bank Name", "bankNameBankKey",
 						type.stringType());
-//				TextColumnBuilder<String> chequeNoColumn = col.column("Sales Date", "salesDateBankKey",
-//						type.stringType());
+				TextColumnBuilder<String> salesDateColumn = col.column("Sales Date", "salesDateBankKey",
+						type.stringType());
 				TextColumnBuilder<String> paymentDateColumn = col.column("Deposit Date", "paymentDateBankKey",
 						type.stringType());
 				TextColumnBuilder<BigDecimal> amountColumn = col.column("Amount", "amountBankKey",
-						type.bigDecimalType());
+						type.bigDecimalType()).setStyle(Templates.columnRight);
+				amountColumn.getColumn().setTitleStyle(Templates.columnTitleStyleRight.build());
 
 				report.addColumn(dateColumn, soNumberColumn, siNumberColumn, accountNameColumn, bankNameColumn,
-						paymentDateColumn, amountColumn);
+						paymentDateColumn, salesDateColumn, amountColumn);
 				report.subtotalsAtSummary(sbt.text("", dateColumn), 
 						sbt.text("", soNumberColumn), 
 						sbt.text("", siNumberColumn),  
 						sbt.text("", accountNameColumn),  
 						sbt.text("", bankNameColumn),  
-						sbt.text("", paymentDateColumn),  
+						sbt.text("", paymentDateColumn), 
+						sbt.text("", salesDateColumn),   
 						sbt.sum(amountColumn));
 
 			}
@@ -196,7 +202,7 @@ public class RemittancesReport {
 
 			if (1 == masterRowNumber) {
 
-				List<Payment> cashPayments = paymentsMap.get("Cash");
+				List<Payment> cashPayments = paymentsMap.get(PaymentMode.CASH.name());
 
 				DRDataSource dataSource = new DRDataSource(
 						"dateKey", 
@@ -207,7 +213,7 @@ public class RemittancesReport {
 
 				for (Payment payment : cashPayments) {
 
-					dataSource.add(getStringValue(payment.getPaymentDate()),
+					dataSource.add(getStringValue(payment.getOrderId().getDeliveryDate()),
 							getStringValue(payment.getOrderId().getStockOrderNumber()),
 							getStringValue(payment.getOrderId().getInvoiceId()),
 							getStringValue(payment.getOrderId().getCustomer().getOwnerName()),
@@ -218,7 +224,7 @@ public class RemittancesReport {
 
 			if (2 == masterRowNumber) {
 
-				List<Payment> cashPayments = paymentsMap.get("Cash");
+				List<Payment> cashPayments = paymentsMap.get(PaymentMode.CASH.name());
 
 				if (Objects.nonNull(cashPayments)) {
 					DRDataSource dataSource = new DRDataSource("denominationKey", "quantityKey", "totalKey");
@@ -236,7 +242,7 @@ public class RemittancesReport {
 			
 			if (3 == masterRowNumber) {
 
-				List<Payment> payments = paymentsMap.get("Cheque");
+				List<Payment> payments = paymentsMap.get(PaymentMode.CHEQUE.name());
 
 				if (Objects.nonNull(payments)) {
 					DRDataSource dataSource = new DRDataSource(
@@ -251,13 +257,13 @@ public class RemittancesReport {
 
 					for (Payment payment : payments) {
 
-						dataSource.add(getStringValue(payment.getPaymentDate()),
+						dataSource.add(getStringValue(payment.getOrderId().getDeliveryDate()),
 								getStringValue(payment.getOrderId().getStockOrderNumber()),
 								getStringValue(payment.getOrderId().getInvoiceId()),
 								getStringValue(payment.getOrderId().getCustomer().getOwnerName()),
 								getStringValue(payment.getChequePaymentDetails().getBankId().getBankName()),
 								getStringValue(payment.getChequePaymentDetails().getChequeNumber()),
-								getStringValue(payment.getChequePaymentDetails().getChequeIssueDate()),
+								getStringValue(payment.getChequePaymentDetails().getChequeDueDate()),
 								payment.getAmount());
 					}
 					return dataSource;
@@ -268,7 +274,7 @@ public class RemittancesReport {
 			
 			if (4 == masterRowNumber) {
 
-				List<Payment> payments = paymentsMap.get("Online Remittance");
+				List<Payment> payments = paymentsMap.get(PaymentMode.ONLINE_REMITTANCE.name());
 
 				if (Objects.nonNull(payments)) {
 					DRDataSource dataSource = new DRDataSource(
@@ -278,17 +284,19 @@ public class RemittancesReport {
 							"accountNameBankKey",
 							"bankNameBankKey",
 							"paymentDateBankKey",
-							"amountBankKey");
+							"amountBankKey",
+							"salesDateBankKey");
 
 					for (Payment payment : payments) {
 						try {
-							dataSource.add(getStringValue(payment.getPaymentDate()),
+							dataSource.add(getStringValue(payment.getOrderId().getDeliveryDate()),
 									getStringValue(payment.getOrderId().getStockOrderNumber()),
 									getStringValue(payment.getOrderId().getInvoiceId()),
 									getStringValue(payment.getOrderId().getCustomer().getOwnerName()),
 									getStringValue(payment.getBankRemittanceDetails().getBankId().getBankName()),
 									getStringValue(payment.getBankRemittanceDetails().getDepositDate()),
-									payment.getAmount());
+									payment.getAmount(),
+									getStringValue(payment.getBankRemittanceDetails().getSalesDateCovered()));
 							System.out.println("payment amount " + payment.getAmount() );
 						} catch (Exception e) {
 							e.printStackTrace();

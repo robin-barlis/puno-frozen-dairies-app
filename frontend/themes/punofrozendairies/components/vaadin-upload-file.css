@@ -1,0 +1,13 @@
+vaadin-upload-file[error] {
+	width: 150px;
+}
+
+[part='error'] {
+    color: var(--lumo-error-text-color);
+    width: 150px;
+}
+
+vaadin-upload-file::part(error) {
+	color: var(--lumo-error-text-color);
+    width: 150px;
+}

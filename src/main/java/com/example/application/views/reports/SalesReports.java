@@ -1,6 +1,6 @@
 package com.example.application.views.reports;
 
-
+import java.io.ByteArrayInputStream;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
@@ -9,104 +9,142 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
+import com.example.application.data.service.orders.OrderRepositoryCustom;
+import com.example.application.data.service.orders.OrderRepositoryCustomImpl;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.payment.PaymentRepositoryCustom;
 import com.example.application.data.service.payment.PaymentRepositoryCustomImpl;
 import com.example.application.data.service.payment.PaymentsService;
+import com.example.application.reports.RemittancesReport;
+import com.example.application.reports.SalesReport;
+import com.example.application.security.AuthenticatedUser;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.google.common.collect.Maps;
-import com.vaadin.flow.component.HasComponents;
-import com.vaadin.flow.component.HasStyle;
+import com.vaadin.componentfactory.pdfviewer.PdfViewer;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.StreamResource;
 
-@PageTitle("Reports")
-@Route(value = "reports/sales", layout = MainLayout.class)
-@PermitAll
-public class SalesReports extends AbstractPfdiView implements HasComponents, HasStyle {
+@PageTitle("Stock Orders")
+@Route(value = "reports/sales/", layout = MainLayout.class)
+@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" })
+@Uses(Icon.class)
+public class SalesReports extends AbstractPfdiView {
 
-	private static final long serialVersionUID = -6210105239749320428L;
 
+	private static final long serialVersionUID = 2754507440441771890L;
 
-	private OrdersService ordersService;
-	private PaymentsService paymentsService;
-	private PaymentRepositoryCustom paymentRepositoryCustom;
-	
-    private Tab all;
-    private Tab cash;
-    private Tab bank;
-    private Tab cheque;
-    DatePicker datePickerFromDate;
-    DatePicker datePickerToDate;
-    
-    Grid<Payment> cashPaymentsGrid; 
-    Grid<Payment> bankRemittancePaymentsGrid; 
-    Grid<Payment> chequePaymentsGrid; 
+	private byte[] stockTransferData;
+
+	private VerticalLayout mainDiv = new VerticalLayout();
+	private VerticalLayout reportContainer = new VerticalLayout();
+	private AuthenticatedUser authenticatedUser;
+    private SalesReport salesReport;
+	private OrderRepositoryCustom orderRepositoryCustom;
+
+    private DatePicker datePickerFromDate;
+    private DatePicker datePickerToDate;
+
 
 
 	@Autowired
-	public SalesReports(OrdersService ordersService, PaymentsService paymentsService, PaymentRepositoryCustomImpl paymentRepositoryCustom) {
-		super("products-view", "Reports");
-		this.ordersService = ordersService;
-		this.paymentRepositoryCustom = paymentRepositoryCustom;
-		populateGrids();
-	}
+	public SalesReports(OrdersService ordersService, 
+			PaymentsService paymentsService, 
+			OrderRepositoryCustomImpl orderRepositoryCustom,
+			SalesReport salesReport,
+			AuthenticatedUser authenticatedUser) {
+		super("products-view", "Sales");
+		this.orderRepositoryCustom = orderRepositoryCustom;
+		this.salesReport = salesReport;
+		this.authenticatedUser = authenticatedUser;
+		addClassNames("administration-view");
 
-	private void populateGrids() {
+		populateReport(reportContainer);
+		mainDiv.add(reportContainer);
+		mainDiv.setHeightFull();
+
+		add(mainDiv);
+	}
+	
+	private void populateReport(VerticalLayout contentContainer) {
 
 
 		Map<String, Object> filters = createSearchCriteria();
 
-		Map<String, List<Payment>> thisWeeksPayments = paymentRepositoryCustom.getPaymentsMapByFilterDates(filters);
+		List<Order> orders = orderRepositoryCustom.filterBy(filters);
+		
+
+		setContent(contentContainer, orders);
+	}
+	
+	private Map<String, Object>  createSearchCriteria() {
+		Map<String, Object> filters = Maps.newHashMap();
+
+
+		if (!datePickerFromDate.isEmpty() && !datePickerToDate.isEmpty()) {
+			
+
+			Map<String, LocalDate> orderDates = Maps.newHashMap();
+			orderDates.put("orderDateFrom", datePickerFromDate.getValue());
+			orderDates.put("orderDateTo", !datePickerToDate.isEmpty() ? datePickerToDate.getValue() : LocalDate.now());
+
+			filters.put("ordersDate", orderDates);
+		} 
+		
+		return filters;
+		
+	}
+
+	private void setContent(VerticalLayout contentContainer, List<Order> orders ) {
+		
+    	
+		StreamResource resource = new StreamResource("STOCK_ORDER_SUMMARY.pdf", () -> {
+
+			if (orders != null) {
+
+				byte[] consolidatedReport = salesReport.buildReport(orders);
+				return new ByteArrayInputStream(consolidatedReport);
+			}
+			return new ByteArrayInputStream(new byte[0]);
+		});
 		
 		
-		
-		
+		PdfViewer pdfViewer = new PdfViewer();
+		pdfViewer.setWidthFull();
+		pdfViewer.setHeightFull();
+
+		pdfViewer.setSrc(resource);
+		pdfViewer.setAddDownloadButton(true);
+		pdfViewer.setAddPrintButton(true);
+		contentContainer.add(pdfViewer);
+		contentContainer.setWidthFull();
+		contentContainer.setHeight("75%");
 		
 		
 	}
 
-	@Override
-	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
-		HorizontalLayout headerContainer = new HorizontalLayout();
-		headerContainer.setWidthFull();
 
-		FlexLayout headerNameWrapper = new FlexLayout();
-		headerNameWrapper.setFlexDirection(FlexDirection.ROW);
-		headerNameWrapper.setJustifyContentMode(JustifyContentMode.START);
-		headerNameWrapper.setAlignItems(Alignment.CENTER);
-		H1 header = new H1("Remittances");
-		header.addClassNames("mb-0", "mt-s", "text-xl");
 
-		// headerNameWrapper.add(tabs);
-		headerNameWrapper.add(header);
-		headerNameWrapper.setWidth("50%");
-
-		headerContainer.add(headerNameWrapper);
-		contentHeaderContainer.add(headerContainer);
-
-	}
-
-	@Override
 	protected void createMainContentLayout(VerticalLayout mainContent) {
 		HorizontalLayout optionsContainer = new HorizontalLayout();
 		optionsContainer.setJustifyContentMode(JustifyContentMode.END);
@@ -126,69 +164,50 @@ public class SalesReports extends AbstractPfdiView implements HasComponents, Has
 		datePickerToDate = new DatePicker("Date To:");
 		datePickerToDate.setValue(currentTo);
 		
-
+		Button searchButton = new Button("Generate Report");
+		searchButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		searchButton.addClickListener(e-> {
+			
+			reportContainer.removeAll();
+			populateReport(reportContainer);
+			
+			
+		});
 		
 		HorizontalLayout dateContainer = new HorizontalLayout();
-		dateContainer.add(datePickerFromDate, datePickerToDate);
-
-		all = new Tab("All");
-		cash = new Tab("Cash Payments");
-		bank = new Tab("Bank Remittances");
-		cheque = new Tab("Cheques");
+		dateContainer.setVerticalComponentAlignment(Alignment.END, searchButton);
+		dateContainer.add(datePickerFromDate, datePickerToDate, searchButton);
 		
-		VerticalLayout contentContainer = new VerticalLayout();
 		
-	    Tabs tabs = new Tabs();
-	   
-	    tabs.add(all, cash, bank, cheque);
-
-	    tabs.addSelectedChangeListener(e -> setContent(e.getSelectedTab(), contentContainer));
-	    tabs.setSelectedTab(all);
 		
-		HorizontalLayout filterButtonsContainer = new HorizontalLayout();
-		filterButtonsContainer.add(tabs);
+		filterLayout.add(dateContainer);
 		
-		setContent(all, contentContainer);
 		
-		filterLayout.add(dateContainer, filterButtonsContainer);
 		
 
-		mainContent.add(filterLayout, contentContainer);
-		
+		mainContent.add(filterLayout);
 		
 	}
 
-	private Map<String, Object>  createSearchCriteria() {
-		Map<String, Object> filters = Maps.newHashMap();
+	@Override
+	protected void addChildrenToContentHeaderContainer(VerticalLayout contentHeaderContainer) {
+		HorizontalLayout headerContainer = new HorizontalLayout();
+		headerContainer.setHeightFull();
+		headerContainer.setWidthFull();
 
+		FlexLayout headerNameWrapper = new FlexLayout();
+		headerNameWrapper.setFlexDirection(FlexDirection.ROW);
+		headerNameWrapper.setJustifyContentMode(JustifyContentMode.START);
+		headerNameWrapper.setAlignItems(Alignment.CENTER);
+		H1 header = new H1("Remittances");
+		header.addClassNames("mb-0", "mt-s", "text-xl");
 
-		if (!datePickerFromDate.isEmpty() && !datePickerToDate.isEmpty()) {
+		headerNameWrapper.add(header);
+		headerNameWrapper.setWidth("50%");
 
-			Map<String, LocalDate> orderDates = Maps.newHashMap();
-			orderDates.put("paymentDateFrom", datePickerFromDate.getValue());
-			orderDates.put("paymentDateTo", !datePickerToDate.isEmpty() ? datePickerToDate.getValue() : LocalDate.now());
+		headerContainer.add(headerNameWrapper);
+		contentHeaderContainer.add(headerContainer);
 
-			filters.put("paymentDateCriteria", orderDates);
-		} 
-		
-		return filters;
-		
-	}
-
-	private void setContent(Tab selectedTab, VerticalLayout contentContainer) {
-		contentContainer.removeAll();
-	        if (selectedTab == null) {
-	            return;
-	        }
-	        if (selectedTab.equals(all)) {
-	        	contentContainer.add(new Paragraph("This is the All tab"));
-	        } else if (selectedTab.equals(cash)) {
-	        	contentContainer.add(new Paragraph("This is the Cash tab"));
-	        } else if (selectedTab.equals(bank)) {
-	        	contentContainer.add(new Paragraph("This is the Bank tab"));
-	        } else if (selectedTab.equals(cheque)){
-	        	contentContainer.add(new Paragraph("This is the Cheque tab"));
-	        }
 	}
 
 	@Override
@@ -196,6 +215,5 @@ public class SalesReports extends AbstractPfdiView implements HasComponents, Has
 		// TODO Auto-generated method stub
 		
 	}
-
 
 }

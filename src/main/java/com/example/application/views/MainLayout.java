@@ -30,6 +30,7 @@ import com.example.application.views.products.ManageSizesView;
 import com.example.application.views.products.ManageTagsView;
 import com.example.application.views.products.ProductsView;
 import com.example.application.views.reports.AccountsReportsView;
+import com.example.application.views.reports.AccountsReportsView2;
 import com.example.application.views.reports.RemittancesView;
 import com.example.application.views.reports.SalesReports;
 import com.example.application.views.stocks.StocksInvetoryView;
@@ -111,7 +112,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		if (maybeUser.isPresent()) {
 			createAvatarDiv(layout, maybeUser);
 		} else {
-			Anchor loginLink = new Anchor("lUI.getCurrent().getClass().getSimpleName())ogin", "Sign in");
+			Anchor loginLink = new Anchor("login", "Sign in");
 			layout.add(loginLink);
 		}
 
@@ -444,9 +445,9 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			Tab accounts = createChildTab("Accounts", AccountsReportsView.class, "admin-view-tab", null);
 			accounts.setVisible(false);
 			
-			Tab stocks = createChildTab("Stocks", AccountsReportsView.class, "admin-view-tab", null);
-			stocks.setVisible(false);
-			
+//			Tab stocks = createChildTab("Stocks", AccountsReportsView2.class, "admin-view-tab", null);
+//			stocks.setVisible(false);
+//			
 			Tab sales = createChildTab("Sales", SalesReports.class, "admin-view-tab", null);
 			sales.setVisible(false);
 			
@@ -457,20 +458,20 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 					showReportsChildrenButton.getElement().setAttribute("icon", "vaadin" + ':' + VaadinIcon.ANGLE_DOWN.name().toLowerCase(Locale.ENGLISH).replace('_', '-'));
 					remittances.setVisible(true);
 					accounts.setVisible(true);
-					stocks.setVisible(true);
+//					/stocks.setVisible(true);
 					sales.setVisible(true);
 					showReports = true;
 				} else {
 					showReportsChildrenButton.getElement().setAttribute("icon", "vaadin" + ':' + VaadinIcon.ANGLE_RIGHT.name().toLowerCase(Locale.ENGLISH).replace('_', '-'));
 					remittances.setVisible(false);
 					accounts.setVisible(false);
-					stocks.setVisible(false);
+				//	stocks.setVisible(false);
 					sales.setVisible(false);
 					showReports = false;
 				}
 			});
 			
-			tabs.add(reportsMain, remittances, accounts, stocks, sales);
+			tabs.add(reportsMain, remittances, accounts, sales);
 		}
 		
 

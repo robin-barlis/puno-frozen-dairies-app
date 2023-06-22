@@ -20,6 +20,7 @@ import com.example.application.views.products.components.CategoryFormDialog;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
@@ -73,7 +74,7 @@ public class ManageCategoriesView extends AbstractPfdiView implements HasCompone
 		Label customerTagLabel = new Label("Manage Categories");
 		customerTagLabel.addClassName(CssClassNamesConstants.PROFILE_DETAILS_LABEL_WRAPPER);
 		sizeWrapper.add(customerTagLabel);
-		categoryFormDialog = new CategoryFormDialog("Add New Size",categoryService, sizesService );
+		categoryFormDialog = new CategoryFormDialog("Add New Category",categoryService, sizesService );
 
 		
 		tableContent.add(sizeWrapper);
@@ -146,6 +147,7 @@ public class ManageCategoriesView extends AbstractPfdiView implements HasCompone
 			}
 		});	
 		Button addNewCategoryButton = new Button("Add Category");
+		addNewCategoryButton.addThemeVariants(ButtonVariant.LUMO_LARGE);
 		addNewCategoryButton.addClickListener(e -> {
 			categoryFormDialog.clearForm(true);
 			categoryFormDialog.open();

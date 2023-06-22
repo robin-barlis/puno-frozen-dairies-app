@@ -23,7 +23,7 @@ import sibModel.SendSmtpEmailTo;
 public class EmailService {
 
 	private static final String TEST_EMAIL = "robbarlis@gmail.com";
-	private static final String API_KEY = "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";
+	private static final String API_KEY = "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";
 
 	
 	public void sendMail(String subject, String message, String toAddress, String toName) throws AddressException, MessagingException, IOException  {

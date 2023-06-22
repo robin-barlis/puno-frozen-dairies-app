@@ -4,8 +4,10 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
+import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -88,7 +90,8 @@ public class StockTransferReport {
 		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
 		TextColumnBuilder<String> quantityColumn = col.column("Quantity", "quantity", type.stringType());
 		TextColumnBuilder<String> sizeColumn =  col.column("Size", "size", type.stringType());
-		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Transfer Price", "price", type.bigDecimalType());
+		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Transfer Price", "price", type.bigDecimalType()).setStyle(Templates.columnRight);
+		priceColumn.getColumn().setTitleStyle(Templates.columnTitleStyleRight.build());
 		report.setTemplate(Templates.reportTemplate2)
 		.columns(categoryColumn,
 				sizeColumn,
@@ -128,7 +131,8 @@ public class StockTransferReport {
 		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
 		TextColumnBuilder<String> quantityColumn = col.column("Quantity", "quantity", type.stringType());
 		TextColumnBuilder<String> sizeColumn =  col.column("Size", "size", type.stringType());
-		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Amount in SRP", "price", type.bigDecimalType());
+		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Amount in SRP", "price", type.bigDecimalType()).setStyle(Templates.columnRight);
+		priceColumn.getColumn().setTitleStyle(Templates.columnTitleStyleRight.build());
 		report.setTemplate(Templates.reportTemplate2)
 		.columns(categoryColumn,
 				sizeColumn,
@@ -139,7 +143,6 @@ public class StockTransferReport {
 				sbt.text("", sizeColumn), 
 				sbt.text("", quantityColumn),  
 				sbt.sum(priceColumn))
-	
 		.setDataSource(createSubreportDataSource(order, orderItemPerCategoryMap))
 		.addColumnFooter(Templates.stockOrderFooter());
 		

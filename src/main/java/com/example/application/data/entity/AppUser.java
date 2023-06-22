@@ -46,6 +46,7 @@ public class AppUser implements Serializable {
 	private LocalDate startDateOfAccess;
 	private LocalDate endDateOfAccess;
 	private String profilePictureUrl;
+	private LocalDate userDateCreated;
 
 	private String password;
 
@@ -185,6 +186,14 @@ public class AppUser implements Serializable {
 
 	public void setProfilePictureUrl(String profilePictureUrl) {
 		this.profilePictureUrl = profilePictureUrl;
+	}
+
+	public LocalDate getUserDateCreated() {
+		return userDateCreated;
+	}
+
+	public void setUserDateCreated(LocalDate userDateCreated) {
+		this.userDateCreated = userDateCreated;
 	}
 
 }

@@ -2,7 +2,9 @@
 package com.example.application.views.order;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import org.vaadin.klaudeta.PaginatedGrid;
 import com.example.application.data.OrderStatus;
 import com.example.application.data.PaymentStatus;
 import com.example.application.data.Reports;
+import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
@@ -33,12 +36,14 @@ import com.example.application.utils.service.ReportConsolidatorService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
+import com.example.application.views.order.offerings.OfferingsView;
 import com.google.common.collect.Maps;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -100,6 +105,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 	List<Customer> customers;
 	private Dialog searchOrdersDialog = new Dialog();
 	private final OrderRepositoryCustom orderRepositoryCustom;
+	private AppUser appUser;
 
 	@Autowired
 	public StockOrderView(OrdersService ordersService, CustomerService customerService, AuthenticatedUser user,
@@ -109,6 +115,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		this.customerService = customerService;
 		this.ordersService = ordersService;
 		this.orderRepositoryCustom = orderRepositoryCustom;
+		this.appUser = user.get().get();
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
@@ -375,30 +382,22 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 			orderIdValue.setClassName("order-row-value");
 
 			orderIdLayout.add(orderIdSpan, orderIdValue);
-
-			HorizontalLayout deliveryReceiptLayout = new HorizontalLayout();
-			deliveryReceiptLayout.setWidthFull();
-			Span deliveryReceiptLabel = new Span("Delivery Receipt:");
-			deliveryReceiptLabel.setClassName("order-row-label");
-			Span deliveryReceiptValue = new Span(getDeliveryReceiptLink(order));
-			deliveryReceiptValue.setClassName("order-row-value");
-
-			deliveryReceiptLayout.add(deliveryReceiptLabel, deliveryReceiptValue);
+			orderLayout.add(orderIdLayout);
+			
 
 			boolean isCompanyOwned = PfdiUtil.isRelativeOrCompanyOwned(order.getCustomer().getCustomerTagId());
-
-			HorizontalLayout stockTransferLayout = new HorizontalLayout();
-
-			stockTransferLayout.setWidthFull();
-			Span stockTransferLabel = new Span("Stock Transfer:");
-			stockTransferLabel.setClassName("order-row-label");
-			Span stockTransferValue = new Span(getStockTransferLink(order, isCompanyOwned));
-			stockTransferValue.setClassName("order-row-value");
-
-			stockTransferLayout.add(stockTransferLabel, stockTransferValue);
-
-			orderLayout.add(orderIdLayout, deliveryReceiptLayout, stockTransferLayout);
 			if (!isCompanyOwned) {
+
+				HorizontalLayout deliveryReceiptLayout = new HorizontalLayout();
+				deliveryReceiptLayout.setWidthFull();
+				Span deliveryReceiptLabel = new Span("Delivery Receipt:");
+				deliveryReceiptLabel.setClassName("order-row-label");
+				Span deliveryReceiptValue = new Span(getDeliveryReceiptLink(order));
+				deliveryReceiptValue.setClassName("order-row-value");
+	
+				deliveryReceiptLayout.add(deliveryReceiptLabel, deliveryReceiptValue);
+				orderLayout.add(deliveryReceiptLayout);
+				
 				HorizontalLayout invoiceLayout = new HorizontalLayout();
 				String label = "Invoice:";
 				invoiceLayout.setWidthFull();
@@ -410,6 +409,21 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 				invoiceLayout.add(invoiceLayoutLabel, invoiceLayoutValue);
 
 				orderLayout.add(invoiceLayout);
+			}
+
+			if (isCompanyOwned) {
+
+				HorizontalLayout stockTransferLayout = new HorizontalLayout();
+
+				stockTransferLayout.setWidthFull();
+				Span stockTransferLabel = new Span("Stock Transfer:");
+				stockTransferLabel.setClassName("order-row-label");
+				Span stockTransferValue = new Span(getStockTransferLink(order, isCompanyOwned));
+				stockTransferValue.setClassName("order-row-value");
+
+				stockTransferLayout.add(stockTransferLabel, stockTransferValue);
+
+				orderLayout.add(stockTransferLayout);
 			}
 
 			return orderLayout;
@@ -446,9 +460,10 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 			HorizontalLayout orderDate = new HorizontalLayout();
 			orderDate.setWidthFull();
-			Span storeAddressValue = new Span("Order Date : " + order.getCreationDate().toLocalDate());
-			orderDate.add(storeAddressValue);
+			Span orderDateValue = new Span("Order Date : " + PfdiUtil.formatDateWithHours(order.getCreationDate()));
+			orderDate.add(orderDateValue);
 			orderDate.setClassName("owner-row-secondary-text");
+			
 
 			orderDetailsLayout.add(amountDueLayout, srpLayout, orderedFrom, orderDate);
 
@@ -518,7 +533,31 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 					return e.getCustomer().getStoreName();
 				});
 
-		grid.addColumn(Order::getStatus).setHeader("Status").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
+		grid.addComponentColumn(currentOrder -> {
+			VerticalLayout statusDetails = new VerticalLayout();
+			statusDetails.setWidthFull();
+			statusDetails.setSpacing(false);
+			
+			OrderStatus status = PfdiUtil.getStatus(currentOrder.getStatus());
+			
+			HorizontalLayout lastUpdateByLayout = new HorizontalLayout();
+			lastUpdateByLayout.setWidthFull();
+			Span lastUpdateByValue = new Span("Last Updated By: " + PfdiUtil.getFullName(currentOrder.getUpdatedByUser()));
+			lastUpdateByLayout.add(lastUpdateByValue);
+			lastUpdateByLayout.setClassName("owner-row-secondary-text");
+			
+			HorizontalLayout lastUpdateDateLayout = new HorizontalLayout();
+			lastUpdateDateLayout.setWidthFull();
+			Span lastUpdateDateValue = new Span("Last Updated Date: " + PfdiUtil.formatDate(currentOrder.getUpdatedDate()));
+			lastUpdateDateLayout.add(lastUpdateDateValue);
+			lastUpdateDateLayout.setClassName("owner-row-secondary-text");
+			
+			statusDetails.add(status.getBadge(), lastUpdateByLayout, lastUpdateDateLayout);
+			
+			return statusDetails;
+			
+		}).setAutoWidth(true).setFlexGrow(0).setHeader("Status");
+		grid.addColumn(Order::getNotes).setHeader("Notes").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 
 		grid.addComponentColumn(currentOrder -> {
 
@@ -534,24 +573,108 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 				RouteParameters params = new RouteParameters(param);
 				UI.getCurrent().navigate(CreateOrderFormView.class, params);
 			});
+			
+			MenuItem setAsDelivered = subMenu.addItem("Set As Delivered", e -> {
+				
+				ConfirmDialog confirmDialog = new ConfirmDialog();
+		      	
+	        	confirmDialog.setCancelable(true);
+	        	confirmDialog.setHeader("Are you sure that this order has already been delivered?");
+	        	
+	        	Button confirmButton = new Button("Confirm");
+	        	confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
 
-			if (currentOrder.getPayments() != null && BigDecimal.ZERO.equals(currentOrder.getBalance())) {
+	        	
+	         	confirmButton.addClickListener(buttonClickListener -> {
+	         		currentOrder.setStatus(OrderStatus.DELIVERED.getOrderStatusName());
+	         		currentOrder.setDeliveryDate(LocalDateTime.now());
+
+	         		currentOrder.setUpdatedByUser(appUser);
+	         		currentOrder.setUpdatedDate(LocalDateTime.now());
+	         		
+
+	        		Order updatedOrder = ordersService.update(currentOrder);
+
+					Notification.show("Stock Order #" + updatedOrder.getStockOrderNumber() + " has been delivered.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					refreshGrid();
+					confirmDialog.close();
+	        	
+	        	});
+	         	
+	         	confirmDialog.setConfirmButton(confirmButton);
+	        	confirmDialog.open();
+
+			});
+			
+			MenuItem cancelOrder = subMenu.addItem("Cancel Order", e -> {
+				
+				ConfirmDialog confirmDialog = new ConfirmDialog();
+		      	
+	        	confirmDialog.setCancelable(true);
+	        	confirmDialog.setHeader("Are you sure you want to cancel this order?");
+	        	
+	        	Button confirmButton = new Button("Confirm");
+	        	confirmButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);       	
+
+	        	
+	         	confirmButton.addClickListener(buttonClickListener -> {
+	         		currentOrder.setStatus(OrderStatus.CANCELLED.getOrderStatusName());
+
+	         		currentOrder.setUpdatedByUser(appUser);
+	         		currentOrder.setUpdatedDate(LocalDateTime.now());
+	         		
+
+	        		Order updatedOrder = ordersService.update(currentOrder);
+
+					Notification.show("Stock Order #" + updatedOrder.getStockOrderNumber() + " has been cancelled.").addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+					refreshGrid();
+					confirmDialog.close();
+	        	
+	        	});
+	         	
+	         	confirmDialog.setConfirmButton(confirmButton);
+	        	confirmDialog.open();
+
+			});
+
+			if (currentOrder.getPayments() != null && BigDecimal.ZERO.equals(currentOrder.getBalance())
+					|| OrderStatus.DELIVERED.getOrderStatusName().equalsIgnoreCase(currentOrder.getStatus())) {
 				// addPaymentSubMenu.setEnabled(false);
 				editItemSubMenu.setEnabled(false);
 			}
 
-			if (currentOrder.getPayments() != null && !BigDecimal.ZERO.equals(currentOrder.getBalance())) {
-
-				// addPaymentSubMenu.setEnabled(true);
-			}
-
-			if (currentOrder.getPayments() != null && !currentOrder.getPayments().isEmpty()) {
+			if (currentOrder.getPayments() != null && !currentOrder.getPayments().isEmpty()
+					|| OrderStatus.DELIVERED.getOrderStatusName().equalsIgnoreCase(currentOrder.getStatus())) {
 				editItemSubMenu.setEnabled(false);
 			}
+			
+			if (OrderStatus.DELIVERED.getOrderStatusName().equalsIgnoreCase(currentOrder.getStatus()) 
+					|| OrderStatus.CANCELLED.getOrderStatusName().equalsIgnoreCase(currentOrder.getStatus())) {
+				setAsDelivered.setEnabled(false);
+			}
+			
+			if (OrderStatus.DELIVERED.getOrderStatusName().equalsIgnoreCase(currentOrder.getStatus()) 
+					|| OrderStatus.CANCELLED.getOrderStatusName().equalsIgnoreCase(currentOrder.getStatus())
+					|| currentOrder.getPayments().size() > 0) {
+				cancelOrder.setEnabled(false);
+			}
+
 
 			return menuBar;
 		}).setWidth("70px").setFlexGrow(0);
-		orders = ordersService.listAll(Sort.by("id"));
+		
+		Map<String, Object> filters = Maps.newHashMap();
+		
+		Map<String, LocalDate> orderDates = Maps.newHashMap();
+		
+		
+		orderDates.put("orderDateFrom", LocalDate.now().with(DayOfWeek.MONDAY));
+		orderDates.put("orderDateTo", LocalDate.now().with(DayOfWeek.SUNDAY));
+		
+		filters.put("ordersDate", orderDates);
+		orders = orderRepositoryCustom.filterBy(filters);
+		
+
 		ldp = DataProvider.ofCollection(orders);
 
 		Button printAllButton = new Button(new Icon(VaadinIcon.PRINT));
@@ -642,6 +765,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
 
 		MenuItem statusMenuItem = optionsMenuSubItems.addItem("Set Order Status");
+		
 		optionsMenuSubItems.addItem(new Hr());
 
 		MenuItem rowsPerPage = optionsMenuSubItems.addItem("Rows per page");
@@ -731,6 +855,13 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 		rowsPerPageSubItem.addItem("15", e -> grid.setPageSize(15));
 		rowsPerPageSubItem.addItem("20", e -> grid.setPageSize(20));
 		rowsPerPageSubItem.addItem("50", e -> grid.setPageSize(50));
+		
+
+		
+		MenuItem manageOfferings = optionsMenuSubItems.addItem("Manage Offerings");
+		manageOfferings.addClickListener(e-> {
+			UI.getCurrent().navigate(OfferingsView.class);
+		});
 
 		grid.setItems(ldp);
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER, GridVariant.LUMO_ROW_STRIPES,
@@ -841,7 +972,7 @@ public class StockOrderView extends AbstractPfdiView implements BeforeEnterObser
 
 	private void refreshGrid() {
 		if (grid != null) {
-			grid.select(null);
+			//grid.select(null);
 			grid.getListDataView().refreshAll();
 		}
 	}

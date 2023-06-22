@@ -38,7 +38,7 @@ public class ProductsViewCard extends ListItem {
         image.setWidth("100%");
         image.setSrc(url);
         image.setAlt(product.getProductName());
-        image.addClassName("product-view-image-attributes");
+        //image.addClassName("product-view-image-attributes");
 
         imageDiv.add(image);
         

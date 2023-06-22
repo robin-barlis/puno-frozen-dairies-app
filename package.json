@@ -386,10 +386,10 @@
     "lit-element": "$lit-element",
     "lit-html": "$lit-html",
     "sortablejs": "$sortablejs",
-    "@vaadin/cookie-consent": "$@vaadin/cookie-consent",
-    "@vaadin/vaadin-cookie-consent": "$@vaadin/vaadin-cookie-consent",
+    "@vaadin-component-factory/keyboard-shortcut-manager": "$@vaadin-component-factory/keyboard-shortcut-manager",
     "@fontsource/roboto": "$@fontsource/roboto",
     "line-awesome": "$line-awesome",
-    "@vaadin-component-factory/keyboard-shortcut-manager": "$@vaadin-component-factory/keyboard-shortcut-manager"
+    "@vaadin/cookie-consent": "$@vaadin/cookie-consent",
+    "@vaadin/vaadin-cookie-consent": "$@vaadin/vaadin-cookie-consent"
   }
 }

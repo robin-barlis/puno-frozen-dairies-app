@@ -70,6 +70,8 @@ public class Order implements Serializable {
 	
 	private LocalDateTime checkedDate;
 	
+	private LocalDateTime deliveryDate;
+	
 	private Integer invoiceId;
 	
 	private BigDecimal amountSrp;
@@ -87,6 +89,8 @@ public class Order implements Serializable {
 	private Integer stockOrderNumber;
 	
 	private String status;
+	
+	private BigDecimal discount;
 	
 	public LocalDate getDueDate() {
 		return dueDate;
@@ -260,9 +264,6 @@ public class Order implements Serializable {
 	public void setAmountSrp(BigDecimal amountSrp) {
 		this.amountSrp = amountSrp;
 	}
-
-
-
 	
 	@Override
 	public boolean equals(Object obj) {
@@ -280,6 +281,22 @@ public class Order implements Serializable {
 			return false;
 		}
 		return getId().equals(other.getId());
+	}
+
+	public LocalDateTime getDeliveryDate() {
+		return deliveryDate;
+	}
+
+	public void setDeliveryDate(LocalDateTime deliveryDate) {
+		this.deliveryDate = deliveryDate;
+	}
+
+	public BigDecimal getDiscount() {
+		return discount;
+	}
+
+	public void setDiscount(BigDecimal discount) {
+		this.discount = discount;
 	}
 
 }

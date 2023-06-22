@@ -33,7 +33,7 @@ public class CashPaymentDetails implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 	
-	@OneToOne(fetch = FetchType.EAGER, optional = false)
+	@ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "payment_id", nullable = false)
 	@Fetch(FetchMode.SELECT)
 	private Payment payment;
