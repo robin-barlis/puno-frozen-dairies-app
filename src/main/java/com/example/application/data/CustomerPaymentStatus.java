@@ -1,8 +1,6 @@
 package com.example.application.data;
 
 import java.math.BigDecimal;
-import java.text.NumberFormat;
-import java.util.Currency;
 
 import com.example.application.utils.PfdiUtil;
 import com.vaadin.flow.component.html.Span;
@@ -19,9 +17,6 @@ public enum CustomerPaymentStatus {
 		return paymentStatusName;
 	}
 	public Span getBadge(BigDecimal amount) {
-		NumberFormat formatter = NumberFormat.getCurrencyInstance();
-		String amountString = formatter.format(amount);
-		Currency cur = Currency.getInstance("PHP");
 		
 		Span badge = new Span(createIcon(this.equals(PARTIAL_PAYMENT) ? VaadinIcon.CLOCK : VaadinIcon.CHECK), new Span(PfdiUtil.getCurrencyAmount(amount)));
 		if (this.equals(PARTIAL_PAYMENT)) {

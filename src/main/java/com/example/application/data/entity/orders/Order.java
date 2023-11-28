@@ -56,7 +56,7 @@ public class Order implements Serializable {
 	@Fetch(FetchMode.SELECT)
 	private AppUser checkedByUser;
 
-	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER)
+	@OneToMany(cascade = {CascadeType.ALL}, fetch = FetchType.EAGER, orphanRemoval = true)
 	@JoinColumn(name = "order_id")
 	private Set<OrderItems> orderItems;
 	

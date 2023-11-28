@@ -93,7 +93,7 @@ public class InvoicesView extends AbstractPfdiView implements BeforeEnterObserve
 	private BeanValidationBinder<Customer> binder;
 
 	private final CustomerTagService customerTagService;
-	private final LocationTagService locationTagService;
+//	private final LocationTagService locationTagService;
 	private final CustomerService customerService;
 
 	private ListDataProvider<Customer> ldp = null;
@@ -107,7 +107,7 @@ public class InvoicesView extends AbstractPfdiView implements BeforeEnterObserve
 		super("Admin", "Admin");
 		this.customerTagService = customerTagService;
 		this.customerService = customerService;
-		this.locationTagService = locationTagService;
+//		this.locationTagService = locationTagService;
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
@@ -190,9 +190,6 @@ public class InvoicesView extends AbstractPfdiView implements BeforeEnterObserve
 			try {
 				prepareCustomer();
 				binder.writeBean(customer);
-				Integer locationTagId = locationTag.getValue().getId();
-				Integer customerTagId = customerTag.getValue().getId();
-
 
 				Customer updateCustomer = customerService.update(customer);
 				clearForm();

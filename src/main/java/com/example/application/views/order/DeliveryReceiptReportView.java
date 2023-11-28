@@ -1,23 +1,17 @@
 package com.example.application.views.order;
 
 import java.io.ByteArrayInputStream;
-import java.util.List;
 
 import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 
-import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.products.SizesService;
 import com.example.application.reports.DeliveryReceiptReport;
-import com.example.application.reports.OrderSummaryReport;
 import com.example.application.security.AuthenticatedUser;
-import com.example.application.utils.service.ReportConsolidatorService;
 import com.example.application.views.MainLayout;
-import com.google.gwt.thirdparty.guava.common.collect.Lists;
 import com.vaadin.componentfactory.pdfviewer.PdfViewer;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -40,8 +34,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.StreamResource;
 
-import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
-
 @PageTitle("Stock Orders")
 @Route(value = "order/deliveryReceiptReport/:id", layout = MainLayout.class)
 @RouteAlias(value = "/order/deliveryReceiptReport/:id", layout = MainLayout.class)
@@ -56,8 +48,6 @@ public class DeliveryReceiptReportView extends VerticalLayout implements BeforeE
 	private OrdersService ordersService;
 	private String orderId;
 
-	private AppUser appUser;
-	private SizesService sizesService;
 	private Div mainDiv = new Div();
 	private DeliveryReceiptReport deliveryReceiptReport;
 
@@ -66,9 +56,6 @@ public class DeliveryReceiptReportView extends VerticalLayout implements BeforeE
 	public DeliveryReceiptReportView(SizesService sizesService, OrdersService ordersService, AuthenticatedUser user, 
 			DeliveryReceiptReport deliveryReceiptReport) {
 		this.ordersService = ordersService;
-		this.appUser = user.get().get();
-		
-		this.sizesService = sizesService;
 		this.deliveryReceiptReport = deliveryReceiptReport;
 		addClassNames("administration-view");
 		

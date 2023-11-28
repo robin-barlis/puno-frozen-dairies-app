@@ -4,8 +4,6 @@ import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
-import net.bytebuddy.asm.Advice.This;
-
 public enum SoaPeriodType {
 	
 	CURRENT_MONTH("Current Month"),

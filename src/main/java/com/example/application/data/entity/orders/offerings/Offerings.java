@@ -1,14 +1,8 @@
 package com.example.application.data.entity.orders.offerings;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
 
-import javax.persistence.Basic;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -20,12 +14,8 @@ import javax.persistence.Table;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.Type;
 
 import com.example.application.data.entity.AppUser;
-import com.example.application.data.entity.customers.Customer;
-import com.example.application.data.entity.orders.OrderItems;
-import com.example.application.data.entity.payment.Payment;
 
 
 @Entity

@@ -14,14 +14,10 @@ import javax.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.example.application.data.entity.orders.Order;
-import com.example.application.data.entity.payment.Payment;
 import com.example.application.data.service.orders.OrderRepositoryCustom;
 import com.example.application.data.service.orders.OrderRepositoryCustomImpl;
 import com.example.application.data.service.orders.OrdersService;
-import com.example.application.data.service.payment.PaymentRepositoryCustom;
-import com.example.application.data.service.payment.PaymentRepositoryCustomImpl;
 import com.example.application.data.service.payment.PaymentsService;
-import com.example.application.reports.RemittancesReport;
 import com.example.application.reports.SalesReport;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.views.AbstractPfdiView;
@@ -47,18 +43,16 @@ import com.vaadin.flow.server.StreamResource;
 
 @PageTitle("Stock Orders")
 @Route(value = "reports/sales/", layout = MainLayout.class)
-@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" })
+@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES", "Accounting", "ACCOUNTING"  })
 @Uses(Icon.class)
 public class SalesReports extends AbstractPfdiView {
 
 
 	private static final long serialVersionUID = 2754507440441771890L;
 
-	private byte[] stockTransferData;
 
 	private VerticalLayout mainDiv = new VerticalLayout();
 	private VerticalLayout reportContainer = new VerticalLayout();
-	private AuthenticatedUser authenticatedUser;
     private SalesReport salesReport;
 	private OrderRepositoryCustom orderRepositoryCustom;
 
@@ -76,7 +70,6 @@ public class SalesReports extends AbstractPfdiView {
 		super("products-view", "Sales");
 		this.orderRepositoryCustom = orderRepositoryCustom;
 		this.salesReport = salesReport;
-		this.authenticatedUser = authenticatedUser;
 		addClassNames("administration-view");
 
 		populateReport(reportContainer);

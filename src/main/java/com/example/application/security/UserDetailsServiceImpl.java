@@ -1,11 +1,13 @@
 package com.example.application.security;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -33,8 +35,20 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("No user present with username: " + username);
         } else {
-            return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
-                    getAuthorities(user));
+        	boolean isExpired = user.getEndDateOfAccess() != null && user.getEndDateOfAccess().isBefore(LocalDate.now());
+        	boolean isNotYetActive = user.getStartDateOfAccess() != null && user.getStartDateOfAccess().isAfter(LocalDate.now());
+        	UserDetails userDetails =  User.builder()
+            .username(user.getUsername())
+            .password(user.getPassword())
+           
+            .authorities(getAuthorities(user))
+            .accountExpired(isExpired || isNotYetActive)
+            .disabled(!user.getEnabled())
+            .accountLocked(user.getLocked())
+            .build();
+//            return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
+//                    getAuthorities(user));
+        	return userDetails;
         }
     }
 

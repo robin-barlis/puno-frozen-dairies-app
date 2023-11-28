@@ -29,8 +29,10 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 	public List<Order> filterBy(Map<String, Object> criteriaMap) {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Order> query = cb.createQuery(Order.class);
+	
 		Root<Order> order = query.from(Order.class);
 		List<Predicate> predicates = Lists.newArrayList();
+		
 		
 		for (Entry<String, Object> entry : criteriaMap.entrySet()) {
 
@@ -78,7 +80,7 @@ public class OrderRepositoryCustomImpl implements OrderRepositoryCustom {
 		}
 
 		query.where(predicates.toArray(new Predicate[]{}));
-		query.orderBy(cb.asc(order.get("creationDate")));
+		query.orderBy(cb.desc(order.get("creationDate")));
 
 		return entityManager.createQuery(query).getResultList();
 	}

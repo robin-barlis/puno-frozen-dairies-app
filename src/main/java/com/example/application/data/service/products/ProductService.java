@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.Product;
 
 
@@ -18,6 +19,7 @@ import com.example.application.data.entity.products.Product;
 public class ProductService {
 	
 	private final ProductRepository repository;
+	
 
 	@Autowired
 	public ProductService(ProductRepository repository) {
@@ -43,6 +45,17 @@ public class ProductService {
 
 	
 	public Map<String, List<Product>> listAllByCategory() {
+		List<Product> products = repository.findAll(Sort.by(Sort.Direction.ASC, "sortingIndex"));
+		
+		Map<String, List<Product>> productCategoryMap = products.stream().collect(Collectors.groupingBy(e -> {
+			return e.getCategory().getCategoryType();	
+		}));
+		
+		
+		return productCategoryMap;
+	}
+	
+	public Map<String, List<Product>> getByCategory(Category category) {
 		List<Product> products = repository.findAll(Sort.by(Sort.Direction.ASC, "sortingIndex"));
 		
 		Map<String, List<Product>> productCategoryMap = products.stream().collect(Collectors.groupingBy(e -> {

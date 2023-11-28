@@ -105,7 +105,7 @@ public class ManageInventoryView extends AbstractPfdiView implements HasStyle {
 		VerticalLayout newItemInvetoryContainer = new VerticalLayout();
 		newItemInvetoryContainer.addClassNames("no-padding");
 		
-
+		
 		
 		product = new MultiSelectComboBox<>();
 		product.setLabel("Products");

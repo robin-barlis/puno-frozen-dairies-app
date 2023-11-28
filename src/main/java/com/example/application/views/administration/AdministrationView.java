@@ -24,7 +24,6 @@ import com.example.application.utils.service.EmailService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.constants.CssClassNamesConstants;
-import com.example.application.views.products.AddNewProductView;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -279,19 +278,19 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 
 	}
 
-	private void createTableFunctions(VerticalLayout tableFunctions) {
-
-		addProfileButton = new Button("Add Profile");
-		addProfileButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
-
-		FlexLayout flexWrapper = new FlexLayout();
-		flexWrapper.setFlexDirection(FlexDirection.ROW);
-		flexWrapper.setJustifyContentMode(JustifyContentMode.END);
-		flexWrapper.setClassName("button-layout");
-		flexWrapper.add(addProfileButton);
-
-		tableFunctions.add(flexWrapper);
-	}
+//	private void createTableFunctions(VerticalLayout tableFunctions) {
+//
+//		addProfileButton = new Button("Add Profile");
+//		addProfileButton.setClassName(CssClassNamesConstants.GENERIC_BUTTON_CLASS);
+//
+//		FlexLayout flexWrapper = new FlexLayout();
+//		flexWrapper.setFlexDirection(FlexDirection.ROW);
+//		flexWrapper.setJustifyContentMode(JustifyContentMode.END);
+//		flexWrapper.setClassName("button-layout");
+//		flexWrapper.add(addProfileButton);
+//
+//		tableFunctions.add(flexWrapper);
+//	}
 
 	@Override
 	public void beforeEnter(BeforeEnterEvent event) {
@@ -326,11 +325,11 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 				.<AppUser>of("<vaadin-icon icon='vaadin:${item.icon}' " + "style='width: var(--lumo-icon-size-xs); "
 						+ "height: var(--lumo-icon-size-xs); " + "color: ${item.color};'>"
 						+ "</vaadin-icon>&nbsp;&nbsp;${item.status}")
-				.withProperty("icon", user -> user.getEnabled() ? "circle" : "circle-thin")
+				.withProperty("icon", user -> isUserAccessValid(user) ? "circle" : "circle-thin")
 				.withProperty("color",
-						user -> user.getEnabled() ? "var(--lumo-primary-text-color)"
+						user -> isUserAccessValid(user) ? "var(--lumo-primary-text-color)"
 								: "var(--lumo-disabled-text-color)")
-				.withProperty("status", user -> user.getEnabled() ? "Active" : "Inactive");
+				.withProperty("status", user -> isUserAccessValid(user)? "Active" : "Inactive");
 
 
 		grid.addColumn(statusColumnRenderer).setHeader("Status").setSortable(true)
@@ -403,6 +402,19 @@ public class AdministrationView extends AbstractPfdiView implements BeforeEnterO
 		gridDivider.addClassName("hr-class-wrapper");
 		wrapper.add(searchFiltersLayout,gridDivider,grid);
 		verticalLayout.addAndExpand(wrapper);
+	}
+
+	private boolean isUserAccessValid(AppUser user) {
+		
+		boolean isActive = user.getEnabled();
+		
+		if (user.getEndDateOfAccess() == null ) {
+			return isActive;
+		}
+		
+		boolean isNotExpired = user.getEndDateOfAccess().isAfter(LocalDate.now());
+		
+		return isActive &&  isNotExpired;
 	}
 
 	private void changeStatus() {

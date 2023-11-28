@@ -7,4 +7,5 @@ import com.example.application.data.entity.products.Size;
 @Repository
 public interface SizesRepository extends JpaRepository<Size, Integer> {
 
+
 }

@@ -1,6 +1,7 @@
 package com.example.application.views.administration;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -31,18 +32,13 @@ public class ResetPasswordView extends VerticalLayout implements HasUrlParameter
 
     private static final long serialVersionUID = -1370960994436472023L;
 	private UserService userService;
-	private EmailService emailService;
 	private PasswordResetService passwordResetService;
 	private AppUser appuser;
 	PasswordReset reset = null;
 
     public ResetPasswordView(UserService userService, EmailService emailService, PasswordResetService passwordResetService) {
-		this.emailService = emailService;
 		this.userService = userService;
 		this.passwordResetService = passwordResetService;
-
-        
-
     }
 
 	private void createForm() {
@@ -55,39 +51,53 @@ public class ResetPasswordView extends VerticalLayout implements HasUrlParameter
 		header.setWidthFull();
 		
 		
-	
+
+		PasswordField confirmPassword = new PasswordField();
 		PasswordField passwordField = new PasswordField();
+		Button resetPasswordButton = new Button("Save Password");
+		resetPasswordButton.setEnabled(false);
+		
 		passwordField.setWidthFull();
 		passwordField.setLabel("Password");
 		passwordField.setHelperText("Must be at least 8 characters and contains at least one letter and one digit.");
 		passwordField.setPattern("^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$");
 		passwordField.setErrorMessage("Not a valid password");
+		passwordField.addValueChangeListener(e -> {
+			
+			if (Objects.nonNull(confirmPassword.getValue())  && Objects.nonNull(passwordField.getValue())) {
+				resetPasswordButton.setEnabled(true);
+			}
+			
+		});
 
 		
 		
-		PasswordField confirmPassword = new PasswordField();
 		confirmPassword.setWidthFull();
 		confirmPassword.setLabel("Confirm Password");
+		confirmPassword.addValueChangeListener(e -> {
+			
+			if (Objects.nonNull(confirmPassword.getValue())  && Objects.nonNull(passwordField.getValue())) {
+				resetPasswordButton.setEnabled(true);
+			}
+			
+		});
 
 	
 	
-		Button resetPasswordButton = new Button("Save Password");
 		resetPasswordButton.setWidthFull();
 		resetPasswordButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		resetPasswordButton.addClickListener(e-> {
 			boolean invalid = passwordField.isInvalid();
 			
 			if (invalid) {
-				System.out.println("1");
 				Notification.show("Invalid Password. Please set a valid password.")
 				.addThemeVariants(NotificationVariant.LUMO_ERROR);
 			} else if (!passwordField.getValue().equals(confirmPassword.getValue())) {
-				System.out.println("here");
+
 				confirmPassword.setErrorMessage("Passwords do not match. Please set valid passwords.");
 				confirmPassword.setInvalid(true);
 			} else {
 				confirmPassword.setInvalid(false);
-				System.out.println("setting password");
 				BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 				appuser.setPassword(encoder.encode(passwordField.getValue()));
 				

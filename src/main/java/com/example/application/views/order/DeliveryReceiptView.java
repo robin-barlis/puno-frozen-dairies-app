@@ -14,7 +14,6 @@ import org.vaadin.stefan.table.TableHead;
 import org.vaadin.stefan.table.TableHeaderCell;
 import org.vaadin.stefan.table.TableRow;
 
-import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
 import com.example.application.data.service.orders.DocumentTrackingNumberService;
@@ -70,17 +69,10 @@ public class DeliveryReceiptView extends VerticalLayout implements BeforeEnterOb
 
 	private BigDecimal totalAmount = BigDecimal.valueOf(0);
 
-	private Span totalAmountLabel;
-	private AppUser appUser;
-
-	private DocumentTrackingNumberService documentTrackingNumberService;
-
 
 	@Autowired
 	public DeliveryReceiptView(OrdersService ordersService, AuthenticatedUser user, DocumentTrackingNumberService documentTrackingNumberService) {
 		this.ordersService = ordersService;
-		this.appUser = user.get().get();
-		this.documentTrackingNumberService = documentTrackingNumberService;
 		addClassNames("administration-view");
 		
 		addChildrenToContentHeaderContainer(this);

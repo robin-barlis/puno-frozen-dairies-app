@@ -4,10 +4,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
-import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
-import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,7 +18,6 @@ import com.cloudinary.utils.StringUtils;
 import com.example.application.data.PaymentMode;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.payment.BankRemittancePaymentDetails;
-import com.example.application.data.entity.payment.ChequePaymentDetails;
 import com.example.application.data.entity.payment.Payment;
 import com.example.application.utils.PfdiUtil;
 

@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import javax.annotation.security.RolesAllowed;
 
 import org.hibernate.Hibernate;
-import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 

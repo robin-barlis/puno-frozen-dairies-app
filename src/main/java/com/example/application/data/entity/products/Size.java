@@ -33,7 +33,17 @@ public class Size implements Serializable {
 	
 	private String sizeCategory;
 	
+	private Integer sizeOrder;
 	
+	
+	public Integer getSizeOrder() {
+		return sizeOrder;
+	}
+
+	public void setSizeOrder(Integer sizeOrder) {
+		this.sizeOrder = sizeOrder;
+	}
+
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "pfdi_size_customer_tag_mapping", 
 			joinColumns = {@JoinColumn(name = "size_id") },

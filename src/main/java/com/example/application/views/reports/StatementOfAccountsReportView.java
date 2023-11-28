@@ -43,14 +43,10 @@ import com.vaadin.flow.server.StreamResource;
 
 @PageTitle("Statement of Account")
 @Route(value = "reports/accounts/StatementOfAccount", layout = MainLayout.class)
-@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" })
+@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" , "Accounting", "ACCOUNTING" })
 @Uses(Icon.class)
 public class StatementOfAccountsReportView extends AbstractPfdiView {
-
-
 	private static final long serialVersionUID = 2754507440441771890L;
-
-	private byte[] stockTransferData;
 
 	private VerticalLayout mainDiv = new VerticalLayout();
 	private VerticalLayout reportContainer = new VerticalLayout();

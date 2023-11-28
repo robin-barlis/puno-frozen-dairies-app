@@ -1,12 +1,9 @@
 package com.example.application.utils.service;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Singleton;
@@ -18,6 +15,7 @@ public class CloudinaryService {
 	
 	private final Cloudinary cloudinary = Singleton.getCloudinary();
 
+	@SuppressWarnings("rawtypes")
 	public String uploadFile(File file) {
 	    try {
 	        Map uploadResult = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());

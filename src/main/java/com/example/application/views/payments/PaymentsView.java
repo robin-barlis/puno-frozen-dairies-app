@@ -16,15 +16,12 @@ import org.springframework.data.domain.Sort;
 import org.vaadin.klaudeta.PaginatedGrid;
 
 import com.example.application.data.CustomerPaymentStatus;
-import com.example.application.data.OrderStatus;
 import com.example.application.data.PaymentMode;
 import com.example.application.data.PaymentStatus;
-import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
 import com.example.application.data.service.customers.CustomerService;
-import com.example.application.data.service.orders.OrderRepositoryCustom;
 import com.example.application.data.service.orders.OrderRepositoryCustomImpl;
 import com.example.application.data.service.orders.OrdersService;
 import com.example.application.data.service.payment.PaymentRepositoryCustomImpl;
@@ -78,7 +75,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.NumberField;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -93,7 +89,7 @@ import com.vaadin.flow.router.RouteParameters;
 @PageTitle("Customer Payments")
 @Route(value = "payments", layout = MainLayout.class)
 @RouteAlias(value = "/payments", layout = MainLayout.class)
-@RolesAllowed({ "Admin", "Superuser", "ADMIN", "Checker", "CHECKER" })
+@RolesAllowed({ "Admin", "Superuser", "ADMIN", "Accounting", "ACCOUNTING", "Sales", "SALES" })
 @Uses(Icon.class)
 public class PaymentsView extends AbstractPfdiView implements BeforeEnterObserver {
 
@@ -109,8 +105,6 @@ public class PaymentsView extends AbstractPfdiView implements BeforeEnterObserve
 	List<Payment> payments;
 	List<Customer> customers;
 	private Dialog searchOrdersDialog = new Dialog();
-	private final OrderRepositoryCustom orderRepositoryCustom;
-	private AppUser appUser;
 	private PaymentsService paymentsService;
 
 	private PaymentRepositoryCustomImpl paymentRepositoryCustom;
@@ -124,10 +118,8 @@ public class PaymentsView extends AbstractPfdiView implements BeforeEnterObserve
 		super("Admin", "Admin");
 		this.customerService = customerService;
 		this.ordersService = ordersService;
-		this.orderRepositoryCustom = orderRepositoryCustom;
 		this.paymentsService = paymentsService;
 		this.paymentRepositoryCustom = paymentRepositoryCustom;
-		this.appUser = user.get().get();
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();

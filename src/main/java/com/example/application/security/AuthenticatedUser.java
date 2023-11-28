@@ -33,7 +33,9 @@ public class AuthenticatedUser implements Serializable{
     }
 
     public Optional<AppUser> get() {
-        return getAuthentication().map(authentication -> userRepository.findByUsername(authentication.getName()));
+        return getAuthentication().map(authentication -> {
+        	return userRepository.findByUsername(authentication.getName());
+        });
     }
 
     public void logout() {

@@ -28,7 +28,6 @@ import com.example.application.data.service.payment.PaymentRepositoryCustomImpl;
 import com.example.application.data.service.payment.PaymentsService;
 import com.example.application.reports.OnlinePaymentSummaryReport;
 import com.example.application.reports.OutstandingChequeSummaryReport;
-import com.example.application.reports.RemittancesReport;
 import com.example.application.reports.SubsidiaryLedgerReport;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.utils.PfdiUtil;
@@ -63,20 +62,17 @@ import com.vaadin.flow.server.StreamResource;
 
 @PageTitle("Stock Orders")
 @Route(value = "reports/accounts/", layout = MainLayout.class)
-@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" })
+@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES", "Accounting", "ACCOUNTING" })
 @Uses(Icon.class)
 public class AccountsReportsView extends AbstractPfdiView {
 
 
 	private static final long serialVersionUID = 2754507440441771890L;
 
-	private byte[] stockTransferData;
-
 	private VerticalLayout mainDiv = new VerticalLayout();
 	private VerticalLayout reportContainer = new VerticalLayout();
 
 	private VerticalLayout formContainer = new VerticalLayout();
-	private AuthenticatedUser authenticatedUser;
     private OutstandingChequeSummaryReport chequeSummaryReport;
 
     private OnlinePaymentSummaryReport onlinePaymentSummaryReport;
@@ -123,7 +119,6 @@ public class AccountsReportsView extends AbstractPfdiView {
 		super("products-view", "Remittances");
 		this.paymentRepositoryCustom = paymentRepositoryCustom;
 		this.chequeSummaryReport = chequeSummaryReport;
-		this.authenticatedUser = authenticatedUser;
 		this.customerService = customerService;
 		this.userService = userService;
 		this.onlinePaymentSummaryReport = onlinePaymentSummaryReport;

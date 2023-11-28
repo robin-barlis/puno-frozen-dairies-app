@@ -43,6 +43,12 @@ public class SizesService {
 		return repository.save((Size)entity);
 		
 	}
+	
+	public List<Size> updateAll(List<Size> entities) {
+		return repository.saveAll(entities);
+		
+	}
+
 
 
 }

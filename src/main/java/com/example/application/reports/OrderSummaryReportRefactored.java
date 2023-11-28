@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import com.example.application.data.Categories;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
-import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.Size;
 import com.example.application.utils.PfdiUtil;
 import com.google.common.collect.Maps;
@@ -29,7 +28,6 @@ import ar.com.fdvs.dj.domain.Style;
 import ar.com.fdvs.dj.domain.builders.ColumnBuilder;
 import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
 import ar.com.fdvs.dj.domain.builders.DJBuilderException;
-import ar.com.fdvs.dj.domain.builders.DynamicReportBuilder;
 import ar.com.fdvs.dj.domain.builders.FastReportBuilder;
 import ar.com.fdvs.dj.domain.builders.StyleBuilder;
 import ar.com.fdvs.dj.domain.builders.SubReportBuilder;
@@ -46,6 +44,7 @@ import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
+@SuppressWarnings("deprecation")
 @Service
 public class OrderSummaryReportRefactored {
 
@@ -53,33 +52,14 @@ public class OrderSummaryReportRefactored {
 	protected JasperReport jr;
 	protected DynamicReport dr;
 	private Order order;
-	private List<Size> flavorSizes;
 
 	private List<Size> coneSizes;
-
-	private List<Size> otherSizes;
 	ArrayList<HashMap<String, String>> rowsDataList;
 
 	public byte[] buildReport(Order order, Set<OrderItems> orderList, List<Size> sizes)
 			throws ColumnBuilderException, ClassNotFoundException, JRException {
 		this.order = order;
-		this.flavorSizes = sizes.stream().filter(e -> {
-			Set<Category> categories = e.getCategory();
-			return categories.stream()
-					.anyMatch(catergory -> Categories.Flavors.name().equals(catergory.getCategoryType()));
-		}).collect(Collectors.toList());
 
-		this.coneSizes = sizes.stream().filter(e -> {
-			Set<Category> categories = e.getCategory();
-			return categories.stream()
-					.anyMatch(catergory -> Categories.Cones.name().equals(catergory.getCategoryType()));
-		}).collect(Collectors.toList());
-
-		this.otherSizes = sizes.stream().filter(e -> {
-			Set<Category> categories = e.getCategory();
-			return categories.stream()
-					.anyMatch(catergory -> Categories.Others.name().equals(catergory.getCategoryType()));
-		}).collect(Collectors.toList());
 
 		rowsDataList = Lists.newArrayList();
 
@@ -157,7 +137,7 @@ public class OrderSummaryReportRefactored {
 		return sb.build();
 	}
 
-	private AbstractColumn createColumn(String property, Class type, String title, int width, Style headerStyle,
+	private AbstractColumn createColumn(String property, @SuppressWarnings("rawtypes") Class type, String title, int width, Style headerStyle,
 			Style detailStyle) throws ColumnBuilderException {
 		AbstractColumn columnState = ColumnBuilder.getNew().setColumnProperty(property, type.getName()).setTitle(title)
 				.setWidth(Integer.valueOf(width)).setStyle(detailStyle).setHeaderStyle(headerStyle).build();
@@ -246,38 +226,38 @@ public class OrderSummaryReportRefactored {
 		return rb.build();
 	}
 	
-	private DynamicReport createFlavorSubreport(Style headerStyle, Style detailTextStyle, Style detailNumberStyle) throws ColumnBuilderException, ClassNotFoundException {
-		FastReportBuilder rb = new FastReportBuilder();
-
-		
-		AbstractColumn flavorColumn = createColumn("keyFlavorName", String.class, "Flavor", 140, headerStyle,
-				detailTextStyle);
-
-		rb.addColumn(flavorColumn);
-		for (Size size : flavorSizes) {
-			AbstractColumn column = createColumn("key" + size.getId(), String.class, size.getSizeName(), 55,
-					headerStyle, detailTextStyle);
-
-			rb.addColumn(column);
-		}
-		return rb.build();
-	}
-	
-	private DynamicReport createOtherSubreport(Style headerStyle, Style detailTextStyle, Style detailNumberStyle) throws ColumnBuilderException, ClassNotFoundException {
-		FastReportBuilder rb = new FastReportBuilder();
-
-		
-		AbstractColumn flavorColumn = createColumn("keyOtherName", String.class, "Others", 140, headerStyle,
-				detailTextStyle);
-
-		rb.addColumn(flavorColumn);
-		for (Size size : otherSizes) {
-			AbstractColumn column = createColumn("key" + size.getId(), String.class, size.getSizeName(), 55,
-					headerStyle, detailTextStyle);
-
-			rb.addColumn(column);
-		}
-		return rb.build();
-	}
+//	private DynamicReport createFlavorSubreport(Style headerStyle, Style detailTextStyle, Style detailNumberStyle) throws ColumnBuilderException, ClassNotFoundException {
+//		FastReportBuilder rb = new FastReportBuilder();
+//
+//		
+//		AbstractColumn flavorColumn = createColumn("keyFlavorName", String.class, "Flavor", 140, headerStyle,
+//				detailTextStyle);
+//
+//		rb.addColumn(flavorColumn);
+//		for (Size size : flavorSizes) {
+//			AbstractColumn column = createColumn("key" + size.getId(), String.class, size.getSizeName(), 55,
+//					headerStyle, detailTextStyle);
+//
+//			rb.addColumn(column);
+//		}
+//		return rb.build();
+//	}
+//	
+//	private DynamicReport createOtherSubreport(Style headerStyle, Style detailTextStyle, Style detailNumberStyle) throws ColumnBuilderException, ClassNotFoundException {
+//		FastReportBuilder rb = new FastReportBuilder();
+//
+//		
+//		AbstractColumn flavorColumn = createColumn("keyOtherName", String.class, "Others", 140, headerStyle,
+//				detailTextStyle);
+//
+//		rb.addColumn(flavorColumn);
+//		for (Size size : otherSizes) {
+//			AbstractColumn column = createColumn("key" + size.getId(), String.class, size.getSizeName(), 55,
+//					headerStyle, detailTextStyle);
+//
+//			rb.addColumn(column);
+//		}
+//		return rb.build();
+//	}
 
 }

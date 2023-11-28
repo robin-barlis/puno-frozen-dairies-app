@@ -74,7 +74,7 @@ import com.vaadin.flow.spring.annotation.UIScope;
 @PageTitle("Create Payment")
 @Route(value = "payments/createPayment/:paymentId?", layout = MainLayout.class)
 @RouteAlias(value = "payments/createPayment/", layout = MainLayout.class)
-@RolesAllowed({ "Admin", "Superuser", "ADMIN", "Checker", "CHECKER" })
+@RolesAllowed({ "Admin", "Superuser", "ADMIN", "Accounting", "ACCOUNTING", "Sales", "SALES" })
 @UIScope
 public class CreatePaymentView extends AbstractPfdiView implements HasComponents, HasStyle, HasUrlParameter<String>  {
 
@@ -297,7 +297,7 @@ public class CreatePaymentView extends AbstractPfdiView implements HasComponents
 		ownerName.setWidth("50%");
 		
 	
-		List<Customer> availableCustomers = customerService.listAll(Sort.unsorted());
+		customerService.listAll(Sort.unsorted());
 		
 		
 		

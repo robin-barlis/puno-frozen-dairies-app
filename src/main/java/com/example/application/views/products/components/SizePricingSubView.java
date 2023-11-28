@@ -3,7 +3,6 @@ package com.example.application.views.products.components;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import com.example.application.data.entity.products.Category;
 import com.example.application.data.entity.products.CustomerTag;
@@ -26,7 +25,7 @@ public class SizePricingSubView extends VerticalLayout {
 	
 
 	private HashSet<LocationTagPriceFieldMapping> fieldMapping = new HashSet<>();
-
+	
 	public SizePricingSubView(Size size, Category category, Map<String, ProductPrice> sizeProductPrice) {
 		this.category = category;
 		this.size = size;
@@ -43,7 +42,7 @@ public class SizePricingSubView extends VerticalLayout {
 		sizeField.setWidthFull();
 		sizeField.setLabel("Size");
 
-		add(sizeField);
+		//add(sizeField);
 		
 		for (CustomerTag customerTag : size.getCustomerTagSet()) {
 			add(createSizeFormLayouts(customerTag));

@@ -31,7 +31,6 @@ public class Category implements Serializable {
 
 	private String categoryType;
 	
-	
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "pfdi_category_size_mapping", 
 			joinColumns = {@JoinColumn(name = "category_id") },

@@ -14,10 +14,10 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.annotation.security.PermitAll;
 import javax.imageio.ImageIO;
 
-import org.apache.commons.io.FileUtils;
+import javax.annotation.security.PermitAll;
+
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -44,9 +44,9 @@ import com.google.gwt.thirdparty.guava.common.collect.Sets;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
 import com.vaadin.flow.component.combobox.MultiSelectComboBox;
@@ -97,9 +97,9 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 	private ProductService productService;
 	private HashSet<SizePricingSubView> pricingSubViewSet = new HashSet<>();
 	private ItemStockService itemStockService;
-	private AuthenticatedUser authenticatedUser;
 	private ProductPriceService priceService;
 	private CheckboxGroup<String> checkboxGroup;
+	Accordion sizesAccordion = new Accordion();
 	
 	Binder<Product> binder = new Binder<>();
 	private Integer productId;
@@ -119,7 +119,6 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		addClassNames("products-view");
 		this.productService = productService;
 		this.itemStockService = itemStockService;
-		this.authenticatedUser = authenticatedUser;
 		this.priceService = priceService;
 
 		this.categories = categoryService.listAll(Sort.by("id"));
@@ -187,7 +186,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 
 			try {
 				BufferedImage bufferedImage = ImageIO.read(fileData);
-				file = new File(FileUtils.getTempDirectoryPath() + fileName);
+				file = new File(fileName);
 				file.createNewFile();
 				
 				
@@ -209,18 +208,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 				Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.BOTTOM_START);
 				notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 			} 
-			//processFile(fileData, fileName, contentLength, mimeType);
 
-		});
-		
-		
-		uploadImage.addAllFinishedListener(event -> {
-			 com.vaadin.flow.component.upload.UploadI18N.Uploading.Error error = i18N.getUploading().getError();
-			 
-			 if (error != null) {
-				 Notification notification = Notification.show("Upload failed. Please try again. If issue persist, please contact system administrator.", 5000, Notification.Position.BOTTOM_START);
-					notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
-			 }
 		});
 		
 		Button uploadButton = new Button();
@@ -330,6 +318,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		sizes.setPlaceholder("Select Sizes");
 		sizes.setItemLabelGenerator(e -> e.getSizeName());
 		sizes.setWidthFull();
+		newAddSizeContainer.add(sizesAccordion);
 		sizes.addValueChangeListener(e -> {
 			
 			Set<Size> newValue = e.getValue();
@@ -362,7 +351,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 				Set<SizePricingSubView> viewToDelete = Sets.newHashSet();
 				pricingSubViewSet.forEach(subView -> {
 					if (subView.getSize().getSizeName().equalsIgnoreCase(removedSize.getSizeName())) {
-						newAddSizeContainer.remove(subView);
+						sizesAccordion.remove(subView);
 						viewToDelete.add(subView);
 					}
 				});
@@ -391,10 +380,9 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 					effectiveEndDateValue -> effectiveStartDate.getValue().compareTo(effectiveEndDateValue) < 0, 
 					"Effective End Date must not be earlier than Effective Start Date")
 			.bind(Product::getEffectiveEndDate,Product::setEffectiveEndDate);
-		binder.forField(checkboxGroup)
-			.bind(e -> {
-				
-				if  (e.getActiveStatus()) {
+		binder.forField(checkboxGroup).bind(e -> {
+				boolean isActiveStatus = e.getActiveStatus() != null && e.getActiveStatus();
+				if  (isActiveStatus) {
 					return Sets.newHashSet("Active");
 				}
 				return Sets.newHashSet();
@@ -492,8 +480,10 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 		addSizeButtonLayout.addClassNames("no-padding", "padding-top-large");
 		//addSizeButtonLayout.add(addSizeButton);
 		addSizeButtonLayout.add(actionsButtonLayout);
+		
+		sizesAccordion.setWidthFull();
 
-		content.add(categoryNameImageWrapper, sizeContainer, newAddSizeContainer, addSizeButtonLayout);
+		content.add(categoryNameImageWrapper, sizeContainer, sizesAccordion, addSizeButtonLayout);
 
 	}
 
@@ -519,6 +509,7 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 	private Product createProduct() {
 		if (product == null) {
 			product = new Product();
+			product.setSortingIndex(0);
 
 			if (file != null) {
 				try {
@@ -565,8 +556,8 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 	private void addNewSizeFormSection(VerticalLayout addSizeButtonLayout, Size size, Map<String, ProductPrice> sizeProductPrice) {
 		SizePricingSubView pricingSubView = new SizePricingSubView(size, category.getValue(), sizeProductPrice);
 		pricingSubViewSet.add(pricingSubView);
-		addSizeButtonLayout.add(pricingSubView);
-
+		//addSizeButtonLayout.add(pricingSubView);
+		sizesAccordion.add(size.getSizeName(), pricingSubView);
 	}
 
 	@Override
@@ -585,35 +576,37 @@ public class AddNewProductView extends AbstractPfdiView implements HasComponents
 			
 			product = productService.get(productId).orElse(null);
 
-			
-			if  (product.getActiveStatus()) {
-				checkboxGroup.setValue(Sets.newHashSet("Active"));
-			} else {
-				checkboxGroup.setValue(Sets.newHashSet());
-			}
-			productPrice = product.getProductPrices();
 			if (product != null) {
-				productName.setValue(product.getProductName());
-				
-				if (product.getProductPictureUrl() != null) {
-					image.setSrc(product.getProductPictureUrl());
+				if  (product.getActiveStatus()) {
+					checkboxGroup.setValue(Sets.newHashSet("Active"));
 				} else {
-					image.setSrc(imageUrl);
+					checkboxGroup.setValue(Sets.newHashSet());
 				}
-				shortCode.setValue(product.getProductShortCode());
-				effectiveStartDate.setValue(product.getEffectiveStartDate());
-				effectiveEndDate.setValue(product.getEffectiveEndDate());
-				Optional<Category> optionalCategory = categories.stream().filter(category -> category.getId().equals(product.getCategory().getId())).findFirst();
-				if (optionalCategory.isPresent()) {
-					category.setValue(optionalCategory.get());
+				productPrice = product.getProductPrices();
+				if (product != null) {
+					productName.setValue(product.getProductName());
+					
+					if (product.getProductPictureUrl() != null) {
+						image.setSrc(product.getProductPictureUrl());
+					} else {
+						image.setSrc(imageUrl);
+					}
+					shortCode.setValue(product.getProductShortCode());
+					effectiveStartDate.setValue(product.getEffectiveStartDate());
+					effectiveEndDate.setValue(product.getEffectiveEndDate());
+					Optional<Category> optionalCategory = categories.stream().filter(category -> category.getId().equals(product.getCategory().getId())).findFirst();
+					if (optionalCategory.isPresent()) {
+						category.setValue(optionalCategory.get());
+					}
+					
+					
+					Set<Integer> sizesMap = product.getProductPrices().stream().map(e-> e.getSize().getId()).collect(Collectors.toSet());
+					Set<Size> productSizes = category.getValue().getSizeSet().stream().filter(catSizes -> sizesMap.contains(catSizes.getId())).collect(Collectors.toSet());
+					sizes.setValue(productSizes);
+					
 				}
-				
-				
-				Set<Integer> sizesMap = product.getProductPrices().stream().map(e-> e.getSize().getId()).collect(Collectors.toSet());
-				Set<Size> productSizes = category.getValue().getSizeSet().stream().filter(catSizes -> sizesMap.contains(catSizes.getId())).collect(Collectors.toSet());
-				sizes.setValue(productSizes);
-				
 			}
+			
 		}
 		
 	}

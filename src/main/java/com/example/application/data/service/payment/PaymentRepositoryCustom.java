@@ -3,7 +3,6 @@ package com.example.application.data.service.payment;
 import java.util.List;
 import java.util.Map;
 
-import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
 
 public interface PaymentRepositoryCustom {

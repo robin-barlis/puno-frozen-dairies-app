@@ -52,7 +52,6 @@ public class CategoryFormDialog  extends ConfirmDialog {
 
 		Hr divider1 = new Hr();
 
-		Hr divider2 = new Hr();
 
 		categoryName = new TextField("Category Name");
 		categoryName.setRequired(true);
@@ -106,7 +105,7 @@ public class CategoryFormDialog  extends ConfirmDialog {
 		saveButton.addClickListener(e -> {
 			try {
 				if (category == null) {
-					category = new Category();
+					category = new Category();				
 				}
 				binder.writeBean(category);
 				category.setSizeSet(sizeComboBox.getValue());

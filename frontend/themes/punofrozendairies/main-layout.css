@@ -50,12 +50,15 @@ header nav a[highlight]:not([active])::after {
 }
 
 .user-profile-wrapper {
-	position: absolute;
-	right: 0px;
-	top: 60px;
-	background-color: #FFFFFF;
-	font-size: var(--lumo-font-size-s);
-	z-index: 1
+	height: 93vh;
+    position: absolute;
+    right: 0px;
+    top: 59px;
+    background-color: rgb(255, 255, 255);
+    font-size: var(--lumo-font-size-s);
+    z-index: 100;
+    overflow: scroll;
+    max-height: 93vh;
 }
 
 .bold-label {

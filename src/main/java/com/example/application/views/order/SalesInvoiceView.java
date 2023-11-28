@@ -20,7 +20,6 @@ import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Hr;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.menubar.MenuBarVariant;
@@ -34,9 +33,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import com.vaadin.flow.server.StreamResource;
-
-import ar.com.fdvs.dj.domain.builders.ColumnBuilderException;
-import net.sf.jasperreports.engine.JRException;
 
 @PageTitle("Sales Invoice")
 @Route(value = "order/salesInvoice/:id", layout = MainLayout.class)
@@ -131,21 +127,21 @@ public class SalesInvoiceView extends VerticalLayout implements BeforeEnterObser
 		mainDiv.setHeight("75%");
 	}
 
-	private void createFooterDiv(Div mainDiv) {
-		Div disclaimerDiv = new Div();
-		Span disclaimer1 = new Span("THIS SALES INVOICE SHALL BE VALID FOR FIVE (5) YEARS FROM THE DATE OF RELEASE..");
-		disclaimerDiv.addClassNames("report-header-text-subheading", "padding-bottom-large");
-		disclaimerDiv.add(disclaimer1);
-
-		Div signatureLine = new Div();
-		Span signatureText = new Span("Authorized Signature");
-		signatureText.addClassNames("float-right", "text-align-center");
-		signatureLine.addClassNames("report-header-text-subheading", "padding-bottom-large", "float-right",
-				"signature-line");
-		signatureLine.add(signatureText);
-
-		mainDiv.add(disclaimerDiv, signatureLine);
-	}
+//	private void createFooterDiv(Div mainDiv) {
+//		Div disclaimerDiv = new Div();
+//		Span disclaimer1 = new Span("THIS SALES INVOICE SHALL BE VALID FOR FIVE (5) YEARS FROM THE DATE OF RELEASE..");
+//		disclaimerDiv.addClassNames("report-header-text-subheading", "padding-bottom-large");
+//		disclaimerDiv.add(disclaimer1);
+//
+//		Div signatureLine = new Div();
+//		Span signatureText = new Span("Authorized Signature");
+//		signatureText.addClassNames("float-right", "text-align-center");
+//		signatureLine.addClassNames("report-header-text-subheading", "padding-bottom-large", "float-right",
+//				"signature-line");
+//		signatureLine.add(signatureText);
+//
+//		mainDiv.add(disclaimerDiv, signatureLine);
+//	}
 
 	private Integer generateStockOrderNumber() {
 		return ordersService.getLastId() + 1;

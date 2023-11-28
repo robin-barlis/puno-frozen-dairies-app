@@ -16,19 +16,18 @@ import org.springframework.stereotype.Service;
 
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
-import com.example.application.data.entity.stock.ItemStock;
 
 @Service
 public class OrdersService implements Serializable{
 
 	private static final long serialVersionUID = 1L;
 	private final OrdersRepository repository;
-	private final OrderRepositoryCustom orderRepositoryCustom;
+	//private final OrderRepositoryCustom orderRepositoryCustom;
 
 	@Autowired
 	public OrdersService(OrdersRepository repository, OrderRepositoryCustomImpl orderRepositoryCustomImpl) {
 		this.repository = repository;
-		this.orderRepositoryCustom = orderRepositoryCustomImpl;
+	//	this.orderRepositoryCustom = orderRepositoryCustomImpl;
 	}
 
 	public Optional<Order> get(Integer id) {
@@ -64,9 +63,9 @@ public class OrdersService implements Serializable{
 
 
 	public Order update(Object entity) {
-		Order order = repository.save((Order) entity);
+		//Order order = repository.save((Order) entity);
 		
-		List<ItemStock> itemInv = order.getOrderItems().stream().map(e -> e.getItemInventory()).collect(Collectors.toList());
+		//List<ItemStock> itemInv = order.getOrderItems().stream().map(e -> e.getItemInventory()).collect(Collectors.toList());
 
 		return repository.save((Order) entity);
 

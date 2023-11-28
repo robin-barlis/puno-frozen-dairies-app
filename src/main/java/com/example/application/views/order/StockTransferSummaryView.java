@@ -16,7 +16,6 @@ import org.vaadin.klaudeta.PaginatedGrid;
 
 import com.example.application.data.OrderStatus;
 import com.example.application.data.PaymentStatus;
-import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
@@ -96,9 +95,6 @@ public class StockTransferSummaryView extends AbstractPfdiView implements Before
 
 	private ListDataProvider<Order> ldp = null;
 	List<Order> orders;
-	private AppUser appUser;
-	//private OrderSummaryReport2 orderSummaryReport;
-	private SizesService sizesService;
 	List<Customer> customers;
 	private Dialog searchOrdersDialog = new Dialog();
 	private final OrderRepositoryCustom orderRepositoryCustom;
@@ -110,8 +106,6 @@ public class StockTransferSummaryView extends AbstractPfdiView implements Before
 		super("Admin", "Admin");
 		this.customerService = customerService;
 		this.ordersService = ordersService;
-		this.sizesService = sizesService;
-		this.appUser = user.get().get();
 		this.orderRepositoryCustom = orderRepositoryCustom;
 		addClassNames("administration-view");
 
@@ -520,8 +514,6 @@ public class StockTransferSummaryView extends AbstractPfdiView implements Before
 			paymentDetailsLayout.setWidthFull();
 			paymentDetailsLayout.setSpacing(false);
 			
-			Customer customer = order.getCustomer();
-			
 			List<Payment> payments = order.getPayments();
 			
 			HorizontalLayout paymentStatusWrapper = new HorizontalLayout();
@@ -621,23 +613,12 @@ public class StockTransferSummaryView extends AbstractPfdiView implements Before
 
         Button printAllButton = new Button(new Icon(VaadinIcon.PRINT) );
         printAllButton.setTooltipText("Print All Documents");
-        MenuItem printAll = printStockOrderDocs.addItem(printAllButton);
-        
-        
         
         MenuBar options = new MenuBar();
         options.addThemeVariants(MenuBarVariant.LUMO_TERTIARY, MenuBarVariant.LUMO_ICON);
         
         MenuItem optionsMenu = options.addItem(new Icon(VaadinIcon.COG));
         SubMenu optionsMenuSubItems = optionsMenu.getSubMenu();
-//        MenuItem viewOrders = optionsMenuSubItems.addItem("View");
-//        
-//        SubMenu viewOrdersSubItem = viewOrders.getSubMenu();
-//        
-//        viewOrdersSubItem.addItem("Today's orders");
-//        viewOrdersSubItem.addItem("This week's orders");
-//        viewOrdersSubItem.addItem("This month's orders");
-//        optionsMenuSubItems.add(new Hr());
         MenuItem rowsPerPage = optionsMenuSubItems.addItem("Rows per page");
         
         SubMenu rowsPerPageSubItem = rowsPerPage.getSubMenu();
@@ -734,57 +715,55 @@ public class StockTransferSummaryView extends AbstractPfdiView implements Before
 		secondaryActionsLayout.setWidthFull();
 		secondaryActionsLayout.add(searchFiltersLayout, printButtonContainer);
 		
-		VerticalLayout searchFields = createSearchLayout();
-		
 		wrapper.add(secondaryActionsLayout, new Hr(),  grid);
 		verticalLayout.addAndExpand(wrapper);
 	}
 
-	private VerticalLayout createSearchLayout() {
-		VerticalLayout fields = new VerticalLayout();
-		
-		HorizontalLayout orderFields = new HorizontalLayout();
-		
-		
-		TextField orderId = new TextField("Order ID");
-		
-		customers = customerService.listAll(Sort.by("id"));
-		MultiSelectComboBox<Customer> customersDropdown = new MultiSelectComboBox<>();
-		customersDropdown.setLabel("Customer");
-		customersDropdown.setItemLabelGenerator(e -> {
-			return e.getStoreName();
-		});
-		customersDropdown.setItems(customers);
-
-		DatePicker orderDateTo = new DatePicker("Order From To");
-		orderDateTo.setValue(LocalDate.now());
-		
-		DatePicker orderDateFrom = new DatePicker("Order From Date");
-		orderDateFrom.setValue(LocalDate.now());
-		orderDateFrom.addValueChangeListener(e-> {
-			
-			if (e.getValue() != null) {
-
-				orderDateTo.setMin(orderDateFrom.getValue());
-			}
-		});
-		
-		
-		HorizontalLayout orderDateFields = new HorizontalLayout();
-		orderDateFields.add(orderDateFrom, orderDateTo);
-		
-		
-		
-		
-		orderFields.add(orderId, customersDropdown, orderDateFields);
-		
-		
-		fields.add(orderFields);
-		
-		
-		
-		return fields;
-	}
+//	private VerticalLayout createSearchLayout() {
+//		VerticalLayout fields = new VerticalLayout();
+//		
+//		HorizontalLayout orderFields = new HorizontalLayout();
+//		
+//		
+//		TextField orderId = new TextField("Order ID");
+//		
+//		customers = customerService.listAll(Sort.by("id"));
+//		MultiSelectComboBox<Customer> customersDropdown = new MultiSelectComboBox<>();
+//		customersDropdown.setLabel("Customer");
+//		customersDropdown.setItemLabelGenerator(e -> {
+//			return e.getStoreName();
+//		});
+//		customersDropdown.setItems(customers);
+//
+//		DatePicker orderDateTo = new DatePicker("Order From To");
+//		orderDateTo.setValue(LocalDate.now());
+//		
+//		DatePicker orderDateFrom = new DatePicker("Order From Date");
+//		orderDateFrom.setValue(LocalDate.now());
+//		orderDateFrom.addValueChangeListener(e-> {
+//			
+//			if (e.getValue() != null) {
+//
+//				orderDateTo.setMin(orderDateFrom.getValue());
+//			}
+//		});
+//		
+//		
+//		HorizontalLayout orderDateFields = new HorizontalLayout();
+//		orderDateFields.add(orderDateFrom, orderDateTo);
+//		
+//		
+//		
+//		
+//		orderFields.add(orderId, customersDropdown, orderDateFields);
+//		
+//		
+//		fields.add(orderFields);
+//		
+//		
+//		
+//		return fields;
+//	}
 
 	private Component getStockTransferLink(Order order, boolean isCompanyOwned) {
 	RouteParameters parameters = new RouteParameters("id", order.getId().toString());

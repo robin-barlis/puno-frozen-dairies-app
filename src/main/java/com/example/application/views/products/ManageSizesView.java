@@ -27,6 +27,9 @@ import com.vaadin.flow.component.contextmenu.SubMenu;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
+import com.vaadin.flow.component.grid.dnd.GridDropLocation;
+import com.vaadin.flow.component.grid.dnd.GridDropMode;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -52,6 +55,7 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 	private SizesService sizesService;
 	private CustomerTagService customerTagService;
 	private Grid<Size> sizesGrid = new Grid<>(Size.class, false);
+	private Size draggedItem;
 
 
 	ListDataProvider<Size> ldp = null;
@@ -81,9 +85,12 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 		
 		tableContent.add(sizeWrapper);
 		sizesGrid = new Grid<>(Size.class, false);
+		sizesGrid.setRowsDraggable(true);
+		sizesGrid.setDropMode(GridDropMode.BETWEEN);
 		sizesGrid.addColumn("sizeName").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		sizesGrid.addColumn("sizeDescription").setAutoWidth(true).setTextAlign(ColumnTextAlign.START);
 		sizesGrid.addColumn("sizeCategory").setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Size Type");
+
 		sizesGrid.addColumn(sizeTag -> {
 			Hibernate.initialize(sizeTag.getCustomerTagSet());
 			Set<String> locationTagsString = sizeTag.getCustomerTagSet().stream().map(CustomerTag::getCustomerTagName).collect(Collectors.toSet());
@@ -126,7 +133,30 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 
 		ldp = DataProvider.ofCollection(sizesService.listAll(Sort.by("id")));
 
-		sizesGrid.setItems(ldp);
+		GridListDataView<Size> dataView = sizesGrid.setItems(ldp);
+		sizesGrid.addDragStartListener(
+                e -> draggedItem = e.getDraggedItems().get(0));
+
+		sizesGrid.addDropListener(e -> {
+            Size targetPerson = e.getDropTargetItem().orElse(null);
+            GridDropLocation dropLocation = e.getDropLocation();
+
+            boolean personWasDroppedOntoItself = draggedItem
+                    .equals(targetPerson);
+
+            if (targetPerson == null || personWasDroppedOntoItself)
+                return;
+
+            dataView.removeItem(draggedItem);
+
+            if (dropLocation == GridDropLocation.BELOW) {
+                dataView.addItemAfter(draggedItem, targetPerson);
+            } else {
+                dataView.addItemBefore(draggedItem, targetPerson);
+            }
+        });
+
+		sizesGrid.addDragEndListener(e -> draggedItem = null);
 		sizesGrid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 		sizesGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		sizesGrid.addThemeVariants(GridVariant.MATERIAL_COLUMN_DIVIDERS);
@@ -158,6 +188,13 @@ public class ManageSizesView extends AbstractPfdiView implements HasComponents, 
 			sizeFormDialog.setCurrentSelectionToBinder(null);
 			sizeFormDialog.open();
 		});
+		
+		Button addNewSizeButton1 = new Button("Add Size1");
+		addNewSizeButton1.addThemeVariants(ButtonVariant.LUMO_LARGE);
+		addNewSizeButton1.addClickListener(e -> {
+			sizesGrid.getListDataView().getItems().collect(Collectors.toList());
+		});
+		
 		sizeButtonWrapper.add(addNewSizeButton);
 		
 		tableContent.add(sizeButtonWrapper);

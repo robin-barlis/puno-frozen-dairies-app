@@ -30,6 +30,7 @@ import com.example.application.data.entity.products.LocationTag;
 import com.example.application.data.entity.products.Product;
 import com.example.application.data.entity.products.ProductPrice;
 import com.example.application.data.entity.products.Size;
+import com.example.application.data.entity.stock.Inventory;
 import com.example.application.data.entity.stock.ItemStock;
 import com.google.gwt.thirdparty.guava.common.collect.Ordering;
 import com.google.gwt.thirdparty.guava.common.collect.Sets;
@@ -41,28 +42,39 @@ public class PfdiUtil {
 			"Main Store");
 
 	// T/C, 3.4L, 1.9L, 1.0L, PINT, CUP, I.C. CONE, 1.5L, 800ML, 475ML, 200ML
-	private final static List<String> SIZE_NAMES = Arrays.asList("T/C", "3.4L", "1.9L", "1.0L", "Pint", "CUP",
-			"I.C. Cone", "1.5L", "800mL", "475mL", "200mL", "OTHERS", "OTHER_FLAVORS_SIZE");
+	private final static List<String> SIZE_NAMES = Arrays.asList("T/C", "3.4L", "1.9L", "1.0L", "475mL", "200mL",
+			"Pint", "Cup", "CUP", "Cups", "I.C. Cone", "1.5L", "800mL", "OTHERS", "OTHER_FLAVORS_SIZE");
 
-	private final static List<String> FLAVORS_SORTING = Arrays.asList("Regular Ice Cream", "Special/Premium Ice Cream",
+	private final static List<String> FLAVORS_SORTING = Arrays.asList("Regular Ice Cream", "Special/Premium Ice Cream", "Seasonal Ice Cream",
 			"Sherbet", "OTHER_FLAVORS");
+
+	private final static List<String> CATEGORY_TYPE_SORTING = Arrays.asList("Flavors", "Cones", "Others");
 
 	private final static List<String> CONES_SIZE_NAMES = Arrays.asList("BOX", "PACK", "OTHERS", "OTHER_CONES_SIZE");
 
-	private final static List<String> OTHERS_SIZE_NAMES = Arrays.asList("PC", "BOX", "PACK", "OTHERS",
+	private final static List<String> OTHERS_SIZE_NAMES = Arrays.asList("PACK - OTHERS", "PACK", "PC", "BOX", "OTHERS",
 			"OTHER_OTHERS_SIZE");
 
+	private final static List<String> ALL_SIZE_NAMES = Arrays.asList("T/C", "3.4L", "1.9L", "1.0L", "Pint", "CUP",
+			"I.C. Cone", "1.5L", "800mL", "475mL", "200mL", "BOX", "PACK", "PC", "PACK - OTHERS", "OTHERS");
+
 	private final static Ordering<String> SIZE_NAME_ORDERING = Ordering.explicit(SIZE_NAMES)
-			.onResultOf(lang -> CONES_SIZE_NAMES.contains(lang) ? lang : "OTHER_FLAVORS_SIZE");
+			.onResultOf(lang -> SIZE_NAMES.contains(lang) ? lang : "OTHER_FLAVORS_SIZE");
 
 	private final static Ordering<String> CONE_SIZE_NAME_ORDERING = Ordering.explicit(CONES_SIZE_NAMES)
 			.onResultOf(lang -> CONES_SIZE_NAMES.contains(lang) ? lang : "OTHER_CONES_SIZE");
 
 	private final static Ordering<String> OTHER_SIZE_NAME_ORDERING = Ordering.explicit(OTHERS_SIZE_NAMES)
-			.onResultOf(lang -> CONES_SIZE_NAMES.contains(lang) ? lang : "OTHER_OTHERS_SIZE");
+			.onResultOf(lang -> OTHERS_SIZE_NAMES.contains(lang) ? lang : "OTHER_OTHERS_SIZE");
 
 	private final static Ordering<String> CATEGORY_NAME_ORDERING = Ordering.explicit(FLAVORS_SORTING)
-			.onResultOf(lang -> CONES_SIZE_NAMES.contains(lang) ? lang : "OTHER_FLAVORS");
+			.onResultOf(lang -> FLAVORS_SORTING.contains(lang) ? lang : "OTHER_FLAVORS");
+
+	private final static Ordering<String> CATEGORY_TYPE_ORDERING = Ordering.explicit(CATEGORY_TYPE_SORTING)
+			.onResultOf(lang -> CATEGORY_TYPE_SORTING.contains(lang) ? lang : "OTHER_CATEGORY");
+
+	private final static Ordering<String> ALL_SIZE_NAME_ORDERING = Ordering.explicit(ALL_SIZE_NAMES)
+			.onResultOf(lang -> ALL_SIZE_NAMES.contains(lang) ? lang : "OTHERS");
 
 	public static final NumberFormat getFormatter() {
 
@@ -133,6 +145,16 @@ public class PfdiUtil {
 
 		return formatDateTime;
 	}
+	
+	public static String formatTime(LocalDateTime localDateTime) {
+		
+		
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+		String formatDateTime = localDateTime.format(formatter);
+
+		return formatDateTime;
+	}
 
 	public static Comparator<Size> sizeComparator = new Comparator<Size>() {
 
@@ -142,12 +164,13 @@ public class PfdiUtil {
 			return SIZE_NAME_ORDERING.compare(arg0.getSizeName(), arg1.getSizeName());
 		}
 	};
+	
+	
 
 	public static Comparator<Size> coneSizeComparator = new Comparator<Size>() {
 
 		@Override
 		public int compare(Size arg0, Size arg1) {
-			System.out.println(CONE_SIZE_NAME_ORDERING.compare(arg0.getSizeName(), arg1.getSizeName()));
 			int order = CONE_SIZE_NAME_ORDERING.compare(arg0.getSizeName(), arg1.getSizeName());
 			return order;
 		}
@@ -161,11 +184,11 @@ public class PfdiUtil {
 		}
 	};
 
-	public static Comparator<ItemStock> itemStockComparator = new Comparator<ItemStock>() {
+	public static Comparator<Inventory> itemStockComparator = new Comparator<Inventory>() {
 
 		@Override
-		public int compare(ItemStock arg0, ItemStock arg1) {
-			return SIZE_NAME_ORDERING.compare(arg0.getSize().getSizeName(), arg1.getSize().getSizeName());
+		public int compare(Inventory arg0, Inventory arg1) {
+			return ALL_SIZE_NAME_ORDERING.compare(arg0.getName(), arg0.getName());
 		}
 	};
 
@@ -186,6 +209,30 @@ public class PfdiUtil {
 	};
 
 	public static Comparator<String> categoryNameComparator = new Comparator<String>() {
+
+		@Override
+		public int compare(String arg0, String arg1) {
+			return CATEGORY_NAME_ORDERING.compare(arg0, arg1);
+		}
+	};
+	
+	public static Comparator<String> categoryNameThenSizeComparator = new Comparator<String>() {
+
+		@Override
+		public int compare(String arg0, String arg1) {
+			return CATEGORY_NAME_ORDERING.compare(arg0, arg1);
+		}
+	};
+
+	public static Comparator<Category> categoryTypeComparator = new Comparator<Category>() {
+
+		@Override
+		public int compare(Category arg0, Category arg1) {
+			return CATEGORY_TYPE_ORDERING.compare(arg0.getCategoryType(), arg1.getCategoryType());
+		}
+	};
+
+	public static Comparator<String> categoryNameInventortComparator = new Comparator<String>() {
 
 		@Override
 		public int compare(String arg0, String arg1) {
@@ -251,7 +298,10 @@ public class PfdiUtil {
 
 	public static BigDecimal getTotalPrice(OrderItems orderItem, CustomerTag customerTag) {
 		if (PfdiUtil.isCompanyOwned(customerTag)) {
-			System.out.println("SRP : " + orderItem.getProductSrp() + " Q: " + orderItem.getQuantity());
+			if (orderItem.getProductSrp() == null) {
+				return BigDecimal.ZERO;
+			}
+
 			return orderItem.getProductSrp().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
 		} else if (PfdiUtil.isRelative(customerTag)) {
 			return orderItem.getProductPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity()));
@@ -319,7 +369,7 @@ public class PfdiUtil {
 				LocalDateTime o1 = t1.getDate();
 				LocalDateTime o2 = t2.getDate();
 				int result = o1.toLocalDate().compareTo(o2.toLocalDate()); // Consider only the date portion first.
-				
+
 				result = ((-1) * result); // Flip the positive/negative sign of the int, to get ascending order. Or more
 											// simply: `= - result ;`.
 				if (0 == result) // If dates are equal, look at the time-of-day.
@@ -330,6 +380,39 @@ public class PfdiUtil {
 				return result;
 			}
 		};
+
+	}
+
+	public static void sortByNameThenSize(List<OrderItems> cones) {
+
+		Collections.sort(cones, (o1, o2) -> {
+			if (o1.getItemInventory().getProduct().getProductName()
+					.compareTo(o2.getItemInventory().getProduct().getProductName()) == 0) {
+				return o1.getItemInventory().getSize().getSizeOrder().compareTo(o2.getItemInventory().getSize().getSizeOrder());
+			} else {
+				return o1.getItemInventory().getProduct().getProductName()
+						.compareTo(o2.getItemInventory().getProduct().getProductName());
+			}
+		});
+
+	}
+	
+	public static void sortBySizeOrder(List<OrderItems> items) {
+
+		Collections.sort(items, (o1, o2) -> {
+
+			return o1.getItemInventory().getSize().getSizeOrder().compareTo(o2.getItemInventory().getSize().getSizeOrder());
+		});
+
+	}
+	
+	
+	public static void sortSizeByOrderId(List<Size> sizes) {
+
+		Collections.sort(sizes, (o1, o2) -> {
+
+			return o1.getSizeOrder().compareTo(o2.getSizeOrder());
+		});
 
 	}
 

@@ -2,8 +2,6 @@ package com.example.application.views;
 
 import java.util.Optional;
 
-import javax.annotation.security.RolesAllowed;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.example.application.data.entity.AppUser;
@@ -21,10 +19,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 
+import javax.annotation.security.RolesAllowed;
+
 @PageTitle("Jumpoff")
 @Route(value = "", layout = MainLayout.class)
 @RouteAlias(value = "/", layout = MainLayout.class)
-@RolesAllowed({ "Admin", "Superuser", "ADMIN", "Sales", "SALES", "Checker", "CHECKER" })
+@RolesAllowed({ "Admin", "Superuser", "ADMIN", "Sales", "SALES", "Checker", "CHECKER", "Accounting", "ACCOUNTING" })
 @Uses(Icon.class)
 public class RedirectPage  extends VerticalLayout implements BeforeEnterObserver {
 
@@ -41,6 +41,9 @@ public class RedirectPage  extends VerticalLayout implements BeforeEnterObserver
     	System.out.println("here");
 		Optional<AppUser> appUserOpt = authenticatedUser.get();
         if (authenticatedUser.get().isPresent()) {
+        	
+        	
+        	
         	System.out.println("here");
         	AppUser appUser = appUserOpt.get();
         	

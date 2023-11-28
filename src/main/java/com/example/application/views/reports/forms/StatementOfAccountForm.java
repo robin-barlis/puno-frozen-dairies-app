@@ -13,13 +13,13 @@ import java.util.stream.IntStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 
-import com.beust.jcommander.internal.Lists;
 import com.example.application.data.StatementPeriod;
 import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.service.UserService;
 import com.example.application.data.service.customers.CustomerService;
 import com.example.application.utils.PfdiUtil;
+import com.google.api.client.util.Lists;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.vaadin.flow.component.button.Button;
@@ -312,10 +312,10 @@ public class StatementOfAccountForm extends FormLayout{
 		public ComboBox<Integer> getYear() {
 			return yearSelectPicker;
 		}
-
-		public MultiSelectComboBox<Month> getMonth() {
-			return monthSelectPicker;
-		}
+//
+//		public MultiSelectComboBox<Month> getMonth() {
+//			return monthSelectPicker;
+//		}
 
 		public Button getRemoveButton() {
 			return removeButton;

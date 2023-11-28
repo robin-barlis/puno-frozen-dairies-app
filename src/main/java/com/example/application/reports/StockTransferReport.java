@@ -4,10 +4,8 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
-import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
-import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -22,7 +20,7 @@ import org.springframework.stereotype.Service;
 import com.example.application.data.Categories;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.OrderItems;
-import com.example.application.data.entity.products.CustomerTag;
+import com.example.application.data.entity.products.Size;
 import com.example.application.utils.PfdiUtil;
 import com.google.common.collect.Lists;
 
@@ -46,7 +44,7 @@ public class StockTransferReport {
 
 			report().title(Templates.createStockTransferDetailsComponent(order), 
 					cmp.subreport(createSubreport(order, orderItemPerCategoryMap)))
-					.addPageFooter(Templates.createStockTransferDetailsFooterComponent())
+					.addLastPageFooter(Templates.createStockTransferDetailsFooterComponent())
 					.pageFooter(Templates.footerComponent).toPdf(baos);
 
 
@@ -87,7 +85,7 @@ public class StockTransferReport {
 	
 
 	private void buildOthersReport(JasperReportBuilder report, Order order, Map<Object, List<OrderItems>> orderItemPerCategoryMap) {
-		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
+		TextColumnBuilder<String> categoryColumn = col.column("Particulars", "category", type.stringType());
 		TextColumnBuilder<String> quantityColumn = col.column("Quantity", "quantity", type.stringType());
 		TextColumnBuilder<String> sizeColumn =  col.column("Size", "size", type.stringType());
 		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Transfer Price", "price", type.bigDecimalType()).setStyle(Templates.columnRight);
@@ -104,34 +102,36 @@ public class StockTransferReport {
 				sbt.sum(priceColumn))
 	
 		.setDataSource(createSubreportDataSource(order, orderItemPerCategoryMap))
-		.addColumnFooter(Templates.stockOrderFooter());
+		.addColumnFooter(Templates.stockTransferFooter());
 		
 	}
 
 	private void getRelativeOwnedReport(JasperReportBuilder report, Order order, Map<Object, List<OrderItems>> orderItemPerCategoryMap) {
-		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
+		TextColumnBuilder<String> categoryColumn = col.column("Particulars", "category", type.stringType());
 		TextColumnBuilder<String> quantityColumn = col.column("Quantity", "quantity", type.stringType());
 		TextColumnBuilder<String> sizeColumn =  col.column("Size", "size", type.stringType());
-		//TextColumnBuilder<BigDecimal>  priceColumn = col.column("Transfer Price", "price", type.bigDecimalType());
+		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Amount", "price", type.bigDecimalType());
 		report.setTemplate(Templates.reportTemplate2)
 		.columns(categoryColumn,
 				sizeColumn,
-				quantityColumn
+				quantityColumn,
+				priceColumn
 				)
-		.subtotalsAtSummary(sbt.text("Total Transfer Price", categoryColumn), 
+		.subtotalsAtSummary(sbt.text("Total Amount", categoryColumn), 
 				sbt.text("", sizeColumn), 
-				sbt.text(PfdiUtil.getFormatter().format(order.getAmountDue()), quantityColumn))
+				sbt.text("", quantityColumn), 
+				sbt.text(PfdiUtil.getFormatter().format(order.getAmountDue()), priceColumn))
 	
 		.setDataSource(createSubreportDataSource(order, orderItemPerCategoryMap))
-		.addColumnFooter(Templates.stockOrderFooter());
+		.addColumnFooter(Templates.stockTransferFooter());
 		
 	}
 
 	private void getCompanyOwnedReport(JasperReportBuilder report, Order order, Map<Object, List<OrderItems>> orderItemPerCategoryMap) {
-		TextColumnBuilder<String> categoryColumn = col.column("Category", "category", type.stringType());
+		TextColumnBuilder<String> categoryColumn = col.column("Particulars", "category", type.stringType());
 		TextColumnBuilder<String> quantityColumn = col.column("Quantity", "quantity", type.stringType());
 		TextColumnBuilder<String> sizeColumn =  col.column("Size", "size", type.stringType());
-		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Amount in SRP", "price", type.bigDecimalType()).setStyle(Templates.columnRight);
+		TextColumnBuilder<BigDecimal>  priceColumn = col.column("Amount", "price", type.bigDecimalType()).setStyle(Templates.columnRight);
 		priceColumn.getColumn().setTitleStyle(Templates.columnTitleStyleRight.build());
 		report.setTemplate(Templates.reportTemplate2)
 		.columns(categoryColumn,
@@ -139,12 +139,12 @@ public class StockTransferReport {
 				quantityColumn,
 				priceColumn
 				)
-		.subtotalsAtSummary(sbt.text("Total Amount (SRP)", categoryColumn), 
+		.subtotalsAtSummary(sbt.text("Total Amount", categoryColumn), 
 				sbt.text("", sizeColumn), 
 				sbt.text("", quantityColumn),  
 				sbt.sum(priceColumn))
 		.setDataSource(createSubreportDataSource(order, orderItemPerCategoryMap))
-		.addColumnFooter(Templates.stockOrderFooter());
+		.addColumnFooter(Templates.stockTransferFooter());
 		
 	}
 
@@ -152,11 +152,11 @@ public class StockTransferReport {
 		DRDataSource dataSource = new DRDataSource( "category", "size", "quantity", "price" );
 		
 		
-		List<OrderItemData> regularFlavors = getRegularFlavors(order, orderItemPerCategoryMap);
+		List<OrderItemData> flavors = getRegularFlavors(order, orderItemPerCategoryMap);
 		
-		for (OrderItemData item : regularFlavors) {
+		
+		for (OrderItemData item : flavors) {
 			
-			System.out.println(item.getProductPrice());
 			dataSource.add(item.getCategory(), 
 					item.getSize(), 
 					item.getQuantity(), 
@@ -166,12 +166,10 @@ public class StockTransferReport {
 		
 		List<OrderItems> cones = orderItemPerCategoryMap.get(Categories.Cones.name());
 		
-	
-			
 		if (Objects.nonNull(cones)) {
-			Collections.sort(cones, (o1,o2) -> {
-				return o1.getItemInventory().getProduct().getProductName().compareTo(o2.getItemInventory().getProduct().getProductName());
-			});
+			
+			
+			PfdiUtil.sortByNameThenSize(cones);
 			
 			
 			for (OrderItems item : orderItemPerCategoryMap.get(Categories.Cones.name())) {
@@ -190,11 +188,9 @@ public class StockTransferReport {
 		
 
 		if (Objects.nonNull(others)) {
-			Collections.sort(others, (o1,o2) -> {
-				return o1.getItemInventory().getProduct().getProductName().compareTo(o2.getItemInventory().getProduct().getProductName());
-			});
+
+			PfdiUtil.sortByNameThenSize(others);
 			for (OrderItems item : others) {
-				System.out.println(item.getItemInventory().getProduct().getProductName());
 
 				BigDecimal currentPrice = PfdiUtil.getTotalPrice(item, order.getCustomer().getCustomerTagId());
 				dataSource.add(
@@ -228,9 +224,14 @@ public class StockTransferReport {
 
 			
 			Collections.sort(flavorsValuePerCategory, (o1, o2) -> {
-				Integer sortingIndex1 = o1.getItemInventory().getProduct().getSortingIndex();
-				Integer sortingIndex2 = o2.getItemInventory().getProduct().getSortingIndex();
-				return sortingIndex1.compareTo(sortingIndex2);
+				
+				if (o1.getItemInventory().getProduct().getSortingIndex()
+						.compareTo(o2.getItemInventory().getProduct().getSortingIndex()) == 0) {
+					return o1.getItemInventory().getSize().getSizeOrder().compareTo(o2.getItemInventory().getSize().getSizeOrder());
+				} else {
+					return o1.getItemInventory().getProduct().getSortingIndex()
+							.compareTo(o2.getItemInventory().getProduct().getSortingIndex());
+				}
 			});
 			if ("Regular Ice Cream".equalsIgnoreCase(key)) {
 				Map<String, List<OrderItems>> regularFlavorsBySize = flavorsValuePerCategory.stream()
@@ -238,14 +239,13 @@ public class StockTransferReport {
 				orders.addAll(collectRegularIceCream(regularFlavorsBySize, order));
 
 			} else {
-				
-				
+								
 				for (OrderItems orderItem : flavorsValuePerCategory) {
 					BigDecimal currentPrice = PfdiUtil.getTotalPrice(orderItem, order.getCustomer().getCustomerTagId());
 					OrderItemData orderData = new OrderItemData(orderItem.getQuantity().toString(), 
 							orderItem.getItemInventory().getSize().getSizeName(),
 							orderItem.getItemInventory().getProduct().getProductName(), 
-							currentPrice);
+							currentPrice, orderItem.getItemInventory().getSize());
 					orders.add(orderData);
 				}
 			}
@@ -259,27 +259,30 @@ public class StockTransferReport {
 		
 		
 		List<OrderItemData> orderItemDataRegularList = Lists.newArrayList();
-
+	
 		for (Entry<String, List<OrderItems>> regularFlavorSizeEntry : regularFlavorsBySize.entrySet()) {
 
 			Integer quantity = 0;
+			Size size = null;
 
 			BigDecimal productPrice = BigDecimal.ZERO;
 			for (OrderItems item : regularFlavorSizeEntry.getValue()) {
 				int currentQuantity = item.getQuantity();
 				quantity = quantity + currentQuantity;
 				BigDecimal price = PfdiUtil.getTotalPrice(item, order.getCustomer().getCustomerTagId());
-				
+				size = item.getItemInventory().getSize();
 				productPrice = productPrice.add(price);
 			}
 			
 			OrderItemData orderItemData = new OrderItemData(quantity.toString(), 
 					regularFlavorSizeEntry.getKey(),
 					"Regular Ice Cream",
-					productPrice);
+					productPrice, size);
 			orderItemDataRegularList.add(orderItemData);
+			
 		}
-		
+		Collections.sort(orderItemDataRegularList, (item1, item2) -> item1.getSizeDetails().getSizeOrder().compareTo(item2.getSizeDetails().getSizeOrder()));
+			
 		return orderItemDataRegularList;
 	}
 	
@@ -290,13 +293,16 @@ public class StockTransferReport {
 		private String size;
 		private String category;
 		private BigDecimal productPrice;
+
+		private Size sizeDetails;
 		
 		
-		public OrderItemData(String quantity, String size, String category, BigDecimal productPrice) {
+		public OrderItemData(String quantity, String size, String category, BigDecimal productPrice, Size sizeDetails) {
 			this.category = category;
 			this.size = size;
 			this.quantity = quantity;
 			this.productPrice = productPrice;
+			this.sizeDetails = sizeDetails;
 		}
 
 
@@ -319,6 +325,11 @@ public class StockTransferReport {
 			return productPrice;
 		}
 		
+
+
+		public Size getSizeDetails() {
+			return sizeDetails;
+		}
 		
 	}
 

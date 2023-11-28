@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.customers.Customer;
 
 @Service

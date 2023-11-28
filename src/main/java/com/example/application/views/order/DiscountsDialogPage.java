@@ -2,7 +2,6 @@ package com.example.application.views.order;
 
 import java.util.List;
 
-
 import org.springframework.data.domain.Sort;
 
 import com.example.application.data.DiscountType;
@@ -102,21 +101,21 @@ public class DiscountsDialogPage extends Dialog{
 
 			}
 			
-//			if (DiscountType.BuyGetDiscount == discountType) {
-//				BuyGetOffering fixedAmountOffering = 
-//						new BuyGetOffering(discountType, getProducts.getValue(), getSizes.getValue(), buyQuanity.getValue(), getQuantity.getValue());
-//				
-//				offering = fixedAmountOffering;
-//
-//			}
-//			
-//			if (DiscountType.FreeItems == discountType) {
-//				FreeItemsOffering fixedAmountOffering = 
-//						new FreeItemsOffering(discountType, freeItemsProduct.getValue(), freeItemsSizes.getValue(), freeItemQuantity.getValue());
-//				
-//				offering = fixedAmountOffering;
-//
-//			}
+			if (DiscountType.BuyGetDiscount == discountType) {
+				BuyGetOffering fixedAmountOffering = 
+						new BuyGetOffering(discountType, getProducts.getValue(), getSizes.getValue(), buyQuanity.getValue(), getQuantity.getValue());
+				
+				offering = fixedAmountOffering;
+
+			}
+			
+			if (DiscountType.FreeItems == discountType) {
+				FreeItemsOffering fixedAmountOffering = 
+						new FreeItemsOffering(discountType, freeItemsProduct.getValue(), freeItemsSizes.getValue(), freeItemQuantity.getValue());
+				
+				offering = fixedAmountOffering;
+
+			}
 			
 			this.close();
 			

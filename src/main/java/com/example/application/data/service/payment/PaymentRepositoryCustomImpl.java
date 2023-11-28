@@ -4,8 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -17,10 +17,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import com.example.application.data.entity.customers.Customer;
-import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.payment.Payment;
 import com.google.gwt.thirdparty.guava.common.collect.Lists;
-import com.vaadin.flow.spring.annotation.SpringComponent;
 
 
 public class PaymentRepositoryCustomImpl implements PaymentRepositoryCustom {

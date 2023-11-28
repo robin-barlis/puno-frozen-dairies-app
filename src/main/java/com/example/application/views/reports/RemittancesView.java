@@ -43,14 +43,11 @@ import com.vaadin.flow.server.StreamResource;
 
 @PageTitle("Stock Orders")
 @Route(value = "reports/remittances/", layout = MainLayout.class)
-@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" })
+@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES", "Accounting", "ACCOUNTING"  })
 @Uses(Icon.class)
 public class RemittancesView extends AbstractPfdiView {
 
-
 	private static final long serialVersionUID = 2754507440441771890L;
-
-	private byte[] stockTransferData;
 
 	private VerticalLayout mainDiv = new VerticalLayout();
 	private VerticalLayout reportContainer = new VerticalLayout();

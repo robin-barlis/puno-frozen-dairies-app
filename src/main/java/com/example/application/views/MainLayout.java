@@ -6,12 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.Singleton;
@@ -30,7 +31,6 @@ import com.example.application.views.products.ManageSizesView;
 import com.example.application.views.products.ManageTagsView;
 import com.example.application.views.products.ProductsView;
 import com.example.application.views.reports.AccountsReportsView;
-import com.example.application.views.reports.AccountsReportsView2;
 import com.example.application.views.reports.RemittancesView;
 import com.example.application.views.reports.SalesReports;
 import com.example.application.views.stocks.StocksInvetoryView;
@@ -126,6 +126,8 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		
 		addToDrawer(tabs);
 		addToNavbar(toggle, layout);
+		
+		
 
 		return header;
 	}
@@ -143,16 +145,17 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		avatarButton.setIcon(avatar);
 		avatarButton.setSizeUndefined();
 
-		Div div = new Div();
+		VerticalLayout div = new VerticalLayout();
+		div.getStyle().set("padding-left", "0px");
 		div.setVisible(false);
 		div.addClassName(CssClassNamesConstants.USER_PROFILE_WRAPPER);
-		div.setHeight("100vh");
 		div.setWidth("35vw");
 		div.scrollIntoView();
 
 		VerticalLayout nameWrapper = new VerticalLayout();
 		nameWrapper.addClassName(CssClassNamesConstants.PROFILE_DETAILS_NAME_AVATAR_WRAPPER);
 		nameWrapper.setAlignItems(Alignment.CENTER);
+		
 
 		Avatar profilePicture = new Avatar(user.getFirstName());
 		profilePicture.setImage(user.getProfilePictureUrl());
@@ -179,7 +182,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 
 			try {
 				BufferedImage bufferedImage = ImageIO.read(fileData);
-				File file = new File(FileUtils.getTempDirectoryPath() + fileName);
+				File file = new File(fileName);
 				file.createNewFile();
 				
 				
@@ -195,7 +198,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 					profilePicture.setImageResource(imageResource);
 					avatar.setImageResource(imageResource);
 					user.setProfilePictureUrl(url);
-					cloudinary.uploader().destroy(fileName, uploadResult);
+					//cloudinary.uploader().destroy(fileName, uploadResult);
 					userService.update(user);
 				}
 				
@@ -288,8 +291,13 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		profileDetailsContent.setWidth("100%");
 
 		FormLayout resetPasswordFormLayout = new FormLayout();
-
+		
 		PasswordField passwordField = new PasswordField();
+
+		PasswordField confirmPassword = new PasswordField();
+
+		Button saveButton = new Button("Save Password");
+		
 		passwordField.setLabel("Password");
 		passwordField.setHelperText(
 				"A password must be at least 8 characters. It has to have at least one letter and one digit.");
@@ -297,23 +305,77 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		passwordField.setErrorMessage("Not a valid password");
 		passwordField.setRequired(true);
 		passwordField.setRevealButtonVisible(false);
+		passwordField.addValueChangeListener(e -> {
+			
+			if (Objects.nonNull(confirmPassword.getValue())  && Objects.nonNull(passwordField.getValue())) {
+				saveButton.setEnabled(true);
+			}
+			
+		});
 
-		PasswordField resetPasswordField = new PasswordField();
-		resetPasswordField.setLabel("Confirm Password");
-		resetPasswordField.setPattern("^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$");
-		resetPasswordField.setErrorMessage("Not a valid password");
-		resetPasswordField.setRequired(true);
-		resetPasswordField.setRevealButtonVisible(false);
+		confirmPassword.setLabel("Confirm Password");
+		confirmPassword.setPattern("^(?=.*[0-9])(?=.*[a-zA-Z]).{8}.*$");
+		confirmPassword.setErrorMessage("Not a valid password");
+		confirmPassword.setRequired(true);
+		confirmPassword.setRevealButtonVisible(false);
+		confirmPassword.addValueChangeListener(e -> {
+			
+			if (Objects.nonNull(confirmPassword.getValue())  && Objects.nonNull(passwordField.getValue())) {
+				saveButton.setEnabled(true);
+			}
+			
+		});
+		
+
+		AccordionPanel profileDetailsPanel = profileAccordion.add("Profile Details", profileDetailsContent);
+		AccordionPanel changePasswordPanel = profileAccordion.add("Change Password", changePasswordContent);
+
+		
+		HorizontalLayout buttonContainer = new HorizontalLayout();
+		buttonContainer.setPadding(true);
+		Button cancelButton = new Button("Cancel");
+		cancelButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
+		cancelButton.setWidth("50%");
+		
+		
+		saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+		saveButton.setWidth("50%");
+		saveButton.setEnabled(false);
+		saveButton.addClickListener(e -> {
+
+			boolean invalid = passwordField.isInvalid();
+			
+			if (invalid) {
+				Notification.show("Invalid Password. Please set a valid password.")
+				.addThemeVariants(NotificationVariant.LUMO_ERROR);
+			} else if (!passwordField.getValue().equals(confirmPassword.getValue())) {
+
+				confirmPassword.setErrorMessage("Passwords do not match. Please set valid passwords.");
+				confirmPassword.setInvalid(true);
+			} else {
+				confirmPassword.setInvalid(false);
+				BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+				currentUser.setPassword(encoder.encode(passwordField.getValue()));
+				
+				userService.update(currentUser);		
+
+				Notification.show("Password was changed successfully.")
+				.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+				changePasswordPanel.setOpened(false);
+			}
+			
+		});
+		
+		buttonContainer.add(saveButton, cancelButton);
 
 		resetPasswordFormLayout.add(passwordField);
-		resetPasswordFormLayout.add(resetPasswordField);
+		resetPasswordFormLayout.add(confirmPassword);
+		resetPasswordFormLayout.add(buttonContainer);
 
 		changePasswordContent.add(resetPasswordFormLayout);
 
-		AccordionPanel profileDetailsPanel = profileAccordion.add("Profile Details", profileDetailsContent);
 		profileDetailsPanel.setOpened(false);
 
-		AccordionPanel changePasswordPanel = profileAccordion.add("Change Password", changePasswordContent);
 		changePasswordPanel.setOpened(false);
 		changePasswordContent.addClassName(CssClassNamesConstants.CHANGE_PASSWORD_ACCORDION_PANEL);
 
@@ -331,10 +393,13 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 		VerticalLayout logoutButtonWrapper = new VerticalLayout();
 		logoutButtonWrapper.setAlignItems(Alignment.CENTER);
 
+		
+
 		Button logout = new Button("Logout");
 		logout.addClickListener(e -> openDialog().open());
 		logout.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 		logoutButtonWrapper.add(logout);
+		
 
 		div.add(logoutButtonWrapper);
 
@@ -432,7 +497,7 @@ public class MainLayout extends AppLayout implements BeforeEnterObserver {
 			tabs.add(paymentTab);
 		}
 		
-		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser)) {
+		if (PfdiUtil.isSales(currentUser) || PfdiUtil.isSuperUser(currentUser) || PfdiUtil.isAccounting(currentUser)) {
 			
 
 			Icon showReportsChildrenButton = new Icon(VaadinIcon.ANGLE_RIGHT);

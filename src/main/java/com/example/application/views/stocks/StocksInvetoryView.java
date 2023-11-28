@@ -23,15 +23,12 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.FlexLayout.FlexDirection;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
@@ -43,8 +40,8 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 
 @PageTitle("Inventory")
-@Route(value = "stocks/inventory", layout = MainLayout.class)
-@RouteAlias(value = "stocks/inventory", layout = MainLayout.class)
+@Route(value = "stocks/inventory1", layout = MainLayout.class)
+@RouteAlias(value = "stocks/inventory1", layout = MainLayout.class)
 @RolesAllowed({ "Admin", "Superuser", "ADMIN", "Checker", "CHECKER", "Sales", "SALES" })
 @Uses(Icon.class)
 public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterObserver {
@@ -55,15 +52,12 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 
 	private ListDataProvider<ItemStock> ldp = null;
 	private ItemStockService itemStockService;
-	private ProductService productService;
-
 
 	@Autowired
 	public StocksInvetoryView(ItemStockService itemStockService, ProductService productService) {
 		super("Admin", "Admin");
 		addClassNames("administration-view");
 		this.itemStockService = itemStockService;
-		this.productService = productService;
 
 		VerticalLayout tableContent = new VerticalLayout();
 		createGridLayout(tableContent);
@@ -128,8 +122,6 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 		wrapper.setClassName("grid-wrapper");
 		
 		grid.addColumn(itemStock -> {	
-			
-			
 			return itemStock.getProduct().getCategory().getCategoryName();
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Category").setSortable(true);
 		
@@ -142,61 +134,61 @@ public class StocksInvetoryView extends AbstractPfdiView implements BeforeEnterO
 		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Size").setSortable(true);
 		
 
-		grid.addColumn("availableStock").setHeader("Available").setTextAlign(ColumnTextAlign.START);
+		grid.addColumn("availableStock").setHeader("On Hand").setTextAlign(ColumnTextAlign.START);
 
-		
-		
-		
-		grid.addComponentColumn(itemStock -> {
-			
-			
-			
-			
-			HorizontalLayout adjustmentFieldSaveWrapper = new HorizontalLayout();
-			IntegerField adjustmentField = new IntegerField();
-			//adjustmentField.setValue(0);
-			adjustmentField.setHasControls(true);
-			
-			Button saveButton = new Button(new Icon(VaadinIcon.CHECK)); // make this an icon
-			saveButton.setVisible(false);
-			saveButton.addClickListener(e -> {
-				int currentStock = itemStock.getAvailableStock();
-				itemStock.setAvailableStock(currentStock + adjustmentField.getValue());
-				
-				itemStockService.update(itemStock);
-				ldp.refreshItem(itemStock);
-				//grid.getListDataView().refreshAll();
-				Notification.show("Successfully adjusted available stocks for " + itemStock.getProduct().getProductName() + " (" + itemStock.getSize().getSizeName() + ")")
-				.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
-			});
-			saveButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-			saveButton.getElement().setAttribute("aria-label", "Save Adjustment");
-			
-			Button cancelButton = new Button(new Icon(VaadinIcon.CLOSE));
-			cancelButton.setVisible(false);
-			cancelButton.addClickListener(e -> {
-				adjustmentField.setValue(0);
-				saveButton.setVisible(false);
-				cancelButton.setVisible(false);
-			});
-			cancelButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_ERROR);
-			cancelButton.getElement().setAttribute("aria-label", "Cancel Adjustment");
-			
-
-			adjustmentFieldSaveWrapper.add(adjustmentField, saveButton, cancelButton);
-			
-			adjustmentField.addValueChangeListener(e -> {
-				if (!saveButton.isVisible()) {
-					saveButton.setVisible(true);
-				}
-				if (!cancelButton.isVisible()) {
-					cancelButton.setVisible(true);
-				}
-			
-			});
-		    
-		    return adjustmentFieldSaveWrapper; 
-		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Adjustment").setSortable(true);
+//		
+//		
+//		
+//		grid.addComponentColumn(itemStock -> {
+//			
+//			
+//			
+//			
+//			HorizontalLayout adjustmentFieldSaveWrapper = new HorizontalLayout();
+//			IntegerField adjustmentField = new IntegerField();
+//			//adjustmentField.setValue(0);
+//			adjustmentField.setHasControls(true);
+//			
+//			Button saveButton = new Button(new Icon(VaadinIcon.CHECK)); // make this an icon
+//			saveButton.setVisible(false);
+//			saveButton.addClickListener(e -> {
+//				int currentStock = itemStock.getAvailableStock();
+//				itemStock.setAvailableStock(currentStock + adjustmentField.getValue());
+//				
+//				itemStockService.update(itemStock);
+//				ldp.refreshItem(itemStock);
+//				//grid.getListDataView().refreshAll();
+//				Notification.show("Successfully adjusted available stocks for " + itemStock.getProduct().getProductName() + " (" + itemStock.getSize().getSizeName() + ")")
+//				.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+//			});
+//			saveButton.addThemeVariants(ButtonVariant.LUMO_ICON);
+//			saveButton.getElement().setAttribute("aria-label", "Save Adjustment");
+//			
+//			Button cancelButton = new Button(new Icon(VaadinIcon.CLOSE));
+//			cancelButton.setVisible(false);
+//			cancelButton.addClickListener(e -> {
+//				adjustmentField.setValue(0);
+//				saveButton.setVisible(false);
+//				cancelButton.setVisible(false);
+//			});
+//			cancelButton.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_ERROR);
+//			cancelButton.getElement().setAttribute("aria-label", "Cancel Adjustment");
+//			
+//
+//			adjustmentFieldSaveWrapper.add(adjustmentField, saveButton, cancelButton);
+//			
+//			adjustmentField.addValueChangeListener(e -> {
+//				if (!saveButton.isVisible()) {
+//					saveButton.setVisible(true);
+//				}
+//				if (!cancelButton.isVisible()) {
+//					cancelButton.setVisible(true);
+//				}
+//			
+//			});
+//		    
+//		    return adjustmentFieldSaveWrapper; 
+//		}).setAutoWidth(true).setTextAlign(ColumnTextAlign.START).setHeader("Adjustment").setSortable(true);
 		
 		
 		ldp = DataProvider.ofCollection(itemStockService.listAll(Sort.by("id")));

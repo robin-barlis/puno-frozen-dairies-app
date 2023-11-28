@@ -5,22 +5,18 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
-import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.example.application.data.entity.payment.Payment;
 import com.example.application.data.service.orders.OrdersService;
-import com.example.application.data.service.payment.PaymentRepositoryCustom;
 import com.example.application.data.service.payment.PaymentRepositoryCustomImpl;
 import com.example.application.data.service.payment.PaymentsService;
 import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
-import com.google.common.collect.Maps;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -41,16 +37,10 @@ import com.vaadin.flow.router.Route;
 
 @PageTitle("Reports")
 @Route(value = "reports/stocks", layout = MainLayout.class)
-@PermitAll
+@RolesAllowed({ "Superuser", "Checker", "Sales", "CHECKER", "SALES" , "Accounting", "ACCOUNTING" })
 public class StocksReports extends AbstractPfdiView implements HasComponents, HasStyle {
 
 	private static final long serialVersionUID = -6210105239749320428L;
-
-
-	private OrdersService ordersService;
-	private PaymentsService paymentsService;
-	private PaymentRepositoryCustom paymentRepositoryCustom;
-	
     private Tab all;
     private Tab cash;
     private Tab bank;
@@ -66,21 +56,19 @@ public class StocksReports extends AbstractPfdiView implements HasComponents, Ha
 	@Autowired
 	public StocksReports(OrdersService ordersService, PaymentsService paymentsService, PaymentRepositoryCustomImpl paymentRepositoryCustom) {
 		super("products-view", "Reports");
-		this.ordersService = ordersService;
-		this.paymentRepositoryCustom = paymentRepositoryCustom;
 		populateGrids();
 	}
 
 	private void populateGrids() {
 
+//
+//		Map<String, Object> filters = createSearchCriteria();
 
-		Map<String, Object> filters = createSearchCriteria();
-
-		Map<String, List<Payment>> thisWeeksPayments = paymentRepositoryCustom.getPaymentsMapByFilterDates(filters);
-		
-		
-		
-		
+//		Map<String, List<Payment>> thisWeeksPayments = paymentRepositoryCustom.getPaymentsMapByFilterDates(filters);
+//		
+//		
+//		
+//		
 		
 		
 	}
@@ -158,22 +146,22 @@ public class StocksReports extends AbstractPfdiView implements HasComponents, Ha
 		
 	}
 
-	private Map<String, Object>  createSearchCriteria() {
-		Map<String, Object> filters = Maps.newHashMap();
-
-
-		if (!datePickerFromDate.isEmpty() && !datePickerToDate.isEmpty()) {
-
-			Map<String, LocalDate> orderDates = Maps.newHashMap();
-			orderDates.put("paymentDateFrom", datePickerFromDate.getValue());
-			orderDates.put("paymentDateTo", !datePickerToDate.isEmpty() ? datePickerToDate.getValue() : LocalDate.now());
-
-			filters.put("paymentDateCriteria", orderDates);
-		} 
-		
-		return filters;
-		
-	}
+//	private Map<String, Object>  createSearchCriteria() {
+//		Map<String, Object> filters = Maps.newHashMap();
+//
+//
+//		if (!datePickerFromDate.isEmpty() && !datePickerToDate.isEmpty()) {
+//
+//			Map<String, LocalDate> orderDates = Maps.newHashMap();
+//			orderDates.put("paymentDateFrom", datePickerFromDate.getValue());
+//			orderDates.put("paymentDateTo", !datePickerToDate.isEmpty() ? datePickerToDate.getValue() : LocalDate.now());
+//
+//			filters.put("paymentDateCriteria", orderDates);
+//		} 
+//		
+//		return filters;
+//		
+//	}
 
 	private void setContent(Tab selectedTab, VerticalLayout contentContainer) {
 		contentContainer.removeAll();

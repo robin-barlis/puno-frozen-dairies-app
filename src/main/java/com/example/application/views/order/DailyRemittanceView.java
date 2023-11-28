@@ -93,7 +93,6 @@ public class DailyRemittanceView extends AbstractPfdiView implements BeforeEnter
 	private BeanValidationBinder<Customer> binder;
 
 	private final CustomerTagService customerTagService;
-	private final LocationTagService locationTagService;
 	private final CustomerService customerService;
 
 	private ListDataProvider<Customer> ldp = null;
@@ -107,7 +106,6 @@ public class DailyRemittanceView extends AbstractPfdiView implements BeforeEnter
 		super("Admin", "Admin");
 		this.customerTagService = customerTagService;
 		this.customerService = customerService;
-		this.locationTagService = locationTagService;
 		addClassNames("administration-view");
 
 		VerticalLayout tableContent = new VerticalLayout();
@@ -190,9 +188,6 @@ public class DailyRemittanceView extends AbstractPfdiView implements BeforeEnter
 			try {
 				prepareCustomer();
 				binder.writeBean(customer);
-				Integer locationTagId = locationTag.getValue().getId();
-				Integer customerTagId = customerTag.getValue().getId();
-
 
 				Customer updateCustomer = customerService.update(customer);
 				clearForm();

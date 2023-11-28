@@ -10,9 +10,9 @@ import com.example.application.views.administration.AdministrationView;
 import com.example.application.views.administration.RequestPasswordView;
 import com.example.application.views.order.StockOrderView;
 import com.example.application.views.products.ProductsView;
-import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.login.LoginI18n;
+import com.vaadin.flow.component.login.LoginI18n.ErrorMessage;
 import com.vaadin.flow.component.login.LoginOverlay;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
@@ -37,23 +37,18 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
         i18n.getHeader().setTitle("Sign In");
         i18n.getHeader().setDescription("Puno Frozen Dairies, Inc");
         i18n.setAdditionalInformation(null);
+        ErrorMessage errorMessage = new ErrorMessage();
+        errorMessage.setTitle("Invalid Username");
+        errorMessage.setMessage("Check that you have entered the correct username and password and try again or contact your System Administrator.");
+        i18n.setErrorMessage(errorMessage);
         setI18n(i18n);
         
-
         setForgotPasswordButtonVisible(true);
         setOpened(true);
-        ComponentEventListener<ForgotPasswordEvent> forgotPasswordEventListener = new ComponentEventListener<ForgotPasswordEvent>() {
 
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void onComponentEvent(ForgotPasswordEvent event) {
-				
-				UI.getCurrent().navigate(RequestPasswordView.class);
-				
-			}
-		};
-        addForgotPasswordListener(forgotPasswordEventListener);
+        addForgotPasswordListener(e -> {
+			UI.getCurrent().navigate(RequestPasswordView.class);
+        });
     }
     
    
@@ -61,9 +56,8 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
     @Override
     public void beforeEnter(BeforeEnterEvent event) {
     	Optional<AppUser> appUserOpt = authenticatedUser.get();
-        if (authenticatedUser.get().isPresent()) {
+        if (authenticatedUser.get().isPresent() ) {
         	AppUser appUser = appUserOpt.get();
-        	
          	
         	if (PfdiUtil.isAdmin(appUser) || PfdiUtil.isSuperUser(appUser)) {
         		System.out.println("admin");

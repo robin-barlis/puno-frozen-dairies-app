@@ -1,7 +1,6 @@
 package com.example.application.views.order;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +62,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			Map<String, List<Product>> productCategoryMap) {
 		this.customer = customer;
 
-		
+		System.out.println("Creating Item Order Category Sub View");
 		VerticalLayout totalAmountContainer = new VerticalLayout();
 		totalAmount.setText("Total Amount: " + PfdiUtil.getFormatter().format(currentTotalPrice));
 		totalAmount.addClassNames("mb-1", "mt-s", "text-l");
@@ -103,7 +102,6 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 		boolean headerAlreadyRendered = false;
 		for (Product product : products) {
-			LocalDate now = LocalDate.now();
 			if (!PfdiUtil.isProductValid(product, product.getEffectiveStartDate(), product.getEffectiveEndDate())) {
 				continue;
 			}
@@ -155,8 +153,6 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			flavorColumnRow.addClassNames("mb-1", "mt-s", "text-s", "span-order-flavor-column");
 			flavorColumnWrapper.add(flavorColumnRow);
 			contentWrapper.add(flavorColumnWrapper);
-
-			int sizeIndex = 0;
 
 			for (Size size : sizes) {
 
@@ -211,20 +207,22 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 							quantityField.setId(itemId);
 							quantityField.addClassName("span-order-size-column");
 							quantityField.setHelperText("Stock: " + quantity);
-							quantityField.setValue(0);
+							quantityField.setPlaceholder("0");
 							quantityField.setMin(0);
 							quantityField.addValueChangeListener(e -> {
 
-								BigDecimal oldAmount = productPrice.getTransferPrice()
-										.multiply(BigDecimal.valueOf(e.getOldValue() != null ? e.getOldValue() : 0));
-								BigDecimal newAmount = productPrice.getTransferPrice()
-										.multiply(BigDecimal.valueOf(e.getValue() != null ? e.getValue() : 0));
+								BigDecimal oldAmount = productPrice.getTransferPrice() != null ?
+										productPrice.getTransferPrice().multiply(BigDecimal.valueOf(e.getOldValue() != null ? e.getOldValue() : 0)) : BigDecimal.ZERO;
+								BigDecimal newAmount = 
+										productPrice.getSuggestedRetailPrice() != null ? productPrice.getTransferPrice()
+										.multiply(BigDecimal.valueOf(e.getValue() != null ? e.getValue() : 0)) : BigDecimal.ZERO;
 								
 								
-								BigDecimal oldSrpAmount = productPrice.getSuggestedRetailPrice()
-										.multiply(BigDecimal.valueOf(e.getOldValue() != null ? e.getOldValue() : 0));
-								BigDecimal newSrpAmount = productPrice.getSuggestedRetailPrice()
-										.multiply(BigDecimal.valueOf(e.getValue() != null ? e.getValue() : 0));
+								BigDecimal oldSrpAmount = productPrice.getSuggestedRetailPrice() != null ? 
+										productPrice.getSuggestedRetailPrice().multiply(BigDecimal.valueOf(e.getOldValue() != null ? e.getOldValue() : 0)) : BigDecimal.ZERO;
+								BigDecimal newSrpAmount = productPrice.getSuggestedRetailPrice() != null ? productPrice.getSuggestedRetailPrice()
+										.multiply(BigDecimal.valueOf(e.getValue() != null ? e.getValue() : 0)): BigDecimal.ZERO;
+										
 
 								currentTotalPrice = currentTotalPrice.subtract(oldAmount);
 								currentTotalPrice = currentTotalPrice.add(newAmount);
@@ -233,6 +231,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 								currentTotalSrp = currentTotalSrp.add(newSrpAmount);
 
 								totalAmount.setText("Total Amount : " + PfdiUtil.getFormatter().format(currentTotalPrice));
+
 //								add(totalAmount);
 
 							});
@@ -242,14 +241,8 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 							System.out.println("item Id " + itemId);
 							itemMap.put(itemId, quantityField);
 							itemsList.add(item);
-
-							sizeIndex++;
 						}
-						
-
 					}
-
-
 				} else {
 					quantityField = new IntegerField();
 					quantityField.setMax(0);
@@ -326,7 +319,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 		private BigDecimal price;
 		private ItemStock itemStock;
 		private BigDecimal srp;
-		private String itemId;
+		//private String itemId;
 
 		public Items(IntegerField numberField, BigDecimal price, ItemStock itemStock, BigDecimal srp, String itemId) {
 			super();
@@ -334,7 +327,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 			this.price = price;
 			this.itemStock = itemStock;
 			this.srp = srp;
-			this.itemId = itemId;
+		//	this.itemId = itemId;
 		}
 
 		public IntegerField getNumberField() {
@@ -353,14 +346,6 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 		public BigDecimal getSrp() {
 			return srp;
 		}
-
-		public String getItemId() {
-			return itemId;
-		}
-
-		public void setItemId(String itemId) {
-			this.itemId = itemId;
-		}
 		
 		
 	}
@@ -371,8 +356,8 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 		setValues();
 	}
 
-	public Set<OrderItems> updateOrderItems(AppUser user) {
-		setValues();
+	public Set<OrderItems> updateOrderItems(AppUser user, Order order) {
+		//setValues();
 		itemsList.forEach(itemField -> {
 			IntegerField field = itemField.getNumberField();
 			String itemFieldId = field.getId().orElse(null);
@@ -393,6 +378,7 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 						inventory.setAvailableStock(currentStock);
 						orderItem.setUpdatedDate(LocalDateTime.now());
 						orderItem.setUpdatedBy(user);
+						orderItem.setOrder(order);
 					}
 				}
 
@@ -406,7 +392,6 @@ public class ItemOrderCategorySubView extends VerticalLayout {
 
 			String productShortCode = e.getItemInventory().getProduct().getProductShortCode();
 			String sizeName = e.getItemInventory().getSize().getSizeName();
-			System.out.println("id-" + productShortCode + "-" + sizeName);
 			return productShortCode + "-" + sizeName;
 		}, Function.identity()));
 

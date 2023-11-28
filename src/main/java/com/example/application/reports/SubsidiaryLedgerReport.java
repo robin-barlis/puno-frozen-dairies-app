@@ -14,13 +14,13 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
-import com.beust.jcommander.internal.Lists;
 import com.cloudinary.utils.StringUtils;
 import com.example.application.data.entity.customers.Customer;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.orders.Transaction;
 import com.example.application.data.entity.payment.Payment;
 import com.example.application.utils.PfdiUtil;
+import com.google.api.client.util.Lists;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
@@ -72,11 +72,9 @@ public class SubsidiaryLedgerReport {
 		private static final long serialVersionUID = 1L;
 
 		private List<Order> orders;
-		private Customer customer;
 
 		public SubreportExpression(List<Order> orders, Customer customer) {
 			this.orders = orders;
-			this.customer = customer;
 		}
 
 		@Override

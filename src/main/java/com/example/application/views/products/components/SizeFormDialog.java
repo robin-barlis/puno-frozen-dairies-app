@@ -18,7 +18,6 @@ import com.vaadin.flow.component.combobox.MultiSelectComboBox;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
-import com.vaadin.flow.component.grid.GridMultiSelectionModel.SelectAllCheckboxVisibility;
 import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.notification.Notification;
@@ -87,6 +86,7 @@ public class SizeFormDialog  extends ConfirmDialog {
 				if (size == null) {
 
 					size = new Size();
+					size.setSizeOrder(0);
 				}
 				binder.writeBean(size);
 				size.setCustomerTagSet(customerTagComboBox.getValue());

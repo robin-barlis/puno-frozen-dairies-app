@@ -31,7 +31,6 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.formlayout.FormLayout.ResponsiveStep;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.Hr;
@@ -95,7 +94,6 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 	private BeanValidationBinder<Customer> binder;
 
 	private final CustomerTagService customerTagService;
-	private final LocationTagService locationTagService;
 	private final CustomerService customerService;
 
 	private ListDataProvider<Customer> ldp = null;
@@ -112,7 +110,6 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		super("Admin", "Admin");
 		this.customerTagService = customerTagService;
 		this.customerService = customerService;
-		this.locationTagService = locationTagService;
 		customers = customerService.listAll(Sort.by("id"));
 		addClassNames("administration-view");
 
@@ -158,7 +155,12 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		locationTag.getStyle().set("padding-bottom", "20px");
 		locationTag.setRequiredIndicatorVisible(true);
 		locationTag.setEmptySelectionAllowed(false);
-		locationTag.setItems(customerTags.get(0).getLocationTagSet());
+	
+		if(!customerTags.isEmpty() && customerTags.get(0) != null) {
+			locationTags = customerTags.get(0).getLocationTagSet();
+		}
+		
+		locationTag.setItems(locationTags);
 		locationTag.setPlaceholder("Select Location Tag");
 		locationTag.setEnabled(false);
 
@@ -219,7 +221,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 					customer.setCustomerTagId(customerTag.getValue());
 					
 
-					Customer updateCustomer = customerService.update(customer);
+					customerService.update(customer);
 					clearForm();
 					//refreshGrid(updateCustomer);
 
@@ -380,7 +382,7 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 
 		ldp = DataProvider.ofCollection(customers);
 
-		GridListDataView<Customer> dataView = grid.setItems(ldp);
+		grid.setItems(ldp);
 		grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
 		grid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
 		grid.addThemeVariants(GridVariant.MATERIAL_COLUMN_DIVIDERS);
@@ -451,23 +453,18 @@ public class CustomerView extends AbstractPfdiView implements BeforeEnterObserve
 		refreshGrid();
 	}
 
-	private void refreshGrid(Customer updateCustomer, boolean delete) {
-		if (delete) {
-
-			grid.getListDataView().removeItem(updateCustomer);
-		} else {
-
-			grid.getListDataView().addItem(updateCustomer);
-		}
-		ldp.refreshItem(updateCustomer);
-		refreshGrid();
-
-	}
-
-	private void refreshGrid(Customer updateCustomer) {
-		refreshGrid(updateCustomer, false);
-
-	}
+//	private void refreshGrid(Customer updateCustomer, boolean delete) {
+//		if (delete) {
+//
+//			grid.getListDataView().removeItem(updateCustomer);
+//		} else {
+//
+//			grid.getListDataView().addItem(updateCustomer);
+//		}
+//		ldp.refreshItem(updateCustomer);
+//		refreshGrid();
+//
+//	}
 
 	private void clearForm() {
 		populateForm(null);

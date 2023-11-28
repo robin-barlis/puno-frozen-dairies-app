@@ -11,8 +11,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.example.application.data.entity.orders.DocumentTrackingNumber;
-import com.example.application.data.entity.orders.Order;
-import com.example.application.data.entity.stock.ItemStock;
 
 @Service
 public class DocumentTrackingNumberService {

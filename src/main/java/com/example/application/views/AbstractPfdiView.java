@@ -3,7 +3,6 @@ package com.example.application.views;
 import org.springframework.beans.factory.annotation.Configurable;
 
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Hr;
 import com.vaadin.flow.component.html.Main;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.FlexComponent.JustifyContentMode;
@@ -15,7 +14,6 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.spring.annotation.SpringComponent;
 import com.vaadin.flow.spring.annotation.UIScope;
 import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
-import com.vaadin.flow.theme.lumo.LumoUtility.MaxWidth;
 import com.vaadin.flow.theme.lumo.LumoUtility.Padding;
 
 @SpringComponent

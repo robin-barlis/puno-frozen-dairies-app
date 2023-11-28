@@ -14,6 +14,7 @@ import com.example.application.data.entity.AppUser;
 import com.example.application.data.entity.orders.Order;
 import com.example.application.data.entity.products.Size;
 import com.example.application.data.service.orders.OrdersService;
+import com.example.application.data.service.products.CategoryService;
 import com.example.application.data.service.products.SizesService;
 import com.example.application.reports.DeliveryReceiptReport;
 import com.example.application.reports.OrderSummaryReport;
@@ -74,6 +75,7 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 	private DeliveryReceiptReport deliveryReceiptReport;
 	private SalesInvoiceReport salesInvoiceReport;
 	private StockTransferReport stockTransferReport;
+	private CategoryService categoryService;
 	
 //
 //	private byte[] orderSummaryReportData;
@@ -88,10 +90,11 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 			ReportConsolidatorService reportConsolidatorService,
 			DeliveryReceiptReport deliveryReceiptReport,
 			SalesInvoiceReport salesInvoiceReport,
-			StockTransferReport stockTransferReport) {
+			StockTransferReport stockTransferReport, CategoryService categoryService) {
 		this.ordersService = ordersService;
 		this.appUser = user.get().get();
 		
+		this.categoryService = categoryService;
 		this.sizesService = sizesService;
 		this.orderSummaryReport = orderSummaryReport;
 		this.reportConsolidatorService = reportConsolidatorService;
@@ -231,7 +234,7 @@ public class PrinterView extends VerticalLayout implements BeforeEnterObserver {
 			reportBuilder = orderSummaryReport
 					.getReportBuilder(order, 
 							sizesService.listAll(Sort.unsorted()), 
-							appUser);
+							appUser, categoryService.listAll(Sort.unsorted()));
 			
 		} else if (Reports.SI == report) {
 			reportBuilder = salesInvoiceReport

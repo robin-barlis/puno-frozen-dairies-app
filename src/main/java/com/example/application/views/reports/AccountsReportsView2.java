@@ -1,15 +1,10 @@
 package com.example.application.views.reports;
 
-import java.io.ByteArrayInputStream;
-import java.util.List;
-import java.util.Map;
-
 import javax.annotation.security.RolesAllowed;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.example.application.data.AccountsReportType;
-import com.example.application.data.entity.payment.Payment;
 import com.example.application.data.service.UserService;
 import com.example.application.data.service.customers.CustomerService;
 import com.example.application.data.service.orders.OrdersService;
@@ -21,9 +16,6 @@ import com.example.application.views.AbstractPfdiView;
 import com.example.application.views.MainLayout;
 import com.example.application.views.reports.forms.StatementOfAccountForm;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.vaadin.componentfactory.pdfviewer.PdfViewer;
-import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -41,7 +33,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
 
 @PageTitle("Stock Orders")
 @Route(value = "reports/accounts2/", layout = MainLayout.class)
@@ -50,13 +41,8 @@ import com.vaadin.flow.server.StreamResource;
 public class AccountsReportsView2 extends AbstractPfdiView {
 
 	private static final long serialVersionUID = 2754507440441771890L;
-
-	private byte[] stockTransferData;
-
 	private VerticalLayout mainDiv = new VerticalLayout();
 	private VerticalLayout formContainer = new VerticalLayout();
-	private AuthenticatedUser authenticatedUser;
-	private RemittancesReport remittancesReport;
 
 	private ComboBox<AccountsReportType> accountsReportType;
 	private FormLayout statementOfAccount;
@@ -72,9 +58,6 @@ public class AccountsReportsView2 extends AbstractPfdiView {
 			PaymentRepositoryCustomImpl paymentRepositoryCustom, RemittancesReport remittancesReport,
 			AuthenticatedUser authenticatedUser, CustomerService customerService, UserService userService) {
 		super("products-view", "Remittances");
-		//this.paymentRepositoryCustom = paymentRepositoryCustom;
-		this.remittancesReport = remittancesReport;
-		this.authenticatedUser = authenticatedUser;
 		this.customerService = customerService;
 
 		this.userService = userService;
@@ -129,37 +112,37 @@ public class AccountsReportsView2 extends AbstractPfdiView {
 
 	}
 
-	private Map<String, Object> createSearchCriteria() {
-		Map<String, Object> filters = Maps.newHashMap();
-
-		return filters;
-
-	}
-
-	private void setContent(VerticalLayout contentContainer, Map<String, List<Payment>> payments) {
-
-		StreamResource resource = new StreamResource("Daily-Remittances-Summary.pdf", () -> {
-
-			if (payments != null) {
-
-				byte[] consolidatedReport = remittancesReport.buildReport(payments, authenticatedUser.get().get());
-				return new ByteArrayInputStream(consolidatedReport);
-			}
-			return new ByteArrayInputStream(new byte[0]);
-		});
-
-		PdfViewer pdfViewer = new PdfViewer();
-		pdfViewer.setWidthFull();
-		pdfViewer.setHeightFull();
-
-		pdfViewer.setSrc(resource);
-		pdfViewer.setAddDownloadButton(true);
-		pdfViewer.setAddPrintButton(true);
-		contentContainer.add(pdfViewer);
-		contentContainer.setWidthFull();
-		contentContainer.setHeight("75%");
-
-	}
+//	private Map<String, Object> createSearchCriteria() {
+//		Map<String, Object> filters = Maps.newHashMap();
+//
+//		return filters;
+//
+//	}
+//
+//	private void setContent(VerticalLayout contentContainer, Map<String, List<Payment>> payments) {
+//
+//		StreamResource resource = new StreamResource("Daily-Remittances-Summary.pdf", () -> {
+//
+//			if (payments != null) {
+//
+//				byte[] consolidatedReport = remittancesReport.buildReport(payments, authenticatedUser.get().get());
+//				return new ByteArrayInputStream(consolidatedReport);
+//			}
+//			return new ByteArrayInputStream(new byte[0]);
+//		});
+//
+//		PdfViewer pdfViewer = new PdfViewer();
+//		pdfViewer.setWidthFull();
+//		pdfViewer.setHeightFull();
+//
+//		pdfViewer.setSrc(resource);
+//		pdfViewer.setAddDownloadButton(true);
+//		pdfViewer.setAddPrintButton(true);
+//		contentContainer.add(pdfViewer);
+//		contentContainer.setWidthFull();
+//		contentContainer.setHeight("75%");
+//
+//	}
 
 	protected void createMainContentLayout() {
 		HorizontalLayout optionsContainer = new HorizontalLayout();

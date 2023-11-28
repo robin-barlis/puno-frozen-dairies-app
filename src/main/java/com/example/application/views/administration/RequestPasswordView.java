@@ -1,7 +1,6 @@
 package com.example.application.views.administration;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 
 import javax.mail.MessagingException;
 

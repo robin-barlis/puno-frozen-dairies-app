@@ -34,6 +34,7 @@ public class PdfRenderingSimple implements AutoCloseable {
 	//
 	// rendering
 	//
+	@SuppressWarnings("deprecation")
 	public void renderText(String Info, int marginwidth) throws IOException {
 		if (content == null || textRenderingLineY < 12)
 			newPage();
@@ -87,8 +88,7 @@ public class PdfRenderingSimple implements AutoCloseable {
 		PDDocument doc = new PDDocument();
 
 		PdfRenderingSimple renderer = new PdfRenderingSimple(doc);
-		for (int i = 0; i < 2000; i++)
-		{
+		for (int i = 0; i < 2000; i++) {
 		    renderer.renderText("hello" + i, 60);
 		}
 		renderer.close();
